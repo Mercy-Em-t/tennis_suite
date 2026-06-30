@@ -1,0 +1,3 @@
+module.exports=[14235,a=>{a.v({className:"outfit_ca35ecd4-module__VNkuCW__className",variable:"outfit_ca35ecd4-module__VNkuCW__variable"})},27572,a=>{"use strict";var b=a.i(7997),c=a.i(14235);let d={className:c.default.className,style:{fontFamily:"'Outfit', 'Outfit Fallback'",fontStyle:"normal"}};null!=c.default.variable&&(d.variable=c.default.variable),a.s(["default",0,function({children:a}){return(0,b.jsx)("html",{lang:"en",className:d.variable,children:(0,b.jsx)("body",{children:a})})},"metadata",0,{title:"Tennis Suite | Elite Organizer",description:"The premier unified suite for niche sports tournaments and broadcasting."}],27572)},50645,a=>{a.n(a.i(27572))}];
+
+//# sourceMappingURL=%5Broot-of-the-server%5D__1h4e63t._.js.map

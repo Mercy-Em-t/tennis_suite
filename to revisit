@@ -1,0 +1,2 @@
+2. At the Database Layer (Procedural / Declarative)
+Supabase itself is built on PostgreSQL. While SQL is inherently declarative, PostgreSQL allows you to write Procedural Language (PL/pgSQL). This means if we wanted to offload heavy logic—like automatically generating the Knockout Tree the exact millisecond a Round-Robin finishes—we could write a procedural trigger function that executes directly on the Supabase server, bypassing our Next.js backend entirely.

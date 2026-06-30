@@ -1,0 +1,3 @@
+{
+  "/(dashboards)/validation/page": "app/(dashboards)/validation/page.js"
+}

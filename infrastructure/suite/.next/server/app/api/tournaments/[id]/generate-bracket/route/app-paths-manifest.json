@@ -1,0 +1,3 @@
+{
+  "/api/tournaments/[id]/generate-bracket/route": "app/api/tournaments/[id]/generate-bracket/route.js"
+}

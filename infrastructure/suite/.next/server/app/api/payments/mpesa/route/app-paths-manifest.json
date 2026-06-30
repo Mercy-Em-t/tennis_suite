@@ -1,0 +1,3 @@
+{
+  "/api/payments/mpesa/route": "app/api/payments/mpesa/route.js"
+}
