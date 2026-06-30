@@ -81,7 +81,8 @@ export async function middleware(request: NextRequest) {
 
   // Pillar 14: White-Label Subdomain Routing
   const hostname = request.headers.get('host') || '';
-  const isSubdomain = hostname.includes('.') && !hostname.startsWith('localhost') && !hostname.startsWith('www.');
+  const isVercelDomain = hostname.endsWith('.vercel.app');
+  const isSubdomain = hostname.includes('.') && !hostname.startsWith('localhost') && !hostname.startsWith('www.') && !isVercelDomain;
   
   if (isSubdomain) {
     const subdomain = hostname.split('.')[0];
