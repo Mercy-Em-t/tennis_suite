@@ -36,14 +36,21 @@ export async function GET(request: Request, context: { params: Promise<{ matchId
     return NextResponse.json({ error: 'Match not found' }, { status: 404 })
   }
 
+  let parsedScore = { gamesA: 0, gamesB: 0 };
+  try {
+    const s = JSON.parse(match.scoreState);
+    parsedScore.gamesA = s.gamesA || 0;
+    parsedScore.gamesB = s.gamesB || 0;
+  } catch (e) {}
+
   const payload: BroadcastPayload = {
     telemetry: {
       matchStatus: match.status,
       durationSec: match.durationSec,
       currentServer: match.currentServer,
       score: {
-        teamA: match.scoreTeamA,
-        teamB: match.scoreTeamB
+        teamA: parsedScore.gamesA,
+        teamB: parsedScore.gamesB
       }
     },
     assets: {

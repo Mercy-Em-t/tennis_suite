@@ -42,7 +42,7 @@ export async function GET(request: Request) {
     // Assuming the first team is the active one for MVP
     const activeTeam = user.teams.find(t => t.tournament.isActive) || user.teams[0];
     
-    let schedule = [];
+    let schedule: any[] = [];
     if (activeTeam) {
       const matchesA = activeTeam.matchesAsTeamA.map(m => ({ ...m, opponent: m.teamB?.franchiseName || 'TBD' }));
       const matchesB = activeTeam.matchesAsTeamB.map(m => ({ ...m, opponent: m.teamA?.franchiseName || 'TBD' }));

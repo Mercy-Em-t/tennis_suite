@@ -12,8 +12,7 @@ export async function GET() {
 
     const fees = await prisma.rainmakerFee.findMany({
       take: 10,
-      orderBy: { createdAt: 'desc' },
-      include: { user: true }
+      orderBy: { createdAt: 'desc' }
     });
 
     // Merge them into a single timeline for the UI ledger
@@ -21,16 +20,16 @@ export async function GET() {
       ...payouts.map(p => ({
         id: `payout_${p.id}`,
         date: p.createdAt,
-        partner: `Affiliate ${p.affiliateId}`,
+        partner: `Affiliate ${p.partnerName}`,
         source: 'Partner Split',
-        amount: Number(p.amount)
+        amount: Number(p.amountOwed)
       })),
       ...fees.map(f => ({
         id: `fee_${f.id}`,
         date: f.createdAt,
-        partner: f.user?.name || `User ${f.userId}`,
+        partner: f.brokerName,
         source: 'Rainmaker Commission',
-        amount: Number(f.commissionCut)
+        amount: Number(f.payoutAmount)
       }))
     ].sort((a, b) => b.date.getTime() - a.date.getTime());
 

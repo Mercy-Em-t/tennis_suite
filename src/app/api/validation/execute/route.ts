@@ -9,12 +9,14 @@ export async function POST(request: Request) {
 
     if (action === 'GATE_1_DB_INTEGRITY') {
       // Create users and team to test M:N
-      const userA = await prisma.user.create({ data: { email: `a_${Date.now()}@test.com`, name: "Test A", passwordHash: "mock", walletAddress: `0x${Date.now()}A` } });
-      const userB = await prisma.user.create({ data: { email: `b_${Date.now()}@test.com`, name: "Test B", passwordHash: "mock", walletAddress: `0x${Date.now()}B` } });
+      const userA = await prisma.user.create({ data: { email: `a_${Date.now()}@test.com`, name: "Test A" } });
+      const userB = await prisma.user.create({ data: { email: `b_${Date.now()}@test.com`, name: "Test B" } });
+      const tourney = await prisma.tournament.create({ data: { name: "Test", formatType: "Fast4", maxTeams: 4 } });
       
       const team = await prisma.team.create({
         data: {
           franchiseName: `Validation Team ${Date.now()}`,
+          tournamentId: tourney.id,
           players: { connect: [{ id: userA.id }, { id: userB.id }] }
         },
         include: { players: true }
@@ -25,7 +27,7 @@ export async function POST(request: Request) {
       const match = await prisma.match.create({
         data: {
           teamAId: team.id,
-          rulesConfig: "FAST4",
+          tournamentId: tourney.id,
           scoreState: JSON.stringify(mockState)
         }
       });

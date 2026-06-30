@@ -7,7 +7,6 @@ export async function GET(request: Request) {
   try {
     const freeAgents = await prisma.freeAgent.findMany({
       where: { status: 'AVAILABLE' },
-      include: { user: true },
       take: 10
     });
 

@@ -22,7 +22,7 @@ export async function generateLegacyArchive(tournamentId: string) {
 
   // Assuming the last completed match was the Final
   const finalMatch = tournament.matches[0];
-  const championTeamId = tournament.championId || finalMatch?.winnerId; // winnerId needs to be derived
+  const championTeamId = tournament.championId || null; // derived at end of match
 
   // Mark as archived
   await prisma.tournament.update({
