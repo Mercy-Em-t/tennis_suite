@@ -17,8 +17,8 @@ export async function POST(request: Request) {
       include: {
         teams: {
           include: {
-            matchesAsTeamA: { where: { status: 'SCHEDULED' }, include: { court: true, teamB: true } },
-            matchesAsTeamB: { where: { status: 'SCHEDULED' }, include: { court: true, teamA: true } }
+            matchesAsTeamA: { where: { status: 'SCHEDULED' }, include: { court: true, teamB: true, teamA: true } },
+            matchesAsTeamB: { where: { status: 'SCHEDULED' }, include: { court: true, teamA: true, teamB: true } }
           }
         }
       }
