@@ -3,125 +3,117 @@
 import React, { useState } from 'react';
 import useSWR from 'swr';
 import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import styles from './admin.module.css';
+import { Badge } from '@/components/ui/Badge';
+import { useRouter } from 'next/navigation';
 
-export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState('SCHEDULE');
-  const fetcher = (url: string) => fetch(url).then(r => r.json());
+const fetcher = (url: string) => fetch(url).then(r => r.json());
 
-  // Data Fetching
-  const { data: scheduleData } = useSWR('/api/schedule', fetcher, { refreshInterval: 5000 });
-  const { data: financeData } = useSWR('/api/finance', fetcher);
+export default function GlobalHostDashboard() {
+  const router = useRouter();
+  const { data, error, mutate } = useSWR('/api/tournaments', fetcher);
+  const [isCreating, setIsCreating] = useState(false);
+  const [formData, setFormData] = useState({ name: '', formatType: 'FAST4_ROUND_ROBIN', maxTeams: '16', poolSize: '4', courts: '' });
 
-  const courts = scheduleData?.courts || {};
-  const ledger = financeData?.ledger || [];
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const payload = {
+      ...formData,
+      courts: formData.courts.split(',').map(c => c.trim()).filter(Boolean)
+    };
+    const res = await fetch('/api/tournaments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      router.push(`/tournaments/${data.tournament.id}`);
+    }
+  };
+
+  if (!data && !error) return <div style={{ padding: '48px', color: '#8b949e' }}>Loading Host Command...</div>;
 
   return (
-    <div className={styles.container}>
-      
-      {/* Sidebar Navigation */}
-      <aside className={styles.sidebar}>
-        <div style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '24px', color: 'var(--accent)' }}>
-          OS Admin
+    <div style={{ padding: '48px', color: '#f0f6fc', background: '#0d1117', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '24px', marginBottom: '32px' }}>
+        <div>
+          <h1 style={{ fontSize: '2.5rem', fontWeight: 900, margin: 0 }}>Host Control Center</h1>
+          <p style={{ color: '#8b949e', marginTop: '8px', fontSize: '1.1rem' }}>Manage your localized operations</p>
         </div>
-        <div className={`${styles.navItem} ${activeTab === 'SCHEDULE' ? styles.active : ''}`} onClick={() => setActiveTab('SCHEDULE')}>
-          Court Scheduling
-        </div>
-        <div className={`${styles.navItem} ${activeTab === 'FINANCE' ? styles.active : ''}`} onClick={() => setActiveTab('FINANCE')}>
-          Financial Ledger
-        </div>
-        <div className={`${styles.navItem} ${activeTab === 'RULES' ? styles.active : ''}`} onClick={() => setActiveTab('RULES')}>
-          Rule Injection
-        </div>
-      </aside>
+        <Button onClick={() => setIsCreating(!isCreating)} variant="primary">
+          {isCreating ? 'Cancel' : '+ New Tournament'}
+        </Button>
+      </header>
 
-      {/* Main Content Area */}
-      <main className={styles.main}>
-        
-        {activeTab === 'SCHEDULE' && (
-          <>
-            <header className={styles.header}>
-              <h1 className={styles.title}>Live Scheduling Matrix</h1>
-              <Button>Auto-Resolve Conflicts</Button>
-            </header>
-            <div className={styles.timeline}>
-              {Object.keys(courts).map((courtName) => (
-                <div key={courtName} className={styles.courtCol}>
-                  <div className={styles.courtTitle}>{courtName}</div>
-                  {courts[courtName].map((match: any) => (
-                    <div key={match.id} className={styles.timeBlock} style={{ borderColor: match.status === 'IN_PROGRESS' ? 'var(--accent)' : 'var(--card-border)' }}>
-                      <Badge variant={match.status === 'IN_PROGRESS' ? 'accent' : 'default'}>
-                        {match.status}
-                      </Badge>
-                      <div style={{ marginTop: '8px', fontWeight: 600 }}>
-                        {match.teamA?.name || 'TBA'} vs {match.teamB?.name || 'TBA'}
-                      </div>
-                    </div>
-                  ))}
-                  {courts[courtName].length === 0 && (
-                    <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textAlign: 'center', marginTop: '16px' }}>No matches scheduled</div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        {activeTab === 'FINANCE' && (
-          <>
-            <header className={styles.header}>
-              <h1 className={styles.title}>Partner Payouts & Rainmaker Fees</h1>
-            </header>
-            <Card>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Partner/Affiliate</th>
-                    <th>Source</th>
-                    <th>Fee Cut</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ledger.length === 0 ? (
-                    <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No financial transactions found.</td></tr>
-                  ) : (
-                    ledger.map((row: any) => (
-                      <tr key={row.id}>
-                        <td>{new Date(row.date).toLocaleDateString()}</td>
-                        <td>{row.partner}</td>
-                        <td>{row.source}</td>
-                        <td className={styles.amount}>${row.amount.toFixed(2)}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </Card>
-          </>
-        )}
-
-        {activeTab === 'RULES' && (
-          <>
-            <header className={styles.header}>
-              <h1 className={styles.title}>Custom Rule Injection</h1>
-              <Button variant="secondary">Save Configuration</Button>
-            </header>
-            <Card>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>JSON Configuration Override (Pillar 40)</label>
-                <textarea 
-                  style={{ width: '100%', height: '200px', backgroundColor: 'var(--bg-color)', color: 'var(--text-main)', border: '1px solid var(--card-border)', borderRadius: '8px', padding: '16px', fontFamily: 'monospace' }}
-                  defaultValue={`{\n  "noAdvantageScoring": true,\n  "tieBreakAt": 6,\n  "targetSets": 3\n}`}
-                />
+      {isCreating && (
+        <Card style={{ background: '#161b22', border: '1px solid #58a6ff', padding: '24px', marginBottom: '32px' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '16px' }}>Initialize New Tournament</h2>
+          <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <div style={{ flex: 2 }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#8b949e' }}>Tournament Name</label>
+                <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="e.g. Purely Doubles Spring 2026" style={{ width: '100%', padding: '12px', background: '#0d1117', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '6px' }} />
               </div>
-            </Card>
-          </>
-        )}
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#8b949e' }}>Format</label>
+                <select value={formData.formatType} onChange={e => setFormData({...formData, formatType: e.target.value})} style={{ width: '100%', padding: '12px', background: '#0d1117', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '6px' }}>
+                  <option value="Standard">Standard</option>
+                  <option value="FAST4_ROUND_ROBIN">Fast4 Round Robin</option>
+                  <option value="Knockout">Knockout</option>
+                </select>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#8b949e' }}>Max Capacity</label>
+                <input type="number" value={formData.maxTeams} onChange={e => setFormData({...formData, maxTeams: e.target.value})} style={{ width: '100%', padding: '12px', background: '#0d1117', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '6px' }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#8b949e' }}>Pool Size</label>
+                <input type="number" value={formData.poolSize} onChange={e => setFormData({...formData, poolSize: e.target.value})} style={{ width: '100%', padding: '12px', background: '#0d1117', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '6px' }} />
+              </div>
+              <div style={{ flex: 2 }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#8b949e' }}>Courts (Comma-separated)</label>
+                <input value={formData.courts} onChange={e => setFormData({...formData, courts: e.target.value})} placeholder="Court 1, Court 2, Centre Court" style={{ width: '100%', padding: '12px', background: '#0d1117', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '6px' }} />
+              </div>
+            </div>
 
-      </main>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+              <Button type="submit" variant="success">Initialize Database Segment</Button>
+            </div>
+          </form>
+        </Card>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px' }}>
+        {data?.tournaments?.map((t: any) => (
+          <Card key={t.id} style={{ background: '#161b22', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'border 0.2s ease' }} onClick={() => router.push(`/tournaments/${t.id}`)}>
+            <div style={{ padding: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                {t.isActive ? <Badge variant="success">PUBLISHED</Badge> : <Badge variant="warning">DRAFT</Badge>}
+                <span style={{ color: '#8b949e', fontSize: '0.9rem' }}>{t.formatType}</span>
+              </div>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '8px' }}>{t.name}</h2>
+              
+              <div style={{ display: 'flex', gap: '24px', marginTop: '24px' }}>
+                <div>
+                  <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 700 }}>{t._count.teams} / {t.maxTeams}</span>
+                  <span style={{ fontSize: '0.8rem', color: '#8b949e', textTransform: 'uppercase' }}>Franchises</span>
+                </div>
+                <div>
+                  <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 700 }}>{t._count.matches}</span>
+                  <span style={{ fontSize: '0.8rem', color: '#8b949e', textTransform: 'uppercase' }}>Matches</span>
+                </div>
+              </div>
+            </div>
+          </Card>
+        ))}
+        {data?.tournaments?.length === 0 && (
+          <div style={{ color: '#8b949e' }}>No tournaments created yet.</div>
+        )}
+      </div>
     </div>
   );
 }

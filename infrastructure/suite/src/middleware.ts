@@ -54,6 +54,9 @@ export async function middleware(request: NextRequest) {
     if (pathname.startsWith('/team') && !['PLAYER', 'ADMIN'].includes(role)) {
       return NextResponse.redirect(new URL(roleDashboardMap[role] || '/', request.url));
     }
+    if (pathname.startsWith('/tournaments') && !['HOST', 'ADMIN', 'MARSHALL'].includes(role)) {
+      return NextResponse.redirect(new URL(roleDashboardMap[role] || '/', request.url));
+    }
   }
 
   // 2. Gateway / Auth Page Redirect Logic (if already logged in)

@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 
 export async function POST(request: Request) {
   try {
-    const { name, email, password, franchiseName } = await request.json();
+    const { name, email, password, franchiseName, tournamentId } = await request.json();
 
     if (!name || !email || !password) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -29,30 +29,34 @@ export async function POST(request: Request) {
       }
     });
 
-    // If franchiseName provided, create Team linked to the active tournament
-    if (franchiseName) {
-      const activeTournament = await prisma.tournament.findFirst({
-        where: { isActive: true },
-        orderBy: { createdAt: 'desc' }
-      });
+    let checkoutUrl = null;
 
-      if (activeTournament) {
-        await prisma.team.create({
-          data: {
-            franchiseName,
-            tournamentId: activeTournament.id,
-            players: {
-              connect: { id: user.id }
-            }
-          }
+    // If franchiseName provided, do not create Team immediately. Send to mock Stripe checkout.
+    if (franchiseName) {
+      let targetTournamentId = tournamentId;
+      
+      if (!targetTournamentId) {
+        const activeTournament = await prisma.tournament.findFirst({
+          where: { isActive: true },
+          orderBy: { createdAt: 'desc' }
         });
+        targetTournamentId = activeTournament?.id;
+      }
+
+      if (targetTournamentId) {
+        // Redirect to mock Stripe Checkout
+        checkoutUrl = `/checkout?t=${targetTournamentId}&f=${encodeURIComponent(franchiseName)}`;
       }
     }
 
     // Automatically log them in
     const token = await signToken({ id: user.id, role: user.role });
 
-    const response = NextResponse.json({ success: true, user: { id: user.id, name: user.name, role: user.role } });
+    const response = NextResponse.json({ 
+      success: true, 
+      user: { id: user.id, name: user.name, role: user.role },
+      checkoutUrl
+    });
     
     response.cookies.set({
       name: 'auth_token',

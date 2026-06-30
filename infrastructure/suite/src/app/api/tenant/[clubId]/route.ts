@@ -3,8 +3,9 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export async function GET(request: Request, { params }: { params: { clubId: string } }) {
+export async function GET(request: Request, props: { params: Promise<{ clubId: string }> }) {
   try {
+    const params = await props.params;
     const club = await prisma.club.findUnique({
       where: { id: params.clubId }
     });

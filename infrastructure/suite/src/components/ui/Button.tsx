@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import styles from './Button.module.css';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'success';
   size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
   children: React.ReactNode;

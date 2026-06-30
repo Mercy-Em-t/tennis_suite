@@ -180,7 +180,7 @@ export default function ValidationSandbox() {
               <span style={{color:'#58a6ff'}}>[{l.gate}]</span> {l.msg}
             </div>
           ))}
-          {logs.length === 0 && <div style={{opacity:0.5}}>> Ready to receive telemetry...</div>}
+          {logs.length === 0 && <div style={{opacity:0.5}}>&gt; Ready to receive telemetry...</div>}
         </div>
       </div>
 
