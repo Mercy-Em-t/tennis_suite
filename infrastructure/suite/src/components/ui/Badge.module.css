@@ -1,0 +1,41 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 9999px; /* Pill shape */
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.default {
+  background-color: var(--card-border);
+  color: var(--text-muted);
+}
+
+.success {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: var(--success);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.warning {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.error {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: var(--error);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.accent {
+  background-color: var(--accent-glow);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+}

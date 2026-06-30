@@ -1,0 +1,26 @@
+{
+  "en": {
+    "dashboard": {
+      "welcome": "Welcome to Tennis Suite",
+      "active_matches": "Active Matches",
+      "standings": "Standings"
+    },
+    "referee": {
+      "start_match": "Start Match",
+      "undo_point": "Undo Last Point",
+      "medical_timeout": "Medical Timeout"
+    }
+  },
+  "fr": {
+    "dashboard": {
+      "welcome": "Bienvenue dans la Suite Tennis",
+      "active_matches": "Matchs Actifs",
+      "standings": "Classement"
+    },
+    "referee": {
+      "start_match": "Commencer le match",
+      "undo_point": "Annuler le dernier point",
+      "medical_timeout": "Temps mort médical"
+    }
+  }
+}

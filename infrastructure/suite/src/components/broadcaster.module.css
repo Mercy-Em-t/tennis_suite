@@ -1,0 +1,340 @@
+/* ============================================================
+   BROADCASTER OVERLAY STYLES
+   Broadcast-safe dark palette. Optimised for clubhouse TVs,
+   OBS overlays, and outdoor high-contrast visibility.
+   ============================================================ */
+
+/* ---- Full-Screen Slate ---- */
+
+.slate {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(160deg, #060a0f 0%, #0c1520 50%, #091018 100%);
+  color: #f0f6fc;
+  font-family: 'Inter', 'Helvetica Neue', sans-serif;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ambientGlow {
+  position: absolute;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 700px;
+  height: 500px;
+  background: radial-gradient(ellipse at center, rgba(88, 166, 255, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Top Bar */
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 48px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.matchContext {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #8b949e;
+}
+
+.divider {
+  opacity: 0.3;
+}
+
+.tournamentLabel {
+  color: #58a6ff;
+}
+
+.formatLabel {
+  color: #f0f6fc;
+}
+
+.sponsorTag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: #8b949e;
+  text-transform: uppercase;
+}
+
+.sponsorTag strong {
+  color: #e3b341;
+}
+
+/* Score Canvas */
+.scoreCanvas {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 80px;
+  gap: 0;
+}
+
+.columnHeaders {
+  display: grid;
+  grid-template-columns: 1fr 120px 120px 120px 160px;
+  padding: 0 0 16px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.teamCol {}
+
+.scoreColHeader,
+.pointsColHeader {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #484f58;
+}
+
+.teamRow {
+  display: grid;
+  grid-template-columns: 1fr 120px 120px 120px 160px;
+  align-items: center;
+  padding: 36px 0;
+  transition: background 0.3s;
+  border-radius: 8px;
+}
+
+.leadingRow {
+  background: rgba(88, 166, 255, 0.04);
+}
+
+.teamInfo {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.serverDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #7ee787;
+  box-shadow: 0 0 12px #7ee787;
+  flex-shrink: 0;
+}
+
+.teamName {
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #f0f6fc;
+}
+
+.setScore {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #484f58;
+}
+
+.livePoints {
+  text-align: center;
+  font-size: 3.5rem;
+  font-weight: 900;
+  color: #58a6ff;
+  letter-spacing: -0.02em;
+}
+
+.rowSeparator {
+  height: 1px;
+  background: rgba(255,255,255,0.06);
+}
+
+/* Game Row */
+.gameRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 20px 0;
+  margin-top: 16px;
+}
+
+.gameLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #484f58;
+  text-transform: uppercase;
+}
+
+.gameCount {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #e3b341;
+}
+
+.gameSep {
+  color: #484f58;
+  font-size: 1rem;
+}
+
+/* Bottom Bar */
+.bottomBar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 20px 48px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  font-size: 0.75rem;
+  color: #484f58;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+.statusPill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(126, 231, 135, 0.1);
+  border: 1px solid rgba(126, 231, 135, 0.3);
+  padding: 4px 12px;
+  border-radius: 100px;
+  color: #7ee787;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+}
+
+.livePip {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #7ee787;
+  animation: pulse 2s infinite;
+  flex-shrink: 0;
+}
+
+.offlinePip {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f85149;
+  flex-shrink: 0;
+}
+
+.latency { color: #58a6ff; }
+.matchStatus { margin-left: auto; text-transform: uppercase; }
+
+.modeToggle {
+  background: none;
+  border: 1px solid #30363d;
+  color: #8b949e;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: inherit;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.modeToggle:hover {
+  border-color: #58a6ff;
+  color: #58a6ff;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ---- Scorebug Mode ---- */
+
+.scorebugWrapper {
+  position: fixed;
+  bottom: 48px;
+  left: 48px;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.scorebug {
+  background: rgba(6, 10, 15, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  min-width: 340px;
+}
+
+.scorebugRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+}
+
+.scorebugDivider {
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+}
+
+.bugTeam {
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #f0f6fc;
+}
+
+.bugScores {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.bugSets {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #8b949e;
+  width: 20px;
+  text-align: center;
+}
+
+.bugGames {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #8b949e;
+  width: 20px;
+  text-align: center;
+}
+
+.bugPoints {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #58a6ff;
+  width: 40px;
+  text-align: center;
+  display: block;
+}
+
+.bugMeta {
+  padding: 6px 20px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: #484f58;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

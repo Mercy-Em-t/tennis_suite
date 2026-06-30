@@ -1,0 +1,389 @@
+/* ============================================================
+   REFEREE MOBILE PWA STYLES
+   Sunlight-safe. High-contrast. Massive tap targets.
+   Designed for outdoor court conditions at arm's length.
+   ============================================================ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: #070b10;
+  color: #f0f6fc;
+  font-family: 'Inter', 'Helvetica Neue', sans-serif;
+  user-select: none;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ---- Status Bar ---- */
+.statusBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: #0d1117;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.courtLabel {
+  color: #8b949e;
+  text-transform: uppercase;
+}
+
+.networkPill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.networkPillOnline {
+  background: rgba(126, 231, 135, 0.1);
+  border: 1px solid rgba(126, 231, 135, 0.3);
+  color: #7ee787;
+}
+
+.networkPillOffline {
+  background: rgba(248, 81, 73, 0.12);
+  border: 1px solid rgba(248, 81, 73, 0.4);
+  color: #f85149;
+  animation: flashRed 2s infinite;
+}
+
+.networkPillSyncing {
+  background: rgba(227, 179, 65, 0.1);
+  border: 1px solid rgba(227, 179, 65, 0.3);
+  color: #e3b341;
+}
+
+.pip {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.pipPulse { animation: pulse 1.8s infinite; }
+
+.queueBadge {
+  background: #f85149;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+/* ---- Match Header ---- */
+.matchHeader {
+  padding: 16px 20px;
+  background: #0d1117;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+
+.matchTitle {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #f0f6fc;
+  margin: 0 0 6px 0;
+}
+
+.matchMeta {
+  font-size: 0.75rem;
+  color: #8b949e;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+/* ---- Match Status Flow ---- */
+.stateFlow {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 40px 24px;
+}
+
+.stateBadge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 6px 16px;
+  border-radius: 100px;
+}
+
+.badgeScheduled { background: rgba(139, 148, 158, 0.15); color: #8b949e; border: 1px solid rgba(139,148,158,0.3); }
+.badgeWarmup { background: rgba(227, 179, 65, 0.1); color: #e3b341; border: 1px solid rgba(227,179,65,0.3); }
+.badgeInProgress { background: rgba(126, 231, 135, 0.1); color: #7ee787; border: 1px solid rgba(126,231,135,0.3); }
+.badgeCompleted { background: rgba(88, 166, 255, 0.1); color: #58a6ff; border: 1px solid rgba(88,166,255,0.3); }
+
+.stateDescription {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #8b949e;
+  text-align: center;
+}
+
+.transitionButton {
+  background: #238636;
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  padding: 24px 48px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  width: 100%;
+  max-width: 380px;
+  transition: transform 0.1s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.transitionButton:active { transform: scale(0.97); background: #2ea043; }
+
+/* ---- Scoring Arena (IN_PROGRESS) ---- */
+.scoringArena {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Score display strip */
+.scoreStrip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 16px 20px;
+  background: #0d1117;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+
+.teamScoreBlock {
+  flex: 1;
+  text-align: center;
+}
+
+.teamLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #484f58;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.scoreDisplay {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #58a6ff;
+  line-height: 1;
+}
+
+.scoreMeta {
+  font-size: 0.65rem;
+  color: #484f58;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.scoreDivider {
+  width: 1px;
+  height: 60px;
+  background: rgba(255,255,255,0.08);
+  margin: 0 20px;
+  flex-shrink: 0;
+}
+
+.serverLabel {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #7ee787;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* Tap buttons — the primary scoring interface */
+.tapGrid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+.tapButton {
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 16px;
+  min-height: 200px;
+  -webkit-tap-highlight-color: transparent;
+  transition: filter 0.1s;
+  position: relative;
+  overflow: hidden;
+}
+
+.tapButtonA {
+  background: linear-gradient(160deg, #0d2010 0%, #0a1a0d 100%);
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+
+.tapButtonA:active { filter: brightness(1.4); }
+
+.tapButtonB {
+  background: linear-gradient(160deg, #0d1520 0%, #0a1018 100%);
+}
+
+.tapButtonB:active { filter: brightness(1.4); }
+
+.tapButtonDisabled {
+  opacity: 0.3;
+  pointer-events: none;
+  filter: grayscale(1);
+}
+
+.tapIcon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.tapTeamName {
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #f0f6fc;
+  text-align: center;
+}
+
+.tapHint {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: #484f58;
+  text-transform: uppercase;
+}
+
+.tapRipple {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: rgba(255, 255, 255, 0.04);
+  pointer-events: none;
+}
+
+/* ---- Action Footer ---- */
+.footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+
+.footerBtn {
+  background: #0d1117;
+  border: none;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  color: #8b949e;
+  padding: 18px 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.footerBtn:last-child { border-right: none; }
+.footerBtn:active { background: rgba(255,255,255,0.05); }
+
+.footerBtnDanger { color: #f85149; }
+.footerBtnDanger:active { background: rgba(248, 81, 73, 0.08); }
+
+.footerBtnServer { color: #7ee787; }
+.footerBtnServer:active { background: rgba(126, 231, 135, 0.05); }
+
+.footerIcon { font-size: 1.2rem; }
+
+/* ---- Completed State ---- */
+.completedView {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.completedTitle {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #7ee787;
+}
+
+.completedScore {
+  font-size: 1.2rem;
+  color: #8b949e;
+  font-weight: 600;
+}
+
+/* Sync notification */
+.syncToast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #161b22;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #7ee787;
+  z-index: 100;
+  white-space: nowrap;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes flashRed {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}

@@ -1,0 +1,117 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  /* Transparent background so it can be layered over an OBS video feed */
+  background-color: transparent;
+  color: var(--text-main);
+  padding: 48px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* The Cinematic Lower Third */
+.lowerThird {
+  position: absolute;
+  bottom: 48px;
+  left: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 400px;
+}
+
+.matchContext {
+  display: flex;
+  gap: 8px;
+}
+
+.scoreBug {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.teamRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.teamRow:last-child {
+  border-bottom: none;
+}
+
+.teamName {
+  font-weight: 700;
+  font-size: 1.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.serverDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+.scorePoints {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.sets, .games {
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  width: 24px;
+  text-align: center;
+}
+
+.points {
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: var(--accent);
+  width: 48px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+/* Sponsor Carousel */
+.sponsorBanner {
+  position: absolute;
+  top: 48px;
+  right: 48px;
+  background-color: var(--bg-glass);
+  backdrop-filter: blur(10px);
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.sponsorLogo {
+  color: var(--accent);
+  font-weight: 800;
+}

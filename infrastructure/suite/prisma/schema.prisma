@@ -1,0 +1,217 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email           String   @unique
+  role            String   @default("PLAYER") // HOST, REFEREE, MARSHALL, BROADCASTER, PLAYER
+  hasSignedWaiver Boolean  @default(false)
+  isMinor         Boolean  @default(false)
+  globalXp        Int      @default(0)
+  badges          String   @default("[]") // JSON string array of earned badges
+  createdAt       DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  teams           Team[]   @relation("TeamRoster")
+}
+
+model Tournament {
+  id          String   @id @default(cuid())
+  name        String
+  formatType  String   // e.g. 'Fast4', 'Standard'
+  isActive    Boolean  @default(false)
+  isArchived  Boolean  @default(false)
+  championId  String?  // Team ID of the winner
+  maxTeams    Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  clubId      String?
+  club        Club?    @relation(fields: [clubId], references: [id])
+  matches     Match[]
+  teams       Team[]
+  courts      Court[]
+  staff       Staff[]
+}
+
+model Team {
+  id             String      @id @default(cuid())
+  franchiseName  String
+  tournamentId   String
+  tournament     Tournament  @relation(fields: [tournamentId], references: [id])
+  logoUrl        String?
+  createdAt      DateTime    @default(now())
+  preOrders      PreOrder[]
+  matchesAsTeamA Match[]     @relation("TeamA")
+  matchesAsTeamB Match[]     @relation("TeamB")
+  players        User[]      @relation("TeamRoster")
+}
+
+model Match {
+  id           String      @id @default(cuid())
+  tournamentId String
+  tournament   Tournament  @relation(fields: [tournamentId], references: [id])
+  status       String      @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, DISPUTED, COMPLETED
+  
+  teamAId      String?
+  teamA        Team?       @relation("TeamA", fields: [teamAId], references: [id])
+  teamBId      String?
+  teamB        Team?       @relation("TeamB", fields: [teamBId], references: [id])
+  
+  scoreState   String      @default("{}") // JSON String: { setsA: 1, setsB: 0, gamesA: 4, pointsA: "AD" }
+  currentServer String?    // teamAId or teamBId
+  durationSec  Int         @default(0)
+  
+  nextMatchId  String?     // ID of the match the winner advances to
+  courtId      String?
+  court        Court?      @relation(fields: [courtId], references: [id])
+  pauseReason  String?     // e.g. "WEATHER_DELAY", "INJURY"
+  auditLogs    AuditLog[]
+  
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  
+  // Pillar 20: Offline-First Resilience
+  offlineVersion Int         @default(1)
+  lastSyncedAt   DateTime?
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  email     String
+  name      String?
+  service   String   // "ORGANIZER", "PLAYER", "BROADCASTER"
+  createdAt DateTime @default(now())
+}
+
+model Court {
+  id           String   @id @default(cuid())
+  name         String
+  courtType    String   @default("TENNIS_HARD") // e.g., PADEL, PICKLEBALL, TENNIS_CLAY
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  matches      Match[]
+}
+
+model Staff {
+  id           String   @id @default(cuid())
+  name         String
+  role         String   // "BALL_BOY", "CONCIERGE"
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  matchId   String
+  match     Match    @relation(fields: [matchId], references: [id])
+  action    String   // "SCORE_CORRECTED", "MATCH_PAUSED"
+  details   String
+  createdAt DateTime @default(now())
+}
+
+model Club {
+  id           String       @id @default(cuid())
+  name         String
+  subdomain    String       @unique // e.g. "countryclub"
+  primaryColor String       @default("#22d3ee")
+  logoUrl      String?
+  tournaments  Tournament[]
+  createdAt    DateTime     @default(now())
+}
+
+model PreOrder {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id])
+  itemName  String
+  size      String
+  quantity  Int
+  createdAt DateTime @default(now())
+}
+
+model PlayerStat {
+  id             String   @id @default(cuid())
+  playerId       String   
+  matchId        String
+  aces           Int      @default(0)
+  doubleFaults   Int      @default(0)
+  unforcedErrors Int      @default(0)
+  winners        Int      @default(0)
+  createdAt      DateTime @default(now())
+}
+
+model FanPrediction {
+  id                String   @id @default(cuid())
+  fanEmail          String
+  tournamentId      String
+  predictedWinnerId String // Team ID
+  createdAt         DateTime @default(now())
+}
+
+model RainmakerFee {
+  id          String   @id @default(cuid())
+  brokerName  String
+  dealAmount  Int
+  feePercent  Float
+  payoutAmount Int
+  createdAt   DateTime @default(now())
+}
+
+model PartnerPayout {
+  id          String   @id @default(cuid())
+  partnerName String
+  service     String   // e.g. "VIDEOGRAPHY"
+  amountOwed  Int
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+}
+
+model SponsorROI {
+  id              String   @id @default(cuid())
+  sponsorName     String
+  tournamentId    String
+  impressions     Int      @default(0)
+  clickThroughs   Int      @default(0)
+  createdAt       DateTime @default(now())
+}
+
+model Equipment {
+  id           String   @id @default(cuid())
+  itemName     String   // e.g. "Camera A", "Shotgun Mic"
+  checkedOutBy String?  // Staff ID or Name
+  status       String   @default("AVAILABLE") // AVAILABLE, IN_USE, MAINTENANCE
+  createdAt    DateTime @default(now())
+}
+
+model BallCan {
+  id           String   @id @default(cuid())
+  brand        String
+  setsPlayed   Int      @default(0)
+  status       String   @default("NEW") // NEW, IN_PLAY, RETIRED
+  createdAt    DateTime @default(now())
+}
+
+model FreeAgent {
+  id           String   @id @default(cuid())
+  userId       String
+  tournamentId String
+  skillLevel   Float    // e.g., UTR 4.5
+  playstyle    String   // e.g., "Baseline Defender", "Net Rusher"
+  status       String   @default("AVAILABLE") // AVAILABLE, DRAFTED
+  createdAt    DateTime @default(now())
+}
+
+model IncidentReport {
+  id           String   @id @default(cuid())
+  matchId      String
+  reportedBy   String   // Referee ID
+  incidentType String   // MEDICAL, CODE_VIOLATION, DISPUTE
+  description  String
+  createdAt    DateTime @default(now())
+}

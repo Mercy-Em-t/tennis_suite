@@ -1,0 +1,138 @@
+.container {
+  padding: 40px;
+  background-color: #0d1117;
+  color: #c9d1d9;
+  min-height: 100vh;
+  font-family: monospace;
+}
+
+.header {
+  border-bottom: 1px solid #30363d;
+  padding-bottom: 20px;
+  margin-bottom: 40px;
+}
+
+.title {
+  color: #58a6ff;
+  font-size: 2rem;
+  margin: 0 0 10px 0;
+}
+
+.subtitle {
+  color: #8b949e;
+  margin: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 24px;
+}
+
+.panel {
+  background-color: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panelTitle {
+  color: #f0f6fc;
+  font-size: 1.25rem;
+  margin: 0;
+  border-left: 4px solid #238636;
+  padding-left: 12px;
+}
+
+.controlGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.controlGroup label {
+  color: #8b949e;
+  font-size: 0.9rem;
+}
+
+.button {
+  background-color: #238636;
+  color: #ffffff;
+  border: 1px solid rgba(240, 246, 252, 0.1);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+  font-family: inherit;
+}
+
+.button:hover {
+  background-color: #2ea043;
+}
+
+.buttonSecondary {
+  background-color: #21262d;
+  color: #c9d1d9;
+  border: 1px solid #30363d;
+}
+
+.buttonSecondary:hover {
+  background-color: #30363d;
+}
+
+.buttonDanger {
+  background-color: #da3633;
+  color: #ffffff;
+}
+
+.buttonDanger:hover {
+  background-color: #f85149;
+}
+
+.console {
+  background-color: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 0.85rem;
+  color: #7ee787;
+  min-height: 100px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.consoleError {
+  color: #ff7b72;
+}
+
+.metrics {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.metricBox {
+  background-color: #21262d;
+  border: 1px solid #30363d;
+  padding: 12px;
+  border-radius: 6px;
+  flex: 1;
+  text-align: center;
+}
+
+.metricValue {
+  font-size: 1.5rem;
+  color: #79c0ff;
+  font-weight: bold;
+}
+
+.metricLabel {
+  font-size: 0.75rem;
+  color: #8b949e;
+  text-transform: uppercase;
+}

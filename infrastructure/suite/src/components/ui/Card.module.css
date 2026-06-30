@@ -1,0 +1,24 @@
+.card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 24px;
+  color: var(--text-main);
+  transition: all 0.3s ease;
+}
+
+.glass {
+  background-color: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.hoverable {
+  cursor: pointer;
+}
+
+.hoverable:hover {
+  border-color: var(--card-border-hover);
+}
