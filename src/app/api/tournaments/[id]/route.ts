@@ -1,8 +1,9 @@
+import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+
 import { verifyToken } from '@/lib/auth';
 
-const prisma = new PrismaClient();
+
 
 export async function GET(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
@@ -29,7 +30,15 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
           }
         },
         teams: true,
-        courts: true,
+        courts: {
+          include: { referee: true, marshall: true }
+        },
+        staff: {
+          include: { user: true }
+        },
+        pools: {
+          include: { poolTeams: { include: { team: true } } }
+        }
       }
     });
 

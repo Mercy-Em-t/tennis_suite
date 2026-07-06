@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { motion } from 'framer-motion';
+import styles from '../../landing.module.css';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { DynamicButton } from '@/components/ui/DynamicButton';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -28,58 +29,77 @@ export default function LoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Login failed');
 
-      // The middleware will automatically redirect us on the next reload
-      // or we can push to root, which will then redirect
       window.location.href = '/';
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Login failed');
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0d1117' }}>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-        <Card style={{ padding: '2rem', width: '400px', background: '#161b22', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '1.5rem', color: '#f0f6fc', textAlign: 'center' }}>Login to Suite</h1>
-          
-          {error && (
-            <div style={{ background: 'rgba(248, 81, 73, 0.1)', color: '#f85149', padding: '0.75rem', borderRadius: '6px', marginBottom: '1rem', fontSize: '0.875rem', border: '1px solid rgba(248,81,73,0.3)' }}>
-              {error}
-            </div>
-          )}
+    <div className={styles.page}>
+      {/* ── Navbar ── */}
+      <nav className={styles.navbar}>
+        <div className={styles.brand} onClick={() => router.push('/')} style={{ cursor: 'pointer' }}>
+          <span className={styles.brandDot} />
+          Tennis <span className={styles.brandAccent}>Suite</span>
+        </div>
+      </nav>
 
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.875rem', color: '#8b949e', marginBottom: '0.5rem' }}>Email</label>
-              <input 
-                type="email" 
-                value={email} 
-                onChange={e => setEmail(e.target.value)}
-                style={{ width: '100%', padding: '0.75rem', background: '#0d1117', border: '1px solid #30363d', borderRadius: '6px', color: '#f0f6fc', outline: 'none' }}
-                required 
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.875rem', color: '#8b949e', marginBottom: '0.5rem' }}>Password</label>
-              <input 
-                type="password" 
-                value={password} 
-                onChange={e => setPassword(e.target.value)}
-                style={{ width: '100%', padding: '0.75rem', background: '#0d1117', border: '1px solid #30363d', borderRadius: '6px', color: '#f0f6fc', outline: 'none' }}
-                required 
-              />
-            </div>
-            <Button type="submit" style={{ marginTop: '1rem' }} disabled={loading}>
-              {loading ? 'Authenticating...' : 'Enter Walled Garden'}
-            </Button>
-          </form>
+      {/* ── Login Container ── */}
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '120px 24px', position: 'relative' }}>
+        <div className={styles.heroBg} />
+        <div className={styles.heroGlow} />
 
-          <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.875rem', color: '#8b949e' }}>
-            Don't have a franchise? <a href="/register" style={{ color: '#58a6ff', textDecoration: 'none' }}>Register Here</a>
-          </p>
-        </Card>
-      </motion.div>
+        <div style={{ maxWidth: '420px', width: '100%', position: 'relative', zIndex: 2 }}>
+          <GlassCard style={{ minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+            >
+              <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px', textAlign: 'center' }}>Login to Suite</h1>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: '0.95rem', textAlign: 'center' }}>
+                Secure access to your walled garden.
+              </p>
+
+              <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
+                {error && (
+                  <div style={{ background: 'rgba(248, 81, 73, 0.1)', color: 'var(--danger)', padding: '12px', borderRadius: '6px', fontSize: '0.875rem', border: '1px solid rgba(248,81,73,0.3)', textAlign: 'center' }}>
+                    {error}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Email</label>
+                  <input className={styles.inputField} type="email" required value={email} onChange={e => setEmail(e.target.value)} />
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Password</label>
+                  <input className={styles.inputField} type="password" required value={password} onChange={e => setPassword(e.target.value)} />
+                </div>
+
+                <div style={{ marginTop: 'auto', paddingTop: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <DynamicButton type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center', opacity: loading ? 0.7 : 1 }}>
+                    {loading ? 'Authenticating...' : 'Log In'}
+                  </DynamicButton>
+                  
+                  <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>
+                      Don't have an account? <a href="/register" style={{ color: 'var(--accent)', textDecoration: 'none' }}>Register as a Player</a>
+                    </p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>
+                      Want to host a tournament? <a href="/host-onboarding" style={{ color: 'var(--success)', textDecoration: 'none' }}>Become an Organizer</a>
+                    </p>
+                  </div>
+                </div>
+              </form>
+            </motion.div>
+          </GlassCard>
+        </div>
+      </main>
     </div>
   );
 }

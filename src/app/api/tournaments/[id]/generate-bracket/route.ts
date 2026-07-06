@@ -1,11 +1,31 @@
+import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+import { requireTournamentAccess } from '@/lib/auth/require-auth';
+import { logger } from '@/lib/logger';
+
+
 
 export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
     const params = await props.params;
+    
+    // Allow global Host or approved Tournament Referee to generate bracket
+    const authResult = await requireTournamentAccess(params.id, ['REFEREE']);
+    if (authResult instanceof NextResponse) return authResult;
+
+    // 0. Pre-flight Validation: Ensure ALL matches are COMPLETED
+    const uncompletedMatches = await prisma.match.count({
+      where: {
+        tournamentId: params.id,
+        status: { not: 'COMPLETED' }
+      }
+    });
+
+    if (uncompletedMatches > 0) {
+      return NextResponse.json({ error: 'All pool matches must be COMPLETED before generating the bracket.' }, { status: 400 });
+    }
+
     // 1. Fetch completed matches to determine standings
     const matches = await prisma.match.findMany({
       where: {

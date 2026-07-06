@@ -336,6 +336,9 @@
 
 .footerIcon { font-size: 1.2rem; }
 
+.footerBtnUndo { color: #8b949e; }
+.footerBtnUndo:active { background: rgba(255,255,255,0.04); }
+
 /* ---- Completed State ---- */
 .completedView {
   flex: 1;
@@ -343,21 +346,46 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 24px;
   padding: 40px 24px;
   text-align: center;
+  background: radial-gradient(ellipse 60% 40% at 50% 40%, rgba(126,231,135,0.06), transparent);
+}
+
+.celebrationEmoji {
+  font-size: 4rem;
+  animation: celebBounce 0.6s ease-out;
 }
 
 .completedTitle {
   font-size: 2rem;
   font-weight: 900;
   color: #7ee787;
+  letter-spacing: -0.03em;
 }
 
 .completedScore {
-  font-size: 1.2rem;
-  color: #8b949e;
-  font-weight: 600;
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #f0f6fc;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.completedScoreLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #484f58;
+  margin-top: -16px;
+}
+
+.completedNote {
+  font-size: 0.82rem;
+  color: #484f58;
+  line-height: 1.5;
+  max-width: 260px;
 }
 
 /* Sync notification */
@@ -386,4 +414,10 @@
 @keyframes flashRed {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
+}
+
+@keyframes celebBounce {
+  0%   { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+  60%  { transform: scale(1.2) rotate(5deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }

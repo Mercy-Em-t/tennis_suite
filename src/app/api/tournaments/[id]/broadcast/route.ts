@@ -1,8 +1,9 @@
+import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+
 import { verifyToken } from '@/lib/auth';
 
-const prisma = new PrismaClient();
+
 
 export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
   try {

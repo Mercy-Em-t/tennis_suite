@@ -1,4 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
+
 
 /**
  * Pillar 5: The Broadcaster & Cinematic Interface
@@ -16,7 +17,7 @@ import { PrismaClient } from '@prisma/client';
 // We poll our own /api/broadcast/latest at a high cadence and push on change.
 export const dynamic = 'force-dynamic';
 
-const prisma = new PrismaClient();
+
 
 export async function GET(request: Request) {
   const encoder = new TextEncoder();

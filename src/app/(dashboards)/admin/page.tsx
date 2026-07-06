@@ -2,10 +2,12 @@
 
 import React, { useState } from 'react';
 import useSWR from 'swr';
-import { Card } from '@/components/ui/Card';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { useRouter } from 'next/navigation';
+import TournamentFactory from '@/components/tennis/TournamentFactory';
+import styles from './admin.module.css';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -13,107 +15,162 @@ export default function GlobalHostDashboard() {
   const router = useRouter();
   const { data, error, mutate } = useSWR('/api/tournaments', fetcher);
   const [isCreating, setIsCreating] = useState(false);
-  const [formData, setFormData] = useState({ name: '', formatType: 'FAST4_ROUND_ROBIN', maxTeams: '16', poolSize: '4', courts: '' });
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const payload = {
-      ...formData,
-      courts: formData.courts.split(',').map(c => c.trim()).filter(Boolean)
-    };
-    const res = await fetch('/api/tournaments', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (res.ok) {
-      const data = await res.json();
-      router.push(`/tournaments/${data.tournament.id}`);
-    }
-  };
+  if (!data && !error) {
+    return <div className={styles.loadingState}>Loading Host Command...</div>;
+  }
 
-  if (!data && !error) return <div style={{ padding: '48px', color: '#8b949e' }}>Loading Host Command...</div>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tournaments: any[] = data?.tournaments ?? [];
+  const activeCount  = tournaments.filter((t: any) => t.isActive).length;
+  const totalTeams   = tournaments.reduce((acc: number, t: any) => acc + (t._count?.teams ?? 0), 0);
+  const totalMatches = tournaments.reduce((acc: number, t: any) => acc + (t._count?.matches ?? 0), 0);
 
   return (
-    <div style={{ padding: '48px', color: '#f0f6fc', background: '#0d1117', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '24px', marginBottom: '32px' }}>
-        <div>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 900, margin: 0 }}>Host Control Center</h1>
-          <p style={{ color: '#8b949e', marginTop: '8px', fontSize: '1.1rem' }}>Manage your localized operations</p>
+    <div className={styles.page}>
+
+      {/* ── Header ── */}
+      <header className={styles.header}>
+        <div className={styles.headerLeft}>
+          <h1 className={styles.pageTitle}>Host Control Center</h1>
+          <p className={styles.pageSubtitle}>Manage your localized operations</p>
         </div>
-        <Button onClick={() => setIsCreating(!isCreating)} variant="primary">
-          {isCreating ? 'Cancel' : '+ New Tournament'}
-        </Button>
+        <div className={styles.headerActions}>
+          <a className={styles.validationLink} href="/validation">
+            Validation Sandbox ↗
+          </a>
+          <Button
+            variant="primary"
+            onClick={() => setIsCreating(v => !v)}
+          >
+            {isCreating ? 'Cancel' : '+ New Tournament'}
+          </Button>
+        </div>
       </header>
 
-      {isCreating && (
-        <Card style={{ background: '#161b22', border: '1px solid #58a6ff', padding: '24px', marginBottom: '32px' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '16px' }}>Initialize New Tournament</h2>
-          <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'flex', gap: '16px' }}>
-              <div style={{ flex: 2 }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#8b949e' }}>Tournament Name</label>
-                <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="e.g. Purely Doubles Spring 2026" style={{ width: '100%', padding: '12px', background: '#0d1117', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '6px' }} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#8b949e' }}>Format</label>
-                <select value={formData.formatType} onChange={e => setFormData({...formData, formatType: e.target.value})} style={{ width: '100%', padding: '12px', background: '#0d1117', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '6px' }}>
-                  <option value="Standard">Standard</option>
-                  <option value="FAST4_ROUND_ROBIN">Fast4 Round Robin</option>
-                  <option value="Knockout">Knockout</option>
-                </select>
-              </div>
-            </div>
-            
-            <div style={{ display: 'flex', gap: '16px' }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#8b949e' }}>Max Capacity</label>
-                <input type="number" value={formData.maxTeams} onChange={e => setFormData({...formData, maxTeams: e.target.value})} style={{ width: '100%', padding: '12px', background: '#0d1117', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '6px' }} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#8b949e' }}>Pool Size</label>
-                <input type="number" value={formData.poolSize} onChange={e => setFormData({...formData, poolSize: e.target.value})} style={{ width: '100%', padding: '12px', background: '#0d1117', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '6px' }} />
-              </div>
-              <div style={{ flex: 2 }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#8b949e' }}>Courts (Comma-separated)</label>
-                <input value={formData.courts} onChange={e => setFormData({...formData, courts: e.target.value})} placeholder="Court 1, Court 2, Centre Court" style={{ width: '100%', padding: '12px', background: '#0d1117', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '6px' }} />
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
-              <Button type="submit" variant="success">Initialize Database Segment</Button>
-            </div>
-          </form>
-        </Card>
-      )}
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px' }}>
-        {data?.tournaments?.map((t: any) => (
-          <Card key={t.id} style={{ background: '#161b22', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'border 0.2s ease' }} onClick={() => router.push(`/tournaments/${t.id}`)}>
-            <div style={{ padding: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                {t.isActive ? <Badge variant="success">PUBLISHED</Badge> : <Badge variant="warning">DRAFT</Badge>}
-                <span style={{ color: '#8b949e', fontSize: '0.9rem' }}>{t.formatType}</span>
-              </div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '8px' }}>{t.name}</h2>
-              
-              <div style={{ display: 'flex', gap: '24px', marginTop: '24px' }}>
-                <div>
-                  <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 700 }}>{t._count.teams} / {t.maxTeams}</span>
-                  <span style={{ fontSize: '0.8rem', color: '#8b949e', textTransform: 'uppercase' }}>Franchises</span>
-                </div>
-                <div>
-                  <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 700 }}>{t._count.matches}</span>
-                  <span style={{ fontSize: '0.8rem', color: '#8b949e', textTransform: 'uppercase' }}>Matches</span>
-                </div>
-              </div>
-            </div>
-          </Card>
-        ))}
-        {data?.tournaments?.length === 0 && (
-          <div style={{ color: '#8b949e' }}>No tournaments created yet.</div>
-        )}
+      {/* ── Stat Bar ── */}
+      <div className={styles.statBar}>
+        <div className={styles.statCell}>
+          <div className={styles.statIcon}>🏆</div>
+          <div className={styles.statInfo}>
+            <span className={styles.statNum}>{activeCount}</span>
+            <span className={styles.statDesc}>Active Tournaments</span>
+          </div>
+        </div>
+        <div className={styles.statCell}>
+          <div className={styles.statIcon}>👥</div>
+          <div className={styles.statInfo}>
+            <span className={styles.statNum}>{totalTeams}</span>
+            <span className={styles.statDesc}>Registered Franchises</span>
+          </div>
+        </div>
+        <div className={styles.statCell}>
+          <div className={styles.statIcon}>🎾</div>
+          <div className={styles.statInfo}>
+            <span className={styles.statNum}>{totalMatches}</span>
+            <span className={styles.statDesc}>Total Matches</span>
+          </div>
+        </div>
       </div>
+
+      {/* ── Create Tournament Wizard ── */}
+      <AnimatePresence>
+        {isCreating && (
+          <TournamentFactory onClose={() => setIsCreating(false)} />
+        )}
+      </AnimatePresence>
+
+      {/* ── Tournament Grid ── */}
+      <div className={styles.sectionHeader}>
+        <h2 className={styles.sectionTitle}>Your Tournaments</h2>
+      </div>
+
+      <div className={styles.tournamentGrid}>
+        {tournaments.length === 0 && (
+          <div className={styles.emptyState}>
+            <div className={styles.emptyIcon}>🏟️</div>
+            <h3 className={styles.emptyTitle}>No active tournament</h3>
+            <p className={styles.emptyDesc}>
+              You do not have any active tournaments. Click <strong>+ New Tournament</strong> above to create a new tournament.
+            </p>
+            <Button variant="primary" onClick={() => setIsCreating(true)}>
+              Create Tournament
+            </Button>
+          </div>
+        )}
+
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        {tournaments.map((t: any, i: number) => {
+          const fillPct = t.maxTeams > 0
+            ? Math.round(((t._count?.teams ?? 0) / t.maxTeams) * 100)
+            : 0;
+
+          return (
+            <motion.div
+              key={t.id}
+              className={styles.tournamentCard}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: i * 0.07 }}
+            >
+              <div className={styles.cardBody}>
+                <div className={styles.cardTopRow}>
+                  {t.isArchived ? (
+                    <Badge variant="secondary">Past</Badge>
+                  ) : t.isActive ? (
+                    <Badge variant="success">Active</Badge>
+                  ) : (
+                    <Badge variant="warning">Draft</Badge>
+                  )}
+                  <span className={styles.formatChip}>{t.formatType}</span>
+                </div>
+
+                <h2 className={styles.tournamentName}>{t.name}</h2>
+
+                {/* Fill bar */}
+                <div className={styles.fillBarSection}>
+                  <div className={styles.fillBarLabel}>
+                    <span className={styles.fillBarText}>Franchises</span>
+                    <span className={styles.fillBarCount}>
+                      {t._count?.teams ?? 0} / {t.maxTeams}
+                    </span>
+                  </div>
+                  <div className={styles.fillBarTrack}>
+                    <div
+                      className={styles.fillBarFill}
+                      style={{ width: `${fillPct}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className={styles.cardStats}>
+                  <div className={styles.cardStat}>
+                    <span className={styles.cardStatValue}>{t._count?.matches ?? 0}</span>
+                    <span className={styles.cardStatLabel}>Matches</span>
+                  </div>
+                  {t._count?.courts !== undefined && (
+                    <div className={styles.cardStat}>
+                      <span className={styles.cardStatValue}>{t._count.courts}</span>
+                      <span className={styles.cardStatLabel}>Courts</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className={styles.cardFooter}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push(`/tournaments/${t.id}`)}
+                >
+                  Manage →
+                </Button>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
     </div>
   );
 }

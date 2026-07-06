@@ -1,0 +1,47 @@
+# Sprint 8: OSI Architecture Alignment & Modularization Implementation Plan
+
+## Overview
+This sprint focuses on refactoring the current platform codebase to align with the OSI (Open Systems Interconnection) reference framework. The goal is to modularize the system (specifically chat, game logic, auth, and WebSockets) into distinct layers to improve message reliability, streamline troubleshooting, and enforce strict boundaries.
+
+## Open Questions
+> [!IMPORTANT]
+> 1. Where should the OSI layer modules (`ApplicationModule`, `SessionModule`, `TransportModule`) be placed within the project directory structure? (e.g., `src/lib/osi/`, `src/modules/`, or leave them in their current domain folders?)
+> 2. What files exactly contain the existing chat, game logic, auth, and WebSocket handlers that we need to refactor into these layers?
+
+## Proposed Implementation Plan
+
+### Phase 1: Setup & Documentation Initialization
+Initialize the required sprint tracking documents inside the `sprint_8` directory. These will be maintained continuously throughout the sprint.
+- Create `documentation.md` (for the Technical Specification Document and Architecture Mapping).
+- Create `tasklist.md` (to track granular tasks).
+- Create `log.md` (to log every code change with the OSI Layer targeted).
+- Create `backlog.md`.
+
+#### [NEW] [documentation.md](file:///d:/TENNIS%20SUITE/sprint_8/documentation.md)
+#### [NEW] [tasklist.md](file:///d:/TENNIS%20SUITE/sprint_8/tasklist.md)
+#### [NEW] [log.md](file:///d:/TENNIS%20SUITE/sprint_8/log.md)
+#### [NEW] [backlog.md](file:///d:/TENNIS%20SUITE/sprint_8/backlog.md)
+
+### Phase 2: Audit & Mapping
+- **Audit**: Identify all existing functions handling chat, game logic, session validation, and WebSockets/WebRTC.
+- **Mapping**: Map these functions to L7 (Application), L5 (Session), L4 (Transport), or L3 (Network).
+- **Document**: Write down the Technical Specification mapping in `documentation.md`.
+
+### Phase 3: Modular Refactoring
+Refactor the codebase to separate logic into strict layer-specific modules. A module must not contain code belonging to a non-adjacent layer.
+- **ApplicationModule (L7)**: User interface, message content formatting, payload identification.
+- **SessionModule (L5)**: Session token validity, user-to-user association. Must NOT handle TCP/WebSocket logic; only passes payloads to L4.
+- **TransportModule (L4)**: Packet loss, flow control, TCP/socket error handling (e.g., WebSocket service).
+
+### Phase 4: Encapsulation & Standardization
+- **Message Structure**: Implement a standard header + payload object for all messages: `{ header: {sender_id, session_id, timestamp}, payload: {data} }`.
+- **Inter-Layer API (`transmit_message`)**: Define strict interfaces for inter-layer communication with `on_success` and `on_failure` callbacks.
+- **Standardized Error Codes**: Integrate codes like `ERR_SESSION_EXPIRED`, `ERR_TRANSPORT_TIMEOUT`, `ERR_TRANSPORT_LOST`, `ERR_SESSION_MISMATCH`, and `ERR_PAYLOAD_MALFORMED`.
+- **Error Bubbling**: Ensure the Error Handling Loop allows L4 errors to bubble up to L7 for UI alerts.
+
+### Phase 5: Verification & Handover
+- **Layer Check Exercise**: Conduct the troubleshooting scenario ("UI shows 'sent' but message is not received") and log it in the Troubleshooting Log.
+- **UI Error Feedback**: Verify that the Application Layer UI properly displays specific error messages based on bubbled-up error codes instead of generic "failed" messages.
+
+## Next Steps
+Once this plan is approved, I will begin by executing Phase 1 (creating the tracking files) and Phase 2 (auditing the existing codebase to map the OSI layers).

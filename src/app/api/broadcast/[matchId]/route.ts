@@ -1,7 +1,8 @@
+import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 
-const prisma = new PrismaClient()
+
+
 
 export interface LiveTelemetry {
   matchStatus: string;
@@ -36,7 +37,7 @@ export async function GET(request: Request, context: { params: Promise<{ matchId
     return NextResponse.json({ error: 'Match not found' }, { status: 404 })
   }
 
-  let parsedScore = { gamesA: 0, gamesB: 0 };
+  const parsedScore = { gamesA: 0, gamesB: 0 };
   try {
     const s = JSON.parse(match.scoreState);
     parsedScore.gamesA = s.gamesA || 0;

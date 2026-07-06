@@ -1,7 +1,8 @@
+import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
+
 
 /**
  * Pillar 27: Internal Revenue Splits & Co-op Distribution

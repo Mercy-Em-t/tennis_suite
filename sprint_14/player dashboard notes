@@ -1,0 +1,203 @@
+so once the player is successfully authenticated and they land on player dashboard.
+
+they land on the player dashboard. 
+sections 
+my tournamnets - current/registered and past tournamnets the player has registered for. it should also show the current status of the tournamnet. if its past tournament it should show a link to the tournament broadcast page(on this section to prevent bloat prioritise the current tournaments. the past ones can be under a view all link that directs the player to a comprehensive list of all their tournamnets past, present, upcoming ones that thy registered for. you can have the page have filter for all tournmnets, current, upcoming, paast. here you list he names of the tournamnets. the names will be clickable links)
+uupcoming or discover tournamnets - it should show all the tournamnets that are currently open for registration. 
+user settings - user profile
+notifications(global notification centre)
+
+
+
+so under my tournamnet section show tournamnet cards which when clicked take the user to the tournamnet home or hub
+
+within the tournamnet hub we should have the following
+- a tournamnet should have a home page i think. where you see its details, format, rules, contact in case of anything, a list of tournamnet odfficials, stations to get water, first aid , sponsor logos, prize money details etc
+- check in. players can check in and let the tournament official know that they are on ground.
+- live score - if available--or rather an order of play. 
+or a section allowing them to go to the broadcast page. 
+
+specific to player
+
+%% Within Tournament Hub
+    TournamentHome --> MatchHub[Match Hub - Current Match]- match schedule  - show a list of all matches the player has. first we can only show the pool matches if player is in pool stage of tournament
+matches schedule can be filterable under all matches, scheduled, ready to play, played
+
+    TournamentHome --> DrawsPools[Draws & Pools]--- players can see their draws and pools. and are filterable by category and stages
+    TournamentHome --> Performance[Performance / Analytics]-- player performance metrics and analytics
+    TournamentHome --> Social[Social Assets / Highlights]-- links to social media assets and highlights
+
+%% Nested Views
+    DrawsPools --> CategoryTabs[Category Selector Tabs]
+    CategoryTabs --> OverallDraw[Overall Draw - Interactive SVG]
+    CategoryTabs --> MyPool[My Pool - Data Table]
+
+    %% Play6ump Logic ----will only be visile on player ui when the referee assigns this role
+    MatchHub -- Assignment Trigger --> UmpireMode[Umpire Mode Overlay]
+    UmpireMode --> Scoring[Scoring / Undo Controls]
+    UmpireMode --> RefCall[Emergency Referee Call]
+
+
+    more details. in match hub. we have a list of matches. the player can click on a match card to narrow down into the specific matchs details. allowing them to see the match, the opponent the court. basically a more detailed version of the match that will be abstracted while it has been listed out. 
+
+    UI/UX Node Implementation Details
+To ensure a seamless experience as you transition into development, keep these interaction principles in mind for each node:
+
+Global Dashboard (The Landing):
+
+
+Tournament Cards: Acts as the entry point. Each card displays high-level metadata: Status, Next Match, and Participation count.
+
+
+Visual Logic: Uses glassmorphism for an elite aesthetic, distinguishing between "Active" and "Past" events.
+
+Tournament Hub (The Deep-Dive):
+
+
+Contextual State: Once a card is clicked, the UI routes the user to the specific tournament hub.
+
+
+Match Hub: Employs a state machine to switch between "Awaiting," "Ready," and "Completed" states.
+
+Draws & Pools (The Hierarchy):
+
+
+Multi-Category Navigation: Uses a two-tier tab structure. The primary row handles the Category, and the secondary row handles the "Overall Draw" vs. "My Pool" toggle.
+
+Play6ump Mode (The Adaptive Layer):
+
+This is a dynamic override triggered by the Referee's assignment.
+
+The UI must provide a high-contrast transition—a "Umpire Yellow" border—to prevent users from confusing personal player stats with active scoring inputs.
+
+This node-based structure effectively decouples the user's permanent profile from their temporary team assignments, ensuring that the interface remains clean regardless of how many tournaments or categories they join.
+
+additonal documentation
+This is a highly optimized, professional-grade architecture for the Player Dashboard. By formalizing these requirements, you have created a clear blueprint that bridges the gap between high-level user goals and granular interface implementation.
+
+Below is the consolidated **Player Dashboard UI Specification**, incorporating the "My Tournaments" filter logic, the "Tournament Home" depth, and the "Play6ump" adaptive layer.
+
+---
+
+### 1. The Global Dashboard (Entry Logic)
+
+Upon successful authentication, the player lands on the **Global Dashboard**, acting as the primary navigation hub.
+
+* **My Tournaments Section:**
+* 
+**Priority View:** Displays active/current tournament cards in a grid using dark-mode glassmorphism.
+
+
+* 
+**"View All" Link:** A secondary link to a dedicated "My Tournaments History" page.
+
+
+* 
+**Filters:** All, Current, Upcoming, Past.
+
+
+* 
+**Interaction:** Tournament names are active links to the "Tournament Home" for that specific event.
+
+
+
+
+
+
+* 
+**Upcoming/Discover Section:** A horizontal scroller of open-registration tournaments.
+
+
+* 
+**Global Elements:** Persistent User Settings (Profile) and a Global Notification Center ("Bell" icon) for match alerts/umpire assignments.
+
+
+
+---
+
+### 2. The Tournament Home (Contextual Hub)
+
+Clicking a Tournament Card routes the player to the **Tournament Home**, an immersive environment containing:
+
+* 
+**Tournament Info Home:** Static details including format, rules, contact directory, official lists, station locations (water/first aid), and sponsor branding.
+
+
+* 
+**Check-In System:** A manual trigger for players to confirm their presence at the venue.
+
+
+* 
+**Live Score/Order of Play:** Real-time visibility into the current schedule or a direct gateway to the broadcast page.
+
+
+
+---
+
+### 3. Deep-Dive: Match & Competition Domains
+
+Inside the Tournament Home, the player navigates four distinct domains:
+
+| Domain | Key UI Features | Logic/State |
+| --- | --- | --- |
+| **Match Hub** | List of all matches (filtered: All, Scheduled, Ready, Played).
+
+ | Click card to open **Match Detail View** (Opponent, Court, Format).
+
+ |
+| **Draws & Pools** | Multi-category tabbed navigation; switch between "Overall Draw" (SVG) and "My Pool" (Data).
+
+ | My Pool filters to show only the user's specific pool.
+
+ |
+| **Performance** | Career/Tournament stats, win/loss trends, and match history.
+
+ | Data-driven visualization of improvement.
+
+ |
+| **Social** | Highlight Library and one-click social sharing cards.
+
+ | Exposure & Identity building.
+
+ |
+
+---
+
+### 4. The Adaptive "Play6ump" Layer
+
+This is a high-priority, context-aware interface transition.
+
+* 
+**Trigger:** The Referee assigns a user as an Umpire via the Command Center.
+
+
+* **Interface Transition:**
+* The UI shifts to an "Umpire Mode" overlay, identified by a **"Umpire Yellow" high-contrast border**.
+
+
+* 
+**Scoring Controls:** Large touch-targets for point increments and a prominent "Undo Last Point" button.
+
+
+* 
+**Emergency Controls:** A dedicated "Call Referee" button.
+
+
+
+
+* 
+**Reversion:** Once the match is marked as `FINALIZED` by the referee, the dashboard automatically reverts to the standard Player View.
+
+
+
+---
+
+### 5. Implementation Summary
+
+This design successfully treats the **Player** as a permanent entity and the **Team** as a temporary, contextual unit. This allows the player to seamlessly toggle between categories and roles (Player vs. Umpire) within the same, uncluttered dashboard environment.
+
+**Next Steps for Engineering:**
+Now that the UI nodes and user flow are fully defined, shall we:
+
+1. **Develop the API schema** to map these specific frontend components to the backend database (e.g., `GET /api/user/tournaments`), OR
+2. **Draft the functional "Ready-to-Play" notification flow** to ensure players never miss a match start?

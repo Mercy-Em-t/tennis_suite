@@ -1,6 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
+
+
 
 /**
  * Pillar 23: Post-Event Archive & Legacy Engine
@@ -21,7 +22,7 @@ export async function generateLegacyArchive(tournamentId: string) {
   if (!tournament) return null;
 
   // Assuming the last completed match was the Final
-  const finalMatch = tournament.matches[0];
+  const _finalMatch = tournament.matches[0]; // retained for reference; champion derived from championId
   const championTeamId = tournament.championId || null; // derived at end of match
 
   // Mark as archived

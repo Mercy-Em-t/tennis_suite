@@ -1,0 +1,21 @@
+# Player Command Center: "Pro Experience" Deployed
+
+We have successfully overhauled the Player Command Center to transform it from a functional MVP into an immersive Engagement Engine. 
+
+## 1. The Match Hub (Logistics & Readiness)
+We brought the Match Hub to life:
+- **The "READY" Pulse:** We introduced a new contextual `READY` status. When the Court Marshal sets a match to ready, the specific match card on the player's dashboard now emits an infinite, glowing blue pulse (powered by `framer-motion`), signaling them to report to the court.
+- **Contextual Iconography:** We integrated `lucide-react` to inject clean, professional icons (MapPins for courts, Shields for opponents) to make the logistics scannable at a glance.
+
+## 2. Interactive Pools & Bracket Draw
+We fundamentally upgraded how players view their path to victory:
+- **Intra-Pool Leaderboard:** Inside the specific tournament dashboard, players now see a "My Pool Leaderboard". The system isolates their team's row and automatically highlights it with a neon accent, making it instantly identifiable.
+- **The "Canvas" Bracket View:** In the Public Spectator portal (`/live/[id]`), we replaced the rigid Flexbox bracket with a sprawling, interactive `framer-motion` Canvas. 
+  - Players (and fans on mobile devices) can now physically click, drag, and pan around the massive bracket grid to explore the Knockout Draw.
+
+## 3. Social & Performance Stubs
+We established the visual domains for future integrations on the Player Dashboard:
+- **Highlights Library:** A new section featuring placeholder video cards for auto-generated match clips (with share buttons ready for social media APIs).
+- **Player Ledger (Wallet):** A sleek financial overview widget that tracks the player's available balance, with a placeholder to connect Stripe Express.
+
+You can preview all of this right now by logging into the `/team` dashboard and clicking on an active tournament, or by visiting the `/live` public portal!

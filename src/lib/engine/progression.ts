@@ -1,6 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
+
+
 
 /**
  * Pillar 36: Gamified Loyalty & Progression System
@@ -17,7 +18,7 @@ export async function awardMatchXP(userId: string, isWin: boolean, isTournamentF
   if (!user) return null;
 
   const newXp = user.globalXp + xpGained;
-  let badges: string[] = JSON.parse(user.badges || '[]');
+  const badges: string[] = JSON.parse(user.badges || '[]');
 
   // Badge Unlock Logic
   if (newXp >= 1000 && !badges.includes("Veteran")) {

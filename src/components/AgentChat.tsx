@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { applicationLayer } from '@/lib/osi/ApplicationModule';
+import { OsiError } from '@/lib/osi/types';
 
 export function AgentChat({ playerId, tournamentId }: { playerId: string, tournamentId: string }) {
   const [query, setQuery] = useState('');
@@ -18,21 +20,34 @@ export function AgentChat({ playerId, tournamentId }: { playerId: string, tourna
     setLoading(true);
 
     try {
-      const res = await fetch('/api/agents/support', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playerId, tournamentId, query: userMsg })
-      });
-      const data = await res.json();
-      
-      if (data.success && data.agentResponse) {
-        setHistory(prev => [...prev, { role: 'agent', text: data.agentResponse.responseMessage }]);
-      } else {
-        setHistory(prev => [...prev, { role: 'agent', text: "Error: Could not reach the Agent Network." }]);
-      }
+      // Use OSI Application Layer instead of direct fetch
+      // For session_id, in a real app this would be extracted from an auth provider or cookie.
+      // We pass a dummy 'auth_token' here which the Server Session module will validate.
+      applicationLayer.sendMessage(
+        { playerId, tournamentId, query: userMsg },
+        playerId,
+        'SUPPORT_AGENT',
+        'auth_token_here',
+        {
+          on_success: (data) => {
+            if (data && data.agentResponse) {
+              setHistory(prev => [...prev, { role: 'agent', text: data.agentResponse.responseMessage }]);
+            } else {
+              setHistory(prev => [...prev, { role: 'agent', text: "Error: Unrecognized response format." }]);
+            }
+            setLoading(false);
+          },
+          on_failure: (error: OsiError) => {
+            setHistory(prev => [...prev, { 
+              role: 'agent', 
+              text: `System Alert [${error.error_code}]: ${error.message} - ${error.suggested_action}` 
+            }]);
+            setLoading(false);
+          }
+        }
+      );
     } catch (err) {
-      setHistory(prev => [...prev, { role: 'agent', text: "Error: Network failure." }]);
-    } finally {
+      setHistory(prev => [...prev, { role: 'agent', text: "Error: Unexpected application failure." }]);
       setLoading(false);
     }
   };
@@ -81,7 +96,12 @@ export function AgentChat({ playerId, tournamentId }: { playerId: string, tourna
           type="text" 
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              handleSend();
+            }
+          }}
           placeholder="Type your message..."
           style={{ flex: 1, padding: '8px 12px', background: '#010409', border: '1px solid #30363d', borderRadius: '6px', color: '#fff', fontSize: '0.9rem' }}
         />

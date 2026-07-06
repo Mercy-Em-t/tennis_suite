@@ -1,0 +1,57 @@
+new role humanin the loop, technical director
+
+While the Tournament Host manages the business and operational flow, and the Delegate handles rule integrity, the System Monitor is the guardian of stream health, network reliability, and system performance.
+
+The **System Monitor (or Technical Director)** is a specialized "human-in-the-loop" role within the Tennis Suite ecosystem, established to ensure the technological "heartbeat" of a live event remains stable. While the Tournament Host manages the business and operational flow, and the Delegate handles rule integrity, the System Monitor is the guardian of **stream health, network reliability, and system performance**.
+
+Below is the foundational System Requirements Document for this role.
+
+---
+
+### System Requirements Document: System Monitor (Technical Director)
+
+#### 1. Overview
+
+The System Monitor ensures that the technical infrastructure—specifically the live broadcast, real-time telemetry data, and PWA synchronization—remains robust during high-traffic tournament events. This role acts as the primary point of intervention for technical anomalies that could degrade the "Pro Experience."
+
+#### 2. Functional Requirements
+
+**2.1 Real-Time System Health Monitoring**
+
+* **Stream Health Dashboard:** A dedicated console displaying telemetry on video ingest quality, latency metrics, and packet loss for all live court streams.
+* **Network Integrity Oversight:** Real-time monitoring of WebSocket/SSE connection status across all client devices (Referee PWAs, Broadcaster overlays, and user frontends).
+* **Infrastructure Pulse:** Ability to view server-side resource utilization (CPU/Memory/Database load) specifically tied to the active `tournamentId` to preempt bottlenecks.
+
+**2.2 Technical Intervention & Emergency Recovery**
+
+* **"Hot-Swap" Stream Routing:** The ability to instantly reroute a degraded broadcast stream to a secondary backup encoder without dropping the public feed.
+* **Connection Reset Authority:** Ability to force a re-handshake for specific nodes (e.g., refreshing a specific court's data stream if telemetry stops updating).
+* **Load Balancing Control:** Manual override to shift traffic from a strained server cluster to a standby instance during unexpected surges in viewer traffic.
+
+**2.3 Incident Logging & Resolution**
+
+* **Technical Audit Trail:** The System Monitor must log every technical intervention (e.g., "Rerouted Stream to Backup B") with a timestamp, creating a post-event technical report for system post-mortems.
+* **Alert Escalation:** Automated trigger system that notifies the Monitor if key performance indicators (KPIs) drop below defined thresholds (e.g., latency > 500ms).
+
+#### 3. Non-Functional Requirements
+
+* **Latency:** The monitoring dashboard must reflect system status updates in near-real-time (< 100ms) to ensure rapid incident response.
+* **Visibility:** The interface must use "Status-Color Coding" (Green: Optimal, Amber: Degraded, Red: Critical) to allow for instant identification of failing systems.
+* **Security:** Access to the System Monitor dashboard is restricted via role-based access control (RBAC), requiring elevated administrative credentials separate from standard tournament staff.
+
+---
+
+### Engineering Directives
+
+**To the Backend Engineering Team:**
+
+* **Telemetry Hook:** Implement a global `SystemHealth` service that aggregates heartbeats from the Broadcaster, Referee PWA, and server-side SSE streams into a single `health_monitor` table.
+* **WebSocket/SSE Heartbeat:** Ensure all active tournament clients push a periodic "heartbeat" signal; the monitor dashboard must flag any `courtId` or `userId` that fails to pulse for >3 seconds.
+
+**To the Frontend Engineering Team:**
+
+* **Dashboard Construction:** Create a `/monitor` route, accessible only to the Technical Director role, featuring a grid-view of "Stream Health" widgets that toggle from neutral to high-contrast red when thresholds are breached.
+
+---
+
+Are there specific technical KPIs (e.g., specific latency thresholds or bandwidth limits) you would like to define for the System Monitor's automated alert triggers, or shall we finalize this specification?

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLiveMatch } from '@/hooks/useLiveMatch';
 import styles from './broadcaster.module.css';
@@ -15,9 +15,22 @@ export default function BroadcasterOverlay() {
   const teamAName = data?.teamA?.name?.toUpperCase() ?? 'TEAM A';
   const teamBName = data?.teamB?.name?.toUpperCase() ?? 'TEAM B';
 
-  // Sponsor rotation (Pillar 16)
+  // Sponsor rotation (Pillar 16) — auto-advances every 8 seconds
   const sponsors = ['RED BULL', 'ROLEX', 'NIKE', 'WILSON'];
-  const [sponsorIdx] = useState(0);
+  const [sponsorIdx, setSponsorIdx] = useState(0);
+  const [sponsorVisible, setSponsorVisible] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSponsorVisible(false);
+      setTimeout(() => {
+        setSponsorIdx(i => (i + 1) % sponsors.length);
+        setSponsorVisible(true);
+      }, 400);
+    }, 8000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (viewMode === 'scorebug') {
     return (
@@ -76,11 +89,13 @@ export default function BroadcasterOverlay() {
           <span className={styles.divider}>|</span>
           <span className={styles.formatLabel}>{state?.isTiebreaker ? '🔥 TIEBREAKER' : 'BEST OF 3 SETS'}</span>
         </div>
-        <div className={styles.sponsorTag}>Presented by <strong>{sponsors[sponsorIdx]}</strong></div>
+        <div className={styles.sponsorTag} style={{ opacity: sponsorVisible ? 1 : 0, transition: 'opacity 0.35s ease' }}>
+          Presented by <strong>{sponsors[sponsorIdx]}</strong>
+        </div>
       </div>
 
       {/* Main score canvas */}
-      <div className={styles.scoreCanvas}>
+      <div className={`${styles.scoreCanvas} ${state?.isTiebreaker ? styles.tiebreakerGlow : ''}`}>
 
         {/* Column headers */}
         <div className={styles.columnHeaders}>

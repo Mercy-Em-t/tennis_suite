@@ -1,0 +1,28 @@
+header links should provide back to homepage(landing page)
+that is if they open dedicate pages- 
+
+should watch live on header lead to login?
+
+how it works isnt pointing anywhere
+
+login works well 
+question is what is the "dont have a frachiser"  anbout? im questoning its relevance here.
+probably it should gear towards registering as a player on the platform----> please confirm.
+
+then also we need to reword the login button writen enter walled garden-----> if it is logging in, let it be login, for sisgnup let it be sign up. dont want to confuse our users
+
+also should /login have other sections apart from the login modal(please advise), because at the moment it just feels weird. has no other directions say if someone want s to go back
+
+the creating organizer account looks good
+
+the browse tournamnet section looks good. but what if we have more than one tournamnet? we need to scaffold for other tournamnets, including a view all tournamnet dedicated page to show upcoming tournamets that one can register for
+
+register for tournamnets modal also looks good.
+however it needs to be aware of tournamnet rules such as player being able to register for more than one category.
+as it picks team name it should have that inputs label as team namne as opposed to franchise name. 
+for multi category reistrations find a way to take in team registrations for single and for doubles. cause we need to have a way to get their doubles patner. 
+
+
+watch live broadcast yes we do have a oturnmanet aware broadcast page. so clicking that button for that specific tournamnet should open that specific tournamnets broadcast. however the broadcast should be aware of the tournamnets status. if its registration on going it should channlel and champion for registrations. it should only preview the tournamnet since it has not started. it can also countdown to the start of the tournament. basically the broadcast should be pretournamnet, during-tournamnet, and post tournamnet.
+
+the footer also looks good

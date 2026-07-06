@@ -1,13 +1,19 @@
+import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+import { requireAuth } from '@/lib/auth/require-auth';
+import { logger } from '@/lib/logger';
+
+
 
 /**
  * Pillar 37: Incident & Emergency Protocol Engine
  * Logs medical timeouts, disputes, or code violations for liability protection.
  */
 export async function POST(request: Request) {
+  const authResult = await requireAuth(['REFEREE', 'ADMIN']);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const { matchId, reportedBy, incidentType, description } = await request.json();
 
@@ -22,6 +28,7 @@ export async function POST(request: Request) {
       message: `${incidentType} protocol activated and logged to digital paper trail.`
     });
   } catch (error) {
+    logger.error('[incidents] Failed to log incident', {}, error);
     return NextResponse.json({ error: 'Failed to log incident' }, { status: 400 });
   }
 }

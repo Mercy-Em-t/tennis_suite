@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tennis Suite - Role-Based Access Architecture</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --accent: #58a6ff;
+            --border: #30363d;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #f0f6fc;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+        }
+
+        .hero-image {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 40px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+        }
+
+        .role-title {
+            font-size: 1.4rem;
+            color: var(--accent);
+            margin: 0 0 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tag {
+            background: rgba(88, 166, 255, 0.1);
+            color: var(--accent);
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: inline-block;
+        }
+
+        ul {
+            padding-left: 20px;
+            margin: 0;
+            color: var(--text-secondary);
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        strong {
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>System Access & Role Branches</h1>
+        <p class="subtitle">Walled Garden Architecture & Middleware Flow for Tennis Suite</p>
+
+        <!-- The generated architecture diagram -->
+        <img src="./system_map.png" alt="RBAC Architecture Diagram" class="hero-image" />
+
+        <div class="grid">
+            <!-- Admin -->
+            <div class="card">
+                <h2 class="role-title">ADMIN / HOST</h2>
+                <div class="tag">Path: /admin</div>
+                <ul>
+                    <li><strong>Visibility:</strong> Complete system access.</li>
+                    <li><strong>Capabilities:</strong> Create/publish tournaments, manage teams, override live match status, and access raw telemetry.</li>
+                    <li><strong>Restrictions:</strong> None.</li>
+                </ul>
+            </div>
+
+            <!-- Referee -->
+            <div class="card">
+                <h2 class="role-title">REFEREE</h2>
+                <div class="tag">Path: /referee</div>
+                <ul>
+                    <li><strong>Visibility:</strong> Active matches they are assigned to officiate.</li>
+                    <li><strong>Capabilities:</strong> Live score mutation, offline queue syncing, marking warmups and completions.</li>
+                    <li><strong>Restrictions:</strong> Cannot modify rules or see other referees' matches.</li>
+                </ul>
+            </div>
+
+            <!-- Broadcaster -->
+            <div class="card">
+                <h2 class="role-title">BROADCASTER</h2>
+                <div class="tag">Path: /broadcast</div>
+                <ul>
+                    <li><strong>Visibility:</strong> Real-time read-only view of active match states.</li>
+                    <li><strong>Capabilities:</strong> Subscribes to Server-Sent Events (SSE) for overlays.</li>
+                    <li><strong>Restrictions:</strong> Blocked from modifying any match states.</li>
+                </ul>
+            </div>
+
+            <!-- Player -->
+            <div class="card">
+                <h2 class="role-title">PLAYER</h2>
+                <div class="tag">Path: /team</div>
+                <ul>
+                    <li><strong>Visibility:</strong> Their team's schedule and head-to-head records.</li>
+                    <li><strong>Capabilities:</strong> Agent OS (AI Chat) and upcoming match previews.</li>
+                    <li><strong>Restrictions:</strong> Blocked from seeing private strategies of others or mutating scores.</li>
+                </ul>
+            </div>
+
+            <!-- Marshall -->
+            <div class="card">
+                <h2 class="role-title">MARSHALL</h2>
+                <div class="tag">Path: /tournaments</div>
+                <ul>
+                    <li><strong>Visibility:</strong> Master view of all courts and matches.</li>
+                    <li><strong>Capabilities:</strong> Dispute resolution and court assignments.</li>
+                    <li><strong>Restrictions:</strong> Cannot act as a referee or directly mutate scores.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

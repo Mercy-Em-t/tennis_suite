@@ -1,0 +1,387 @@
+/* ============================================================
+   TENNIS SUITE — MARSHALL OPS COMMAND CENTER
+   ============================================================ */
+
+.page {
+  padding: 48px;
+  color: #f0f6fc;
+  background: #0d1117;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ─── Header ─── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 24px;
+  margin-bottom: 32px;
+}
+
+.pageTitle {
+  font-size: 2.5rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+.pageSubtitle {
+  color: #8b949e;
+  margin: 8px 0 0;
+  font-size: 1rem;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logoutBtn {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #8b949e;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+  font-family: inherit;
+}
+
+.logoutBtn:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #f0f6fc;
+}
+
+/* ─── Stat Bar ─── */
+.statBar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 40px;
+}
+
+.statCell {
+  background: #161b22;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.statCell:last-child { border-right: none; }
+
+.statIcon {
+  font-size: 1.4rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(88, 166, 255, 0.07);
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.statNum {
+  font-size: 1.6rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  display: block;
+}
+
+.statDesc {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #8b949e;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  display: block;
+}
+
+/* ─── Section Header ─── */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.sectionTitle {
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+/* ─── Court Grid ─── */
+.courtGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 48px;
+}
+
+.courtTile {
+  background: #161b22;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.courtTile:hover {
+  border-color: rgba(88, 166, 255, 0.35);
+  transform: translateY(-2px);
+}
+
+.courtTile.active {
+  border-color: rgba(88, 166, 255, 0.4);
+  box-shadow: 0 0 30px rgba(88, 166, 255, 0.07);
+}
+
+.courtTileHeader {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.courtName {
+  font-size: 1rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.courtStatusChip {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 100px;
+}
+
+.courtStatusChip.inUse {
+  background: rgba(248, 81, 73, 0.12);
+  color: #f85149;
+  border: 1px solid rgba(248, 81, 73, 0.35);
+  animation: liveFlash 2s ease-in-out infinite;
+}
+
+.courtStatusChip.available {
+  background: rgba(126, 231, 135, 0.1);
+  color: #7ee787;
+  border: 1px solid rgba(126, 231, 135, 0.3);
+}
+
+.courtStatusChip.maintenance {
+  background: rgba(227, 179, 65, 0.1);
+  color: #e3b341;
+  border: 1px solid rgba(227, 179, 65, 0.3);
+}
+
+@keyframes liveFlash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.courtTileBody {
+  padding: 16px 20px;
+}
+
+.courtMatchTeams {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #f0f6fc;
+  margin: 0 0 6px 0;
+  line-height: 1.4;
+}
+
+.courtVs {
+  color: #8b949e;
+  font-weight: 400;
+}
+
+.courtMatchTimer {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #8b949e;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.courtEmpty {
+  font-size: 0.85rem;
+  color: #484f58;
+}
+
+.courtTileFooter {
+  padding: 12px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.courtAssignLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #8b949e;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  flex-shrink: 0;
+}
+
+.courtAssignSelect {
+  flex: 1;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f0f6fc;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 0.78rem;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.courtAssignSelect:focus {
+  border-color: rgba(88, 166, 255, 0.5);
+}
+
+.courtAssignSelect option {
+  background: #161b22;
+}
+
+/* ─── Two-column lower grid ─── */
+.lowerGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+/* ─── Disputes Queue ─── */
+.disputeList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.disputeCard {
+  background: #161b22;
+  border: 1px solid rgba(248, 81, 73, 0.2);
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.disputeMatch {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+}
+
+.disputeMeta {
+  font-size: 0.78rem;
+  color: #8b949e;
+  margin: 0;
+}
+
+.resolveBtn {
+  background: rgba(248, 81, 73, 0.1);
+  border: 1px solid rgba(248, 81, 73, 0.3);
+  color: #f85149;
+  padding: 7px 16px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+  font-family: inherit;
+}
+
+.resolveBtn:hover {
+  background: rgba(248, 81, 73, 0.2);
+}
+
+.noDisputes {
+  padding: 32px;
+  text-align: center;
+  color: #484f58;
+  font-size: 0.85rem;
+  border: 1px dashed rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+}
+
+/* ─── Staff Board ─── */
+.staffList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.staffCard {
+  background: #161b22;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.staffInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.staffName {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.staffRole {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #8b949e;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.staffAssignment {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #58a6ff;
+}
+
+.staffAssignmentUnassigned {
+  font-size: 0.78rem;
+  color: #484f58;
+}
+
+/* ─── Loading ─── */
+.loadingState {
+  padding: 80px;
+  color: #8b949e;
+  text-align: center;
+}

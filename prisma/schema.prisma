@@ -9,17 +9,37 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String
+  id              String   @id @default(cuid())
+  name            String
   email           String   @unique
-  role            String   @default("PLAYER") // HOST, REFEREE, MARSHALL, BROADCASTER, PLAYER
+  phone           String?
+  category        String?
+  passwordHash    String   @default("") // bcrypt hash; empty string = legacy dev-seed row
+  role            String   @default("PLAYER") // HOST, REFEREE, MARSHALL, BROADCASTER, PLAYER, DIRECTOR
   hasSignedWaiver Boolean  @default(false)
   isMinor         Boolean  @default(false)
   globalXp        Int      @default(0)
   badges          String   @default("[]") // JSON string array of earned badges
+  
+  // Identity & Social
+  avatarUrl       String?
+  socialHandle    String?
+  trustScore      Int      @default(100)
+
+  // Performance & Skill Matrix
+  skillLevel      Float?
+  playstyle       String?
+  winRate         Float    @default(0.0)
+
+  // Tournament & Availability Context
+  availability    String   @default("{}") // JSON mapping of days to time windows
+  emergencyContact String?
+
   createdAt       DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt       DateTime @updatedAt
   teams           Team[]   @relation("TeamRoster")
+  staffAssignments Staff[]
+  hostedTournaments Tournament[] @relation("HostTournaments")
 }
 
 model Tournament {
@@ -28,16 +48,41 @@ model Tournament {
   formatType  String   // e.g. 'Fast4', 'Standard'
   isActive    Boolean  @default(false)
   isArchived  Boolean  @default(false)
+  globalState String   @default("NORMAL") // NORMAL, SUSPENDED
+  globalMessage String? // Used for Emergency Broadcasts
+  registrationPhase String @default("CLOSED") // CLOSED, EARLY, LATE
+  currentStage String @default("POOL") // POOL, KNOCKOUTS, FINALS
   championId  String?  // Team ID of the winner
   maxTeams    Int
+  poolGenerationCount Int @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   clubId      String?
   club        Club?    @relation(fields: [clubId], references: [id])
+  hostId      String?
+  host        User?    @relation("HostTournaments", fields: [hostId], references: [id])
+  
+  // Tournament Factory Fields
+  startDate   DateTime?
+  endDate     DateTime?
+  location    String?
+  matchDuration Int?
+  scoringRules String?
+  categories  String?
+  surfaceType String?
+  logoUrl     String?
+  sponsorUrl  String?
+  contactEmail String?
+  contactPhone String?
+  prizeMoney   String?
+  stationInfo  String?
+
   matches     Match[]
   teams       Team[]
   courts      Court[]
   staff       Staff[]
+  pools       Pool[]
+  auditLogs   AuditLog[]
 }
 
 model Team {
@@ -46,34 +91,82 @@ model Team {
   tournamentId   String
   tournament     Tournament  @relation(fields: [tournamentId], references: [id])
   logoUrl        String?
+  categories     String      @default("[]") // JSON string array of categories they entered
+  isLateRegistration Boolean @default(false)
+  isCheckedIn    Boolean     @default(false)
+  status         String      @default("ACTIVE") // ACTIVE, WITHDRAWN, DISQUALIFIED
   createdAt      DateTime    @default(now())
   preOrders      PreOrder[]
   matchesAsTeamA Match[]     @relation("TeamA")
   matchesAsTeamB Match[]     @relation("TeamB")
   players        User[]      @relation("TeamRoster")
+  paymentStatus  String      @default("PENDING_PAYMENT") // PENDING_PAYMENT, REGISTERED
+  stripeSessionId String?    @unique
+  poolTeams      PoolTeam[]
+}
+
+model Pool {
+  id             String      @id @default(cuid())
+  name           String      // "Pool A", "Pool B"
+  tournamentId   String
+  tournament     Tournament  @relation(fields: [tournamentId], references: [id])
+  category       String      // The division this pool belongs to e.g. "Men's Singles"
+  versionId      String      @default("v1.0") // Stamped version
+  status         String      @default("ACTIVE") // ACTIVE, LOCKED
+  poolTeams      PoolTeam[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model PoolTeam {
+  id        String   @id @default(cuid())
+  poolId    String
+  teamId    String
+  pool      Pool     @relation(fields: [poolId], references: [id])
+  team      Team     @relation(fields: [teamId], references: [id])
+  seed      Int?     // seeded rank
+  isLateAssign Boolean @default(false)
+  stats     String   @default("{}") // Cache for Wins, Losses, Sets for ranking
+  createdAt DateTime @default(now())
+
+  @@unique([poolId, teamId])
 }
 
 model Match {
   id           String      @id @default(cuid())
   tournamentId String
   tournament   Tournament  @relation(fields: [tournamentId], references: [id])
-  status       String      @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, DISPUTED, COMPLETED
+  status       String      @default("PENDING") // PENDING, SCHEDULED, IN_PROGRESS, DISPUTED, COMPLETED, REQUIRES_INTERVENTION
+  stage        String      @default("POOL") // POOL, KNOCKOUTS, SEMI, FINAL
+  poolId       String?     // Null if knockout
+  category     String?     // E.g., "Men's Open", "Mixed Doubles" (used primarily for knockouts)
+  interventionReason String? // Used when status is REQUIRES_INTERVENTION
   
   teamAId      String?
+  placeholderA String?     // e.g. "Pool A Pos 1"
   teamA        Team?       @relation("TeamA", fields: [teamAId], references: [id])
   teamBId      String?
+  placeholderB String?
   teamB        Team?       @relation("TeamB", fields: [teamBId], references: [id])
   
   scoreState   String      @default("{}") // JSON String: { setsA: 1, setsB: 0, gamesA: 4, pointsA: "AD" }
+  previousScoreState String? // JSON String: caches the state prior to the last update for Undo functionality
   currentServer String?    // teamAId or teamBId
   durationSec  Int         @default(0)
+  winnerId     String?     // ID of the winning Team
+  
+  umpireId     String?     // The User ID of the player currently acting as umpire
+  umpireCode   String?     // The 6-digit PIN generated by the referee to allow a player to claim this match
   
   nextMatchId  String?     // ID of the match the winner advances to
   courtId      String?
   court        Court?      @relation(fields: [courtId], references: [id])
+  orderIndex   Int?        // Order of play in the court's queue
   pauseReason  String?     // e.g. "WEATHER_DELAY", "INJURY"
   auditLogs    AuditLog[]
   
+  startedAt      DateTime?
+  completedAt    DateTime?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   
@@ -97,23 +190,35 @@ model Court {
   tournamentId String
   tournament   Tournament @relation(fields: [tournamentId], references: [id])
   matches      Match[]
+  refereeId    String?
+  referee      Staff?     @relation("CourtReferee", fields: [refereeId], references: [id])
+  marshallId   String?
+  marshall     Staff?     @relation("CourtMarshall", fields: [marshallId], references: [id])
 }
 
 model Staff {
   id           String   @id @default(cuid())
   name         String
-  role         String   // "BALL_BOY", "CONCIERGE"
+  role         String   // "REFEREE", "MARSHALL", "ADMIN"
+  status       String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id])
   tournamentId String
   tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  courtsAsReferee Court[] @relation("CourtReferee")
+  courtsAsMarshall Court[] @relation("CourtMarshall")
 }
 
 model AuditLog {
-  id        String   @id @default(cuid())
-  matchId   String
-  match     Match    @relation(fields: [matchId], references: [id])
-  action    String   // "SCORE_CORRECTED", "MATCH_PAUSED"
-  details   String
-  createdAt DateTime @default(now())
+  id           String      @id @default(cuid())
+  matchId      String?
+  match        Match?      @relation(fields: [matchId], references: [id])
+  tournamentId String?
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id])
+  action       String      // "SCORE_CORRECTED", "MATCH_PAUSED", "MANUAL_SUBSTITUTION", "TOURNAMENT_SUSPENDED"
+  details      String
+  userId       String?     // The Host/Admin/Director who performed the action
+  createdAt    DateTime    @default(now())
 }
 
 model Club {

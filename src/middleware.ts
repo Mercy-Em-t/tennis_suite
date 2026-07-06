@@ -9,15 +9,27 @@ const roleDashboardMap: Record<string, string> = {
   REFEREE: '/referee',
   BROADCASTER: '/broadcast',
   PLAYER: '/team',
-  MARSHALL: '/tournaments'
+  MARSHALL: '/tournaments',
+  DIRECTOR: '/director',
+  MONITOR: '/monitor'
 };
 
-const protectedPrefixes = ['/admin', '/referee', '/broadcast', '/team', '/tournaments', '/validation'];
+const protectedPrefixes = ['/admin', '/referee', '/broadcast', '/team', '/tournaments', '/validation', '/director', '/monitor'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const isProtected = protectedPrefixes.some(prefix => pathname.startsWith(prefix));
+  const isProtected = protectedPrefixes.some(prefix => {
+    if (pathname.startsWith(prefix)) {
+      // Allow public access to the tournament directory and registration pages
+      if (pathname === '/tournaments' || pathname.match(/^\/tournaments\/[^\/]+\/register$/)) {
+        return false;
+      }
+      return true;
+    }
+    return false;
+  });
+  
   const isAuthPage = pathname === '/login' || pathname === '/register';
 
   const token = request.cookies.get('auth_token')?.value;
@@ -54,7 +66,13 @@ export async function middleware(request: NextRequest) {
     if (pathname.startsWith('/team') && !['PLAYER', 'ADMIN'].includes(role)) {
       return NextResponse.redirect(new URL(roleDashboardMap[role] || '/', request.url));
     }
-    if (pathname.startsWith('/tournaments') && !['HOST', 'ADMIN', 'MARSHALL'].includes(role)) {
+    if (pathname.startsWith('/tournaments') && !['HOST', 'ADMIN', 'MARSHALL', 'PLAYER'].includes(role)) {
+      return NextResponse.redirect(new URL(roleDashboardMap[role] || '/', request.url));
+    }
+    if (pathname.startsWith('/director') && !['DIRECTOR', 'ADMIN'].includes(role)) {
+      return NextResponse.redirect(new URL(roleDashboardMap[role] || '/', request.url));
+    }
+    if (pathname.startsWith('/monitor') && !['MONITOR', 'ADMIN', 'HOST'].includes(role)) {
       return NextResponse.redirect(new URL(roleDashboardMap[role] || '/', request.url));
     }
   }

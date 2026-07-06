@@ -1,6 +1,7 @@
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient()
+
+
 
 /**
  * Automates bracket progression. Takes a completed match and slots the winner into the next node.

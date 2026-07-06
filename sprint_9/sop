@@ -1,0 +1,69 @@
+To create a functional task list for an agent—or a "Standard Operating Procedure" (SOP) for your tournament staff—we must organize these actions by persona and the operational phase they occupy.
+
+This task list serves as the "Runbook" for the Tennis Suite ecosystem.
+
+### 1. Pre-Tournament Setup & Provisioning (The Host & Monitor)
+
+* **Initialization (Host)**: Execute the "Tournament Factory" wizard.
+* Verify event basics, asset management, and infrastructure setup.
+* Confirm "Simultaneous Match Capacity" preview is visible before launching.
+
+
+* **Staff Onboarding (Host)**: Generate and distribute secure access links for Referees, Court Marshals, and System Monitors.
+* **Infrastructure Stress Test (System Monitor)**: Run the "Pre-Tournament Tech Sign-off" checklist.
+* Perform the "Cut-the-Wire" network resilience test.
+* Verify server failover and state rehydration.
+* Confirm all active devices show "Green" on the System Health Dashboard.
+
+
+
+### 2. Live Tournament Operations (The Shift)
+
+* **Registration & Pool Management (Host)**:
+* Toggle Registration to OPEN to generate unique QR codes and links.
+* Monitor "Registrations Bucket" for bulk CSV imports and categorization.
+* After the deadline, transition to "Pools Workspace" for auto-seeding or manual drag-and-drop adjustments.
+* Publish final pools with a unique `PoolVersionID`.
+
+
+* **Court Dispatch (Court Marshal)**:
+* Drag and drop "READY" matches from the queue to physical court assignments.
+* Signal "WARMUP" status to trigger the Referee’s PWA notification.
+* Maintain real-time status updates (EMPTY, IN_PROGRESS, MAINTENANCE).
+
+
+* **Match Scoring (Referee)**:
+* Maintain the "Ground Truth" by inputting live match events.
+* Utilize the "Action Drawer" for medical timeouts or code-of-conduct violations.
+* Ensure "Offline-First" status is active if network latency occurs.
+
+
+* **Technical Surveillance (System Monitor)**:
+* Monitor "Heartbeat" grid; react to "Amber" or "Red" status alerts.
+* Observe telemetry for packet loss and latency.
+* Perform "Break-Glass" overrides if a Referee’s device suffers catastrophic failure.
+
+
+
+### 3. Progressive Logic & Incident Handling (The "God-Mode" Tier)
+
+* **Intelligent Progression (System)**:
+* Auto-lock pools upon final match completion.
+* Populate knockout brackets once Top N players are identified.
+
+
+* **Manual Intervention (Delegate/Host)**:
+* If a withdrawal occurs: Halt auto-population and trigger the "Requires Intervention" flag.
+* Review the "Recommended Action" (next-highest-ranked player) and approve/deny the replacement.
+* Record all changes in the immutable Audit Log.
+
+
+
+### 4. Post-Tournament Closure (The Final Phase)
+
+* **Archive (Host)**: Validate all match data for the final report.
+* **Final Report (System Monitor)**: Export the "Technical Audit Trail" to document all interventions performed during the day.
+
+---
+
+**Would you like me to refine this into a printable "Daily Runbook" format for a specific role, or should we define the "System Health Alert" thresholds for the System Monitor to use during their shift?**

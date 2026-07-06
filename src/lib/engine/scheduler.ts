@@ -1,6 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
+
+
 
 /**
  * Time-Block Optimizer
@@ -33,7 +34,7 @@ export async function calculateRestWindow(teamId: string, minRestSeconds: number
  * Checks if a specific player is already scheduled for another active match across divisions.
  * In a real system, we would query the Player relation inside the Team.
  */
-export async function checkDoubleBooking(playerId: string) {
+export async function checkDoubleBooking(_playerId: string) {
   // Mock logic: Returns true if the player has an overlapping IN_PROGRESS match
   // const matches = await prisma.match.findMany({ ... })
   return false;

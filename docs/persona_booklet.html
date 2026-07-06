@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Persona Node Booklet - Tennis Suite</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@400;700&display=swap');
+
+        :root {
+            --bg-color: #050505;
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.5);
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 0%, #1e1e24, #050505 80%);
+        }
+
+        .booklet-container {
+            width: 100%;
+            max-width: 900px;
+            height: 600px;
+            position: relative;
+            perspective: 1500px;
+        }
+
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(20, 20, 25, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 40px;
+            box-sizing: border-box;
+            opacity: 0;
+            transform: translateX(50px) scale(0.95);
+            transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .page.active {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+            pointer-events: all;
+            z-index: 10;
+        }
+
+        .page.prev {
+            transform: translateX(-50px) scale(0.95);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 20px;
+        }
+
+        .node-number {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            color: var(--accent);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3rem;
+            margin: 0;
+            background: linear-gradient(to right, #fff, #9ca3af);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            flex-grow: 1;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .data-box {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .data-box:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .code-pill {
+            display: inline-block;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--card-border);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            color: var(--accent);
+            margin: 4px 0;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        button {
+            background: rgba(255,255,255,0.05);
+            color: white;
+            border: 1px solid var(--card-border);
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        button:hover:not(:disabled) {
+            background: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .progress-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--card-border);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active {
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+            transform: scale(1.3);
+        }
+
+        /* Status Colors */
+        .status-green { color: var(--success); }
+        .status-amber { color: var(--warning); }
+        .status-red { color: var(--danger); }
+    </style>
+</head>
+<body>
+
+    <div class="booklet-container" id="booklet">
+        <!-- Node 1 -->
+        <div class="page active" id="page-0">
+            <div class="header">
+                <div>
+                    <div class="node-number">Node 1 / 8</div>
+                    <h1>Admin / Host</h1>
+                </div>
+            </div>
+            <div class="content-grid">
+                <div>
+                    <div class="section-title">Identity & Role</div>
+                    <p>The creator and overarching owner of the event. They build the structure that all other personas interact with.</p>
+                    <div class="section-title" style="margin-top: 30px;">Capabilities</div>
+                    <ul>
+                        <li>Create and publish tournaments</li>
+                        <li>Onboard franchises and staff</li>
+                        <li>High-level metric overview</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="data-box">
+                        <div class="section-title">UI Route Node</div>
+                        <span class="code-pill">/admin/page.tsx</span>
+                    </div>
+                    <div class="data-box">
+                        <div class="section-title">Middleware Gate</div>
+                        <span class="code-pill">['HOST', 'ADMIN']</span>
+                        <div style="font-size: 0.8rem; color: var(--success); margin-top: 8px;">Status: Strictly Protected</div>
+                    </div>
+                    <div class="data-box">
+                        <div class="section-title">Core API Nodes</div>
+                        <span class="code-pill">/api/tournaments</span><br>
+                        <span class="code-pill">/api/auth</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Node 2 -->
+        <div class="page" id="page-1">
+            <div class="header">
+                <div>
+                    <div class="node-number">Node 2 / 8</div>
+                    <h1>Tournament Delegate</h1>
+                </div>
+            </div>
+            <div class="content-grid">
+                <div>
+                    <div class="section-title">Identity & Role</div>
+                    <p>The ultimate arbiter of the tournament rules (God-Mode). Operates above the Referees to resolve extreme disputes or force rule exceptions.</p>
+                    <div class="section-title" style="margin-top: 30px;">Capabilities</div>
+                    <ul>
+                        <li>Reverse finalized match states</li>
+                        <li>Approve manual bracket replacements</li>
+                        <li>Actions strictly recorded in Immutable Audit Log</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="data-box">
+                        <div class="section-title">UI Route Node</div>
+                        <span class="code-pill">/director/page.tsx</span>
+                    </div>
+                    <div class="data-box">
+                        <div class="section-title">Middleware Gate</div>
+                        <span class="code-pill">['DIRECTOR', 'ADMIN']</span>
+                        <div style="font-size: 0.8rem; color: var(--success); margin-top: 8px;">Status: Strictly Protected</div>
+                    </div>
+                    <div class="data-box">
+                        <div class="section-title">Core API Nodes</div>
+                        <span class="code-pill">/api/director</span><br>
+                        <span class="code-pill">/api/disputes</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Node 3 -->
+        <div class="page" id="page-2">
+            <div class="header">
+                <div>
+                    <div class="node-number">Node 3 / 8</div>
+                    <h1>System Monitor</h1>
+                </div>
+            </div>
+            <div class="content-grid">
+                <div>
+                    <div class="section-title">Identity & Role</div>
+                    <p>The proactive technical supervisor. They do not care about tennis scores; they care about network stability, latency, and keeping the system alive.</p>
+                    <div class="section-title" style="margin-top: 30px;">Capabilities</div>
+                    <ul>
+                        <li>View live telemetry (heartbeats, latency)</li>
+                        <li>Hot-swap failing broadcast streams</li>
+                        <li>Force WebSocket connection resets</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="data-box">
+                        <div class="section-title">UI Route Node</div>
+                        <span class="code-pill">/monitor/page.tsx</span>
+                    </div>
+                    <div class="data-box">
+                        <div class="section-title">Middleware Gate</div>
+                        <span class="code-pill">['MONITOR', 'ADMIN', 'HOST']</span>
+                        <div style="font-size: 0.8rem; color: var(--success); margin-top: 8px;">Status: Secured (Sprint 13 Fix)</div>
+                    </div>
+                    <div class="data-box">
+                        <div class="section-title">Core API Nodes</div>
+                        <span class="code-pill">/api/system</span><br>
+                        <span class="code-pill">SystemHealthService.ts</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Node 4 -->
+        <div class="page" id="page-3">
+            <div class="header">
+                <div>
+                    <div class="node-number">Node 4 / 8</div>
+                    <h1>Referee</h1>
+                </div>
+            </div>
+            <div class="content-grid">
+                <div>
+                    <div class="section-title">Identity & Role</div>
+                    <p>The authoritative official on the court. They own the "Ground Truth" state of a live match.</p>
+                    <div class="section-title" style="margin-top: 30px;">Capabilities</div>
+                    <ul>
+                        <li>Live score mutation (Points, Sets, Games)</li>
+                        <li>Offline-first queue syncing</li>
+                        <li>Mark matches as Warmup, In Progress, Completed</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="data-box">
+                        <div class="section-title">UI Route Node</div>
+                        <span class="code-pill">/referee/page.tsx</span>
+                    </div>
+                    <div class="data-box">
+                        <div class="section-title">Middleware Gate</div>
+                        <span class="code-pill">['REFEREE', 'ADMIN']</span>
+                        <div style="font-size: 0.8rem; color: var(--success); margin-top: 8px;">Status: Strictly Protected</div>
+                    </div>
+                    <div class="data-box">
+                        <div class="section-title">Core API Nodes</div>
+                        <span class="code-pill">/api/referee</span><br>
+                        <span class="code-pill">/api/match</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Node 5 -->
+        <div class="page" id="page-4">
+            <div class="header">
+                <div>
+                    <div class="node-number">Node 5 / 8</div>
+                    <h1>Court Marshal</h1>
+                </div>
+            </div>
+            <div class="content-grid">
+                <div>
+                    <div class="section-title">Identity & Role</div>
+                    <p>The logistical coordinator on the ground. They orchestrate court availability and player dispatch.</p>
+                    <div class="section-title" style="margin-top: 30px;">Capabilities</div>
+                    <ul>
+                        <li>Update court status (Rain delay, Ready)</li>
+                        <li>Assign matches to idle courts</li>
+                        <li>Cannot mutate active scores directly</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="data-box">
+                        <div class="section-title">UI Route Node</div>
+                        <span class="code-pill">/tournaments/page.tsx</span>
+                    </div>
+                    <div class="data-box">
+                        <div class="section-title">Middleware Gate</div>
+                        <span class="code-pill">['MARSHALL', 'ADMIN', ...]</span>
+                        <div style="font-size: 0.8rem; color: var(--success); margin-top: 8px;">Status: Strictly Protected</div>
+                    </div>
+                    <div class="data-box">
+                        <div class="section-title">Core API Nodes</div>
+                        <span class="code-pill">/api/tournaments</span><br>
+                        <span class="code-pill">/api/schedule</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Node 6 -->
+        <div class="page" id="page-5">
+            <div class="header">
+                <div>
+                    <div class="node-number">Node 6 / 8</div>
+                    <h1>Broadcaster</h1>
+                </div>
+            </div>
+            <div class="content-grid">
+                <div>
+                    <div class="section-title">Identity & Role</div>
+                    <p>The reactive media observer. They hook into the system to drive visual broadcast overlays and ticker graphics for live streaming.</p>
+                    <div class="section-title" style="margin-top: 30px;">Capabilities</div>
+                    <ul>
+                        <li>Subscribe to raw Server-Sent Events (SSE)</li>
+                        <li>Read-only access to sub-second score changes</li>
+                        <li>Blocked from making any state mutations</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="data-box">
+                        <div class="section-title">UI Route Node</div>
+                        <span class="code-pill">/broadcast/page.tsx</span>
+                    </div>
+                    <div class="data-box">
+                        <div class="section-title">Middleware Gate</div>
+                        <span class="code-pill">['BROADCASTER', 'ADMIN']</span>
+                        <div style="font-size: 0.8rem; color: var(--success); margin-top: 8px;">Status: Strictly Protected</div>
+                    </div>
+                    <div class="data-box">
+                        <div class="section-title">Core API Nodes</div>
+                        <span class="code-pill">/api/broadcast</span><br>
+                        <span class="code-pill">/api/video</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Node 7 -->
+        <div class="page" id="page-6">
+            <div class="header">
+                <div>
+                    <div class="node-number">Node 7 / 8</div>
+                    <h1>Player</h1>
+                </div>
+            </div>
+            <div class="content-grid">
+                <div>
+                    <div class="section-title">Identity & Role</div>
+                    <p>The active participant inside the tournament ecosystem. They interact with their personal schedule and the AI agents.</p>
+                    <div class="section-title" style="margin-top: 30px;">Capabilities</div>
+                    <ul>
+                        <li>View personal schedule and opponent intel</li>
+                        <li>Interact with Agent OS via chat</li>
+                        <li>Blocked from mutating any tournament logic</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="data-box">
+                        <div class="section-title">UI Route Node</div>
+                        <span class="code-pill">/team/page.tsx</span>
+                    </div>
+                    <div class="data-box">
+                        <div class="section-title">Middleware Gate</div>
+                        <span class="code-pill">['PLAYER', 'ADMIN']</span>
+                        <div style="font-size: 0.8rem; color: var(--success); margin-top: 8px;">Status: Strictly Protected</div>
+                    </div>
+                    <div class="data-box">
+                        <div class="section-title">Core API Nodes</div>
+                        <span class="code-pill">/api/player</span><br>
+                        <span class="code-pill">/api/agents</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Node 8 -->
+        <div class="page" id="page-7">
+            <div class="header">
+                <div>
+                    <div class="node-number">Node 8 / 8</div>
+                    <h1>Public Fan</h1>
+                </div>
+            </div>
+            <div class="content-grid">
+                <div>
+                    <div class="section-title">Identity & Role</div>
+                    <p>The passive external observer. They visit the site purely to consume public data without an account.</p>
+                    <div class="section-title" style="margin-top: 30px;">Capabilities</div>
+                    <ul>
+                        <li>View public scoreboards</li>
+                        <li>View tournament pool standings</li>
+                        <li>Read-only; entirely blocked from protected areas</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="data-box">
+                        <div class="section-title">UI Route Node</div>
+                        <span class="code-pill">/(public)/*</span>
+                    </div>
+                    <div class="data-box">
+                        <div class="section-title">Middleware Gate</div>
+                        <span class="code-pill">Unprotected by Design</span>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px;">Status: Open Web</div>
+                    </div>
+                    <div class="data-box">
+                        <div class="section-title">Core API Nodes</div>
+                        <span class="code-pill">/api/public</span><br>
+                        <span class="code-pill">/api/live</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div style="position: absolute; bottom: 40px; left: 40px; right: 40px; z-index: 50; pointer-events: none;">
+            <div class="controls" style="pointer-events: auto;">
+                <button id="prevBtn" onclick="navigate(-1)" disabled>← Previous Node</button>
+                <div class="progress-dots" id="dots">
+                    <div class="dot active"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+                <button id="nextBtn" onclick="navigate(1)">Next Node →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 0;
+        const totalPages = 8;
+        
+        function navigate(direction) {
+            const newPage = currentPage + direction;
+            if (newPage >= 0 && newPage < totalPages) {
+                // Update pages
+                document.getElementById(`page-${currentPage}`).classList.remove('active');
+                if (direction > 0) {
+                    document.getElementById(`page-${currentPage}`).classList.add('prev');
+                } else {
+                    document.getElementById(`page-${newPage}`).classList.remove('prev');
+                }
+                document.getElementById(`page-${newPage}`).classList.add('active');
+                
+                // Update dots
+                const dots = document.querySelectorAll('.dot');
+                dots[currentPage].classList.remove('active');
+                dots[newPage].classList.add('active');
+                
+                currentPage = newPage;
+                
+                // Update buttons
+                document.getElementById('prevBtn').disabled = currentPage === 0;
+                document.getElementById('nextBtn').disabled = currentPage === totalPages - 1;
+            }
+        }
+    </script>
+</body>
+</html>

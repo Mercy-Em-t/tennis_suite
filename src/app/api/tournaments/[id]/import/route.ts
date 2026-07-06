@@ -1,80 +1,106 @@
+import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { verifyToken } from '@/lib/auth';
 
-const prisma = new PrismaClient();
+import { requireAuth } from '@/lib/auth/require-auth';
+import { logger } from '@/lib/logger';
+import bcrypt from 'bcryptjs';
 
-export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
+
+
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const authResult = await requireAuth(['HOST', 'ADMIN']);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
-    const params = await props.params;
-    const cookieHeader = request.headers.get('cookie') || '';
-    const tokenMatch = cookieHeader.match(/auth_token=([^;]+)/);
-    const token = tokenMatch ? tokenMatch[1] : null;
+    const { id } = await params;
+    const body = await request.json();
+    const { rows } = body;
 
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    
-    const payload = await verifyToken(token);
-    if (!payload || !['HOST', 'ADMIN'].includes(payload.role)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return NextResponse.json({ error: 'No data provided' }, { status: 400 });
     }
 
-    const { rows } = await request.json(); // Expected format: [{ TeamName, Player1_Name, Player1_Email, Player2_Name, Player2_Email }]
+    // Fetch tournament to determine phase
+    const tournament = await prisma.tournament.findUnique({ where: { id } });
+    if (!tournament) return NextResponse.json({ error: 'Tournament not found' }, { status: 404 });
+    const isLate = tournament.registrationPhase === 'LATE';
 
-    if (!rows || !Array.isArray(rows)) {
-      return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
-    }
+    // Atomic transaction for ingestion
+    const ingestedTeams = await prisma.$transaction(async (tx) => {
+      const results = [];
+      
+      // We will hash a default password once for efficiency
+      const defaultPasswordHash = await bcrypt.hash('welcome123!', 10);
 
-    // Execute within a transaction for safety
-    await prisma.$transaction(async (tx) => {
-      let rowIndex = 1;
-      for (const row of rows) {
-        // Strict Validation
-        if (!row.TeamName || !row.Player1_Email || !row.Player2_Email) {
-          throw new Error(`Line ${rowIndex}: Missing required fields (TeamName, or Emails).`);
-        }
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const teamName = row['Team Name'];
+        const p1Name = row['Player 1 Name'];
+        const p1Email = row['Player 1 Email'];
+        const p2Name = row['Player 2 Name'];
+        const p2Email = row['Player 2 Email'];
         
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(row.Player1_Email)) {
-          throw new Error(`Line ${rowIndex}: Invalid email format for Player 1 (${row.Player1_Email}).`);
-        }
-        if (!emailRegex.test(row.Player2_Email)) {
-          throw new Error(`Line ${rowIndex}: Invalid email format for Player 2 (${row.Player2_Email}).`);
+        // Parse categories (e.g. "Men's Singles, Mixed Doubles")
+        const rawCategory = row['Category'] || 'Open';
+        const parsedCategories = rawCategory.split(',').map((c: string) => c.trim()).filter(Boolean);
+
+        if (!teamName || !p1Name || !p1Email) {
+          throw new Error(`Row ${i + 1}: Missing required fields (Team Name, Player 1 Name, Player 1 Email)`);
         }
 
         // Upsert Player 1
-        const p1 = await tx.user.upsert({
-          where: { email: row.Player1_Email },
+        const player1 = await tx.user.upsert({
+          where: { email: p1Email },
           update: {},
-          create: { name: row.Player1_Name || 'Unknown', email: row.Player1_Email, role: 'PLAYER' }
-        });
-
-        // Upsert Player 2
-        const p2 = await tx.user.upsert({
-          where: { email: row.Player2_Email },
-          update: {},
-          create: { name: row.Player2_Name || 'Unknown', email: row.Player2_Email, role: 'PLAYER' }
-        });
-
-        // Create Team linked to Tournament and Players
-        await tx.team.create({
-          data: {
-            franchiseName: row.TeamName,
-            tournamentId: params.id,
-            players: { connect: [{ id: p1.id }, { id: p2.id }] }
+          create: {
+            email: p1Email,
+            name: p1Name,
+            passwordHash: defaultPasswordHash,
+            role: 'PLAYER',
           }
         });
-        
-        rowIndex++;
+
+        const playerConnections = [{ id: player1.id }];
+
+        // Upsert Player 2 if exists
+        if (p2Name && p2Email) {
+          const player2 = await tx.user.upsert({
+            where: { email: p2Email },
+            update: {},
+            create: {
+              email: p2Email,
+              name: p2Name,
+              passwordHash: defaultPasswordHash,
+              role: 'PLAYER',
+            }
+          });
+          playerConnections.push({ id: player2.id });
+        }
+
+        // Create the Team
+        const team = await tx.team.create({
+          data: {
+            franchiseName: teamName,
+            tournamentId: id,
+            categories: JSON.stringify(parsedCategories.length > 0 ? parsedCategories : ['Open']),
+            isLateRegistration: isLate,
+            paymentStatus: 'REGISTERED',
+            players: {
+              connect: playerConnections
+            }
+          }
+        });
+
+        results.push(team);
       }
+      return results;
     });
 
-    return NextResponse.json({ success: true, message: `Successfully imported ${rows.length} teams.` });
+    logger.info('Bulk ingestion successful', { tournamentId: id, count: ingestedTeams.length });
+    return NextResponse.json({ success: true, count: ingestedTeams.length });
+
   } catch (error: any) {
-    console.error('[tournaments/import/POST]', error);
-    // Return the specific line error if thrown from our transaction validation
-    if (error.message.startsWith('Line ')) {
-       return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-    return NextResponse.json({ error: 'Failed to import bulk data due to database constraint.' }, { status: 500 });
+    logger.error('[import] Failed to process ingestion', {}, error);
+    return NextResponse.json({ error: error.message || 'Ingestion failed' }, { status: 500 });
   }
 }

@@ -1,11 +1,17 @@
+import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { advanceScore, TennisScoreState, createInitialScoreState } from '@/lib/engine/scoring';
 
-const prisma = new PrismaClient();
+import { advanceScore, TennisScoreState, createInitialScoreState } from '@/lib/engine/scoring';
+import { requireAuth } from '@/lib/auth/require-auth';
+
+
 
 export async function POST(request: Request) {
   try {
+    const authResult = await requireAuth(['REFEREE', 'ADMIN']);
+    if (authResult instanceof NextResponse) return authResult;
+    const user = (authResult as any).user;
+
     const { syncPayloads } = await request.json();
     
     if (!syncPayloads || !Array.isArray(syncPayloads)) {
@@ -23,6 +29,19 @@ export async function POST(request: Request) {
 
       const match = await prisma.match.findUnique({ where: { id: matchId } });
       if (!match || match.status === 'COMPLETED') continue;
+
+      // Verify RBAC for this match's tournament
+      const isHost = user.role === 'HOST' || user.role === 'ADMIN';
+      const tournamentStaff = await prisma.staff.findFirst({
+        where: {
+          userId: user.id,
+          tournamentId: match.tournamentId,
+          role: 'REFEREE',
+          status: 'APPROVED'
+        }
+      });
+
+      if (!isHost && !tournamentStaff) continue; // Skip if unauthorized
 
       let currentState: TennisScoreState = createInitialScoreState();
       try { 

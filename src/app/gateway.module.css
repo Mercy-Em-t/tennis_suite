@@ -1,169 +1,777 @@
-.container {
+/* ============================================================
+   TENNIS SUITE — PUBLIC GATEWAY
+   Eternal landing page for unauthenticated visitors
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+
+/* ─── Reset & Base ─── */
+.page {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   background-color: #070b10;
   color: #f0f6fc;
   font-family: 'Inter', 'Helvetica Neue', sans-serif;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
-/* Navbar */
+/* ─── Sticky Navbar ─── */
 .navbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24px 48px;
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 10;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 48px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(7, 11, 16, 0.75);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 0.3s;
 }
 
 .brand {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: 900;
   letter-spacing: -0.04em;
-}
-
-.navActions {
+  color: #f0f6fc;
+  text-decoration: none;
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 8px;
+}
+
+.brandAccent {
+  color: #58a6ff;
+}
+
+.brandDot {
+  width: 8px;
+  height: 8px;
+  background: #7ee787;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+  flex-shrink: 0;
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 32px;
 }
 
 .navLink {
   background: none;
   border: none;
   color: #8b949e;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   transition: color 0.2s;
+  text-decoration: none;
+  font-family: inherit;
+  padding: 0;
 }
 
 .navLink:hover {
   color: #f0f6fc;
 }
 
-/* Hero */
-.heroWrapper {
-  flex: 1;
+.navActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.navLoginBtn {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f0f6fc;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  font-family: inherit;
+}
+
+.navLoginBtn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.navRegisterBtn {
+  background: #58a6ff;
+  border: none;
+  color: #070b10;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  font-family: inherit;
+}
+
+.navRegisterBtn:hover {
+  background: #79b8ff;
+  transform: translateY(-1px);
+}
+
+/* ─── Hero ─── */
+.hero {
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 120px 24px 80px 24px;
-  background: radial-gradient(circle at 50% -20%, rgba(88, 166, 255, 0.15), transparent 60%);
+  padding: 140px 24px 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+.heroMesh {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(88, 166, 255, 0.18), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(126, 231, 135, 0.08), transparent 60%),
+    radial-gradient(ellipse 40% 30% at 20% 70%, rgba(210, 168, 255, 0.07), transparent 60%);
+  pointer-events: none;
+}
+
+.heroGrid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 80px 80px;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black, transparent);
 }
 
 .heroContent {
-  max-width: 800px;
+  position: relative;
+  max-width: 860px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  z-index: 1;
 }
 
 .statusPill {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   background: rgba(126, 231, 135, 0.1);
   border: 1px solid rgba(126, 231, 135, 0.3);
   color: #7ee787;
-  padding: 6px 14px;
+  padding: 6px 16px;
   border-radius: 100px;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.1em;
-  margin-bottom: 32px;
+  letter-spacing: 0.12em;
+  margin-bottom: 36px;
+  text-transform: uppercase;
 }
 
 .liveIndicator {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   background-color: #7ee787;
   border-radius: 50%;
   animation: pulse 2s infinite;
+  flex-shrink: 0;
 }
 
 .headline {
-  font-size: 4.5rem;
+  font-size: clamp(3rem, 7vw, 5.5rem);
   font-weight: 900;
-  line-height: 1.1;
+  line-height: 1.05;
   letter-spacing: -0.04em;
-  margin: 0 0 24px 0;
+  margin: 0 0 28px 0;
+}
+
+.headlineAccent {
+  color: #7ee787;
+}
+
+.headlineBlue {
+  color: #58a6ff;
 }
 
 .subhead {
-  font-size: 1.25rem;
+  font-size: clamp(1rem, 2vw, 1.25rem);
   color: #8b949e;
-  max-width: 600px;
-  margin: 0 0 48px 0;
-  line-height: 1.6;
+  max-width: 580px;
+  margin: 0 0 52px 0;
+  line-height: 1.65;
 }
 
 .ctaGroup {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.primaryCta {
+  background: #58a6ff;
+  color: #070b10;
+  border: none;
+  padding: 0 40px;
+  height: 56px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  box-shadow: 0 0 32px rgba(88, 166, 255, 0.25);
+}
+
+.primaryCta:hover {
+  background: #79b8ff;
+  transform: translateY(-2px);
+  box-shadow: 0 0 48px rgba(88, 166, 255, 0.4);
 }
 
 .secondaryCta {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   color: #f0f6fc;
   padding: 0 32px;
   height: 56px;
-  border-radius: 8px;
-  font-size: 1.1rem;
+  border-radius: 10px;
+  font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .secondaryCta:hover {
   background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.32);
 }
 
-/* Features */
-.features {
+.secondaryCtaIcon {
+  font-size: 1rem;
+  opacity: 0.7;
+}
+
+/* ─── Live Ticker ─── */
+.tickerSection {
+  background: #0d1117;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 16px 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.tickerLabel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  background: linear-gradient(90deg, #0d1117 60%, transparent);
+  z-index: 2;
+  gap: 8px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #f85149;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tickerLabelDot {
+  width: 6px;
+  height: 6px;
+  background: #f85149;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+  flex-shrink: 0;
+}
+
+.tickerTrack {
+  display: flex;
+  gap: 48px;
+  animation: ticker 30s linear infinite;
+  padding-left: 120px;
+  will-change: transform;
+}
+
+.tickerItem {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.tickerTeams {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #f0f6fc;
+}
+
+.tickerScore {
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: #58a6ff;
+  font-variant-numeric: tabular-nums;
+  background: rgba(88, 166, 255, 0.1);
+  padding: 2px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(88, 166, 255, 0.2);
+}
+
+.tickerLive {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #f85149;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tickerLiveDot {
+  width: 5px;
+  height: 5px;
+  background: #f85149;
+  border-radius: 50%;
+  animation: pulse 1.2s infinite;
+}
+
+.tickerFinal {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #8b949e;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tickerSep {
+  color: rgba(255,255,255,0.15);
+  font-size: 1.2rem;
+  font-weight: 300;
+}
+
+/* ─── How It Works ─── */
+.howSection {
+  padding: 100px 48px;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.sectionLabel {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #58a6ff;
+  margin-bottom: 16px;
+}
+
+.sectionTitle {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  margin: 0 0 64px 0;
+  line-height: 1.15;
+}
+
+.stepsGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 32px;
-  padding: 64px 48px;
+  gap: 2px;
+  position: relative;
+}
+
+.stepConnector {
+  position: absolute;
+  top: 36px;
+  left: calc(33.333% + 24px);
+  right: calc(33.333% + 24px);
+  height: 1px;
+  background: linear-gradient(90deg, rgba(88,166,255,0.4), rgba(88,166,255,0.4));
+  pointer-events: none;
+}
+
+.stepCard {
+  background: #0d1117;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 36px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  transition: border-color 0.3s, transform 0.3s;
+}
+
+.stepCard:hover {
+  border-color: rgba(88, 166, 255, 0.3);
+  transform: translateY(-4px);
+}
+
+.stepNumber {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(88, 166, 255, 0.1);
+  border: 1px solid rgba(88, 166, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #58a6ff;
+  flex-shrink: 0;
+}
+
+.stepTitle {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #f0f6fc;
+  margin: 0;
+}
+
+.stepDesc {
+  font-size: 0.9rem;
+  color: #8b949e;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ─── Role Preview Cards ─── */
+.rolesSection {
+  padding: 80px 48px;
   background: #0d1117;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.featureItem {
+.rolesSectionInner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.rolesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.roleCard {
+  background: #161b22;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+  cursor: default;
+}
+
+.roleCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+
+.roleCard:nth-child(1):hover { border-color: rgba(88, 166, 255, 0.4); }
+.roleCard:nth-child(2):hover { border-color: rgba(126, 231, 135, 0.4); }
+.roleCard:nth-child(3):hover { border-color: rgba(248, 81, 73, 0.4); }
+.roleCard:nth-child(4):hover { border-color: rgba(210, 168, 255, 0.4); }
+
+.roleIconWrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.roleCardTop {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.roleCardMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.roleTitle {
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin: 0;
+  color: #f0f6fc;
+}
+
+.roleRoute {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #8b949e;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.02em;
+}
+
+.roleDesc {
+  font-size: 0.9rem;
+  color: #8b949e;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.roleCapsList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.roleCap {
+  font-size: 0.82rem;
+  color: #8b949e;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.roleCapDot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  margin-top: 7px;
+  flex-shrink: 0;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+/* ─── Stats / Social Proof ─── */
+.statsSection {
+  padding: 80px 48px;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.statBlock {
+  background: #0d1117;
+  padding: 40px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-right: 1px solid rgba(255,255,255,0.07);
+}
+
+.statBlock:last-child {
+  border-right: none;
+}
+
+.statValue {
+  font-size: 2.8rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: #f0f6fc;
+}
+
+.statSuffix {
+  color: #58a6ff;
+}
+
+.statLabel {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #8b949e;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ─── CTA Banner ─── */
+.ctaBanner {
+  margin: 0 48px 80px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(88, 166, 255, 0.12) 0%, rgba(126, 231, 135, 0.08) 50%, rgba(210, 168, 255, 0.1) 100%);
+  border: 1px solid rgba(88, 166, 255, 0.2);
+  padding: 64px 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ctaBannerGlow {
+  position: absolute;
+  top: -50%;
+  left: -10%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(88,166,255,0.08), transparent 70%);
+  pointer-events: none;
+}
+
+.ctaBannerText {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.featureIcon {
-  font-size: 2rem;
-  margin-bottom: 8px;
-}
-
-.featureItem h3 {
-  font-size: 1.2rem;
-  font-weight: 800;
+.ctaBannerTitle {
+  font-size: 2.2rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
   margin: 0;
+  line-height: 1.15;
 }
 
-.featureItem p {
-  font-size: 0.95rem;
+.ctaBannerSub {
+  font-size: 1rem;
   color: #8b949e;
-  line-height: 1.5;
   margin: 0;
 }
 
+.ctaBannerActions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.ctaBannerBtn {
+  background: #f0f6fc;
+  color: #070b10;
+  border: none;
+  padding: 0 40px;
+  height: 56px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.ctaBannerBtn:hover {
+  background: #ffffff;
+  transform: translateY(-2px);
+}
+
+.ctaBannerNote {
+  font-size: 0.78rem;
+  color: #8b949e;
+  text-align: right;
+}
+
+/* ─── Footer ─── */
+.footer {
+  background: #0d1117;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 40px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.footerBrand {
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: #f0f6fc;
+}
+
+.footerLinks {
+  display: flex;
+  gap: 28px;
+}
+
+.footerLink {
+  font-size: 0.85rem;
+  color: #8b949e;
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s;
+  background: none;
+  border: none;
+  font-family: inherit;
+  padding: 0;
+}
+
+.footerLink:hover {
+  color: #f0f6fc;
+}
+
+.footerTagline {
+  font-size: 0.8rem;
+  color: rgba(139, 148, 158, 0.5);
+}
+
+/* ─── Keyframes ─── */
 @keyframes pulse {
   0% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.2); }
+  50% { opacity: 0.4; transform: scale(1.25); }
   100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 900px) {
+  .navbar { padding: 16px 24px; }
+  .navLinks { display: none; }
+  .stepsGrid { grid-template-columns: 1fr; }
+  .rolesGrid { grid-template-columns: 1fr; }
+  .statsGrid { grid-template-columns: repeat(2, 1fr); }
+  .ctaBanner { flex-direction: column; padding: 48px 32px; }
+  .ctaBannerActions { align-items: flex-start; }
+  .ctaBannerNote { text-align: left; }
+  .footer { flex-direction: column; text-align: center; }
+  .howSection, .statsSection { padding: 60px 24px; }
+  .rolesSection { padding: 60px 24px; }
 }

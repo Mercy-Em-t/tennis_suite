@@ -1,12 +1,12 @@
+import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+
 import { verifyToken } from '@/lib/auth';
 
-const prisma = new PrismaClient();
+
 
 export async function GET(request: Request) {
   try {
-    // 1. Get Token from Cookies
     const cookieHeader = request.headers.get('cookie') || '';
     const tokenMatch = cookieHeader.match(/auth_token=([^;]+)/);
     const token = tokenMatch ? tokenMatch[1] : null;
@@ -20,15 +20,15 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Invalid Token' }, { status: 401 });
     }
 
-    // 2. Fetch User and their Teams
+    // Fetch User and their Teams with Matches
     const user = await prisma.user.findUnique({
       where: { id: payload.id },
       include: {
         teams: {
           include: {
             tournament: true,
-            matchesAsTeamA: { include: { teamB: true, court: true } },
-            matchesAsTeamB: { include: { teamA: true, court: true } }
+            matchesAsTeamA: true,
+            matchesAsTeamB: true
           }
         }
       }
@@ -38,16 +38,55 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // 3. Process matches for the active tournament
-    // Assuming the first team is the active one for MVP
-    const activeTeam = user.teams.find(t => t.tournament.isActive) || user.teams[0];
-    
-    let schedule: any[] = [];
-    if (activeTeam) {
-      const matchesA = activeTeam.matchesAsTeamA.map(m => ({ ...m, opponent: m.teamB?.franchiseName || 'TBD' }));
-      const matchesB = activeTeam.matchesAsTeamB.map(m => ({ ...m, opponent: m.teamA?.franchiseName || 'TBD' }));
-      schedule = [...matchesA, ...matchesB].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    }
+    // Fetch Upcoming Tournaments (registration not CLOSED)
+    const upcomingTournaments = await prisma.tournament.findMany({
+      where: {
+        registrationPhase: { not: 'CLOSED' }
+      },
+      select: {
+        id: true,
+        name: true,
+        formatType: true,
+        startDate: true,
+        registrationPhase: true,
+        location: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      take: 10
+    });
+
+    const myTournaments = user.teams.map(t => {
+      const allMatches = [...t.matchesAsTeamA, ...t.matchesAsTeamB];
+      const matchesPlayed = allMatches.filter(m => m.status === 'COMPLETED').length;
+      
+      const pendingMatches = allMatches.filter(m => ['PENDING', 'SCHEDULED', 'READY'].includes(m.status));
+      // Sort by creation date or a hypothetical scheduledTime (using createdAt for now as proxy)
+      pendingMatches.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      
+      let nextMatchText = 'Awaiting Draw';
+      if (pendingMatches.length > 0) {
+        const next = pendingMatches[0];
+        if (next.status === 'READY') nextMatchText = 'REPORT TO COURT';
+        else if (next.status === 'SCHEDULED') nextMatchText = 'Scheduled (Up Next)';
+        else nextMatchText = 'Pending Scheduling';
+      } else if (t.tournament.isActive && allMatches.length > 0) {
+        nextMatchText = 'Awaiting Next Round';
+      } else if (!t.tournament.isActive) {
+        nextMatchText = 'Tournament Concluded';
+      }
+
+      return {
+        teamId: t.id,
+        franchiseName: t.franchiseName,
+        tournamentId: t.tournament.id,
+        tournamentName: t.tournament.name,
+        status: t.tournament.isActive ? 'ACTIVE' : 'COMPLETED',
+        matchesPlayed,
+        nextMatchText
+      };
+    });
 
     return NextResponse.json({
       success: true,
@@ -56,12 +95,8 @@ export async function GET(request: Request) {
         globalXp: user.globalXp,
         badges: JSON.parse(user.badges || '[]')
       },
-      team: activeTeam ? {
-        id: activeTeam.id,
-        franchiseName: activeTeam.franchiseName,
-        tournamentName: activeTeam.tournament.name
-      } : null,
-      schedule
+      myTournaments,
+      upcomingTournaments
     });
 
   } catch (error) {

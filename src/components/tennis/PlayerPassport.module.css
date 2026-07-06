@@ -1,0 +1,256 @@
+
+.container {
+  width: 100%;
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.headerCard {
+  position: relative;
+  overflow: hidden;
+  padding: 1.5rem;
+}
+
+.headerActions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 1rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.headerLayout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+@media (min-width: 768px) {
+  .headerLayout {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+}
+
+.avatarWrapper {
+  position: relative;
+}
+
+.avatarFrame {
+  width: 8rem;
+  height: 8rem;
+  border-radius: 50%;
+  border: 4px solid rgba(6, 182, 212, 0.5);
+  padding: 0.25rem;
+  background-color: #111827;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.avatarFallback {
+  font-size: 2.25rem;
+  color: #22d3ee;
+  font-weight: 700;
+}
+
+.shieldBadge {
+  position: absolute;
+  bottom: -0.5rem;
+  right: -0.5rem;
+  background-color: #111827;
+  border: 1px solid #06b6d4;
+  border-radius: 50%;
+  padding: 0.5rem;
+  color: #22d3ee;
+}
+
+.headerText {
+  text-align: center;
+  margin-top: 1rem;
+}
+@media (min-width: 768px) {
+  .headerText {
+    text-align: left;
+    margin-top: 0;
+  }
+}
+
+.playerName {
+  font-size: 1.875rem;
+  font-weight: 900;
+  color: #ffffff;
+  margin: 0;
+}
+
+.playerHandle {
+  color: #9ca3af;
+  margin: 0.5rem 0;
+}
+
+.badgeGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}
+@media (min-width: 768px) {
+  .badgeGroup {
+    justify-content: flex-start;
+  }
+}
+
+.bodyGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+@media (min-width: 768px) {
+  .bodyGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.cardSection {
+  padding: 1.5rem;
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sectionTitleIcon {
+  color: #22d3ee;
+}
+
+.radarContainer {
+  height: 16rem;
+  width: 100%;
+}
+
+.statsFooter {
+  display: flex;
+  justify-content: space-between;
+  text-align: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.historyItem {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.historyTitle {
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 0.25rem 0;
+}
+
+.historyDesc {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.settingsForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.inputGroup label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #d1d5db;
+  margin-bottom: 0.5rem;
+}
+
+.inputGroup input,
+.inputGroup textarea {
+  width: 100%;
+  background-color: #111827;
+  border: 1px solid #374151;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  color: #ffffff;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.inputGroup textarea {
+  height: 8rem;
+  font-family: monospace;
+  font-size: 0.875rem;
+  resize: vertical;
+}
+
+.inputGroup input:focus,
+.inputGroup textarea:focus {
+  outline: none;
+  border-color: #06b6d4;
+}
+
+.inputHint {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.formActions {
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: flex-end;
+}
+

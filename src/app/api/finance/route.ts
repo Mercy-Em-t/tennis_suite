@@ -1,9 +1,15 @@
+import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+import { requireAuth } from '@/lib/auth/require-auth';
+import { logger } from '@/lib/logger';
 
-export async function GET() {
+
+
+export async function GET(request: Request) {
+  const authResult = await requireAuth(['HOST', 'ADMIN']);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const payouts = await prisma.partnerPayout.findMany({
       take: 10,
@@ -35,6 +41,7 @@ export async function GET() {
 
     return NextResponse.json({ success: true, ledger });
   } catch (error) {
+    logger.error('[finance] Failed to fetch financial data', {}, error);
     return NextResponse.json({ error: 'Failed to fetch financial data' }, { status: 500 });
   }
 }

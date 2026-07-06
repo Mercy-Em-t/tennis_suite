@@ -1,0 +1,10 @@
+
+.pageWrapper {
+  min-height: 100vh;
+  background-color: #0d1117;
+  padding-top: 3rem;
+  padding-bottom: 6rem;
+  font-family: var(--font-outfit), sans-serif;
+  color: #e5e7eb;
+}
+

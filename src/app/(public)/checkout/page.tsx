@@ -28,8 +28,8 @@ function CheckoutForm() {
       
       // Success, route to Walled Garden
       window.location.href = '/team';
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Payment failed');
       setLoading(false);
     }
   };

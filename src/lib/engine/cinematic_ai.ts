@@ -1,6 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
+
+
 
 /**
  * Pillar 25: Generative AI Cinematic Content Pipeline
@@ -16,7 +17,7 @@ export async function generateCinematicPrompt(matchId: string) {
 
   // Derive narrative metadata
   let state = { setsA: 0, setsB: 0, gamesA: 0, gamesB: 0 };
-  try { state = typeof match.scoreState === 'string' ? JSON.parse(match.scoreState) : match.scoreState; } catch(e){}
+  try { state = typeof match.scoreState === 'string' ? JSON.parse(match.scoreState) : match.scoreState; } catch(_e){}
   const totalPoints = state.gamesA + state.gamesB;
   const isBlowout = Math.abs(state.setsA - state.setsB) >= 2 || Math.abs(state.gamesA - state.gamesB) >= 6;
   const hadDispute = match.auditLogs.some(log => log.action === "SCORE_CORRECTED");

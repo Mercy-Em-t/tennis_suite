@@ -9,7 +9,6 @@ interface QueuedAction {
 }
 
 const QUEUE_KEY = 'referee_offline_queue';
-const MATCH_KEY = 'referee_current_matchId';
 
 function readQueue(): QueuedAction[] {
   try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); } catch { return []; }
@@ -27,18 +26,16 @@ function writeQueue(q: QueuedAction[]) {
  * the connection is restored, the queue is drained sequentially into
  * /api/sync/offline, preserving strict temporal ordering.
  */
-export function useOfflineQueue(jwtToken: string) {
-  const [isOnline, setIsOnline] = useState(true); // Always true on SSR; client corrects in useEffect
-  const [queue, setQueue] = useState<QueuedAction[]>([]);
+export function useOfflineQueue() {
+  const [isOnline, setIsOnline] = useState<boolean>(
+    () => typeof window !== 'undefined' ? navigator.onLine : true
+  );
+  const [queue, setQueue] = useState<QueuedAction[]>(
+    () => typeof window !== 'undefined' ? readQueue() : []
+  );
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncResult, setLastSyncResult] = useState<string | null>(null);
   const syncCalled = useRef(false);
-
-  // Hydrate queue and real online state on client only
-  useEffect(() => {
-    setQueue(readQueue());
-    setIsOnline(navigator.onLine);
-  }, []);
 
   // Track online/offline events
   useEffect(() => {
@@ -51,15 +48,6 @@ export function useOfflineQueue(jwtToken: string) {
       window.removeEventListener('offline', onOffline);
     };
   }, []);
-
-  // Auto-sync when connection is restored
-  useEffect(() => {
-    if (isOnline && queue.length > 0 && !syncCalled.current) {
-      syncCalled.current = true;
-      syncQueue();
-    }
-    if (!isOnline) syncCalled.current = false;
-  }, [isOnline]);
 
   const enqueue = useCallback((matchId: string, teamScored: 'A' | 'B') => {
     const action: QueuedAction = {
@@ -77,6 +65,7 @@ export function useOfflineQueue(jwtToken: string) {
     return action;
   }, []);
 
+  // Declare syncQueue before the effect that references it
   const syncQueue = useCallback(async () => {
     const pending = readQueue();
     if (pending.length === 0 || isSyncing) return;
@@ -87,7 +76,6 @@ export function useOfflineQueue(jwtToken: string) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${jwtToken}`,
         },
         body: JSON.stringify({ syncPayloads: pending }),
       });
@@ -99,13 +87,22 @@ export function useOfflineQueue(jwtToken: string) {
       } else {
         setLastSyncResult(`✗ Sync failed: ${data.error}`);
       }
-    } catch (e) {
+    } catch {
       setLastSyncResult('✗ Sync error — will retry on next connection');
     } finally {
       setIsSyncing(false);
       syncCalled.current = false;
     }
-  }, [jwtToken, isSyncing]);
+  }, [isSyncing]);
+
+  // Auto-sync when connection is restored — declared after syncQueue
+  useEffect(() => {
+    if (isOnline && queue.length > 0 && !syncCalled.current) {
+      syncCalled.current = true;
+      syncQueue();
+    }
+    if (!isOnline) syncCalled.current = false;
+  }, [isOnline, queue.length, syncQueue]);
 
   return { isOnline, queue, queueLength: queue.length, enqueue, syncQueue, isSyncing, lastSyncResult };
 }

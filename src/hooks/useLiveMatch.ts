@@ -23,7 +23,7 @@ export function useLiveMatch() {
   const [data, setData] = useState<LiveMatchData | null>(null);
   const [connected, setConnected] = useState(false);
   const [latencyMs, setLatencyMs] = useState(0);
-  const lastEventTimeRef = useRef<number>(Date.now());
+  const lastEventTimeRef = useRef<number>(0); // initialised to 0; updated inside effects only
   const esRef = useRef<EventSource | null>(null);
 
   useEffect(() => {

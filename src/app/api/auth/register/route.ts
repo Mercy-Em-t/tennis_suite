@@ -1,63 +1,69 @@
+import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { signToken } from '@/lib/auth';
 
-const prisma = new PrismaClient();
+import { signToken } from '@/lib/auth';
+import { hashPassword } from '@/lib/auth/password';
+import { logger } from '@/lib/logger';
+
+
 
 export async function POST(request: Request) {
   try {
-    const { name, email, password, franchiseName, tournamentId } = await request.json();
+    const { name, email, password, phone, category, franchiseName, tournamentId, skillLevel, playstyle, emergencyContact } = await request.json();
 
     if (!name || !email || !password) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      return NextResponse.json({ error: 'Name, email, and password are required.' }, { status: 400 });
     }
 
-    // MVP: No real password hashing, just simulating registration
-    
     // Check if user exists
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
-      return NextResponse.json({ error: 'Email already in use' }, { status: 400 });
+      return NextResponse.json({ error: 'An account with this email already exists.' }, { status: 400 });
     }
 
-    // Create User (default PLAYER)
+    const passwordHash = await hashPassword(password);
+
     const user = await prisma.user.create({
       data: {
         name,
         email,
+        phone,
+        category,
+        passwordHash,
+        skillLevel: skillLevel ? parseFloat(skillLevel) : null,
+        playstyle: playstyle || null,
+        emergencyContact: emergencyContact || null,
         role: 'PLAYER',
-      }
+      },
     });
 
-    let checkoutUrl = null;
+    let checkoutUrl: string | null = null;
 
-    // If franchiseName provided, do not create Team immediately. Send to mock Stripe checkout.
     if (franchiseName) {
       let targetTournamentId = tournamentId;
-      
+
       if (!targetTournamentId) {
         const activeTournament = await prisma.tournament.findFirst({
           where: { isActive: true },
-          orderBy: { createdAt: 'desc' }
+          orderBy: { createdAt: 'desc' },
         });
         targetTournamentId = activeTournament?.id;
       }
 
       if (targetTournamentId) {
-        // Redirect to mock Stripe Checkout
         checkoutUrl = `/checkout?t=${targetTournamentId}&f=${encodeURIComponent(franchiseName)}`;
       }
     }
 
-    // Automatically log them in
+    // Automatically issue session token on successful registration
     const token = await signToken({ id: user.id, role: user.role });
 
-    const response = NextResponse.json({ 
-      success: true, 
+    const response = NextResponse.json({
+      success: true,
       user: { id: user.id, name: user.name, role: user.role },
-      checkoutUrl
+      checkoutUrl,
     });
-    
+
     response.cookies.set({
       name: 'auth_token',
       value: token,
@@ -65,12 +71,13 @@ export async function POST(request: Request) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 60 * 60 * 24 // 24 hours
+      maxAge: 60 * 60 * 24, // 24 hours
     });
 
+    logger.info('New user registered', { userId: user.id, role: user.role });
     return response;
   } catch (error) {
-    console.error('[auth/register]', error);
-    return NextResponse.json({ error: 'Registration failed' }, { status: 500 });
+    logger.error('[auth/register] Registration failed', {}, error);
+    return NextResponse.json({ error: 'Registration failed.' }, { status: 500 });
   }
 }

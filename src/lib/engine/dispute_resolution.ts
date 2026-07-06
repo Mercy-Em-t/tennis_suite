@@ -1,7 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
+
 import { TennisScoreState } from './scoring';
 
-const prisma = new PrismaClient();
+
 
 /**
  * Pillar 11: Edge-Case Match Resolution (The Dispute Engine)

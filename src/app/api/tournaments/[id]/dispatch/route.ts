@@ -1,7 +1,8 @@
+import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+
+
 
 export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
@@ -25,7 +26,7 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     const activeMatchOnCourt = await prisma.match.findFirst({
       where: {
         courtId: courtId,
-        status: 'IN_PROGRESS'
+        status: { in: ['IN_PROGRESS', 'WARMUP', 'READY'] }
       }
     });
 
@@ -47,9 +48,22 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
       where: { id: matchId },
       data: {
         courtId: courtId,
-        status: 'READY'
-      }
+        status: 'READY' // The SSE route polls Match updates and will auto-broadcast this state change
+      },
+      include: { court: true }
     });
+
+    // Fire Phase 4.3 Automated Alert for Referee PWA
+    const origin = request.headers.get('origin') || 'http://localhost:3000';
+    fetch(`${origin}/api/notifications/push`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        matchId: dispatchedMatch.id,
+        courtName: dispatchedMatch.court?.name || 'TBD',
+        action: 'REPORT_TO_COURT'
+      })
+    }).catch(e => console.error("Failed to fire push notification webhook", e));
 
     return NextResponse.json({ 
       success: true, 

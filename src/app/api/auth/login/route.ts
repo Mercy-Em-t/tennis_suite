@@ -1,35 +1,51 @@
+import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { signToken } from '@/lib/auth';
 
-const prisma = new PrismaClient();
+import { signToken } from '@/lib/auth';
+import { verifyPassword } from '@/lib/auth/password';
+import { logger } from '@/lib/logger';
+
+
 
 export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
 
-    if (!email) {
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    if (!email || !password) {
+      return NextResponse.json(
+        { error: 'Email and password are required.' },
+        { status: 400 }
+      );
     }
 
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
-      // Create user if not exists for MVP dev ease, or return 401
-      // MVP behavior: if the user types any email we haven't seen, we should return error.
-      // But for testing ease, let's just let it return 401.
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+      // Return a generic message to avoid leaking whether the email exists
+      return NextResponse.json({ error: 'Invalid credentials.' }, { status: 401 });
     }
 
-    // MVP: No real password check, just simulating login
+    // Reject legacy dev-seed rows that were created without a password
+    if (!user.passwordHash) {
+      logger.warn('Login attempt on account with no password hash', { email });
+      return NextResponse.json(
+        { error: 'Account requires password setup. Contact an administrator.' },
+        { status: 401 }
+      );
+    }
+
+    const isValid = await verifyPassword(password, user.passwordHash);
+    if (!isValid) {
+      return NextResponse.json({ error: 'Invalid credentials.' }, { status: 401 });
+    }
+
     const token = await signToken({ id: user.id, role: user.role });
 
-    const response = NextResponse.json({ 
-      success: true, 
-      user: { id: user.id, name: user.name, role: user.role } 
+    const response = NextResponse.json({
+      success: true,
+      user: { id: user.id, name: user.name, role: user.role },
     });
-    
-    // Set HTTP-only secure cookie
+
     response.cookies.set({
       name: 'auth_token',
       value: token,
@@ -37,12 +53,22 @@ export async function POST(request: Request) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 60 * 60 * 24 // 24 hours
+      maxAge: 60 * 60 * 24, // 24 hours
     });
 
+    logger.info('User logged in', { userId: user.id, role: user.role });
     return response;
-  } catch (error) {
-    console.error('[auth/login]', error);
-    return NextResponse.json({ error: 'Login failed' }, { status: 500 });
+  } catch (error: any) {
+    logger.error('[auth/login] Login failed', {}, error);
+    
+    // "Handle them kindly": Provide a gentle message for database timeouts/connection issues
+    if (error?.name === 'PrismaClientInitializationError' || error?.message?.includes('Can\'t reach database server')) {
+      return NextResponse.json(
+        { error: 'Our database is currently taking a quick breather. Please try logging in again in a few moments.' }, 
+        { status: 503 }
+      );
+    }
+
+    return NextResponse.json({ error: 'An unexpected error occurred during login. Please try again.' }, { status: 500 });
   }
 }

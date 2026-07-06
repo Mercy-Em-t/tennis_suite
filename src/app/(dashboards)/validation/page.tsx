@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styles from './validation.module.css';
 
 export default function ValidationSandbox() {
   const [logs, setLogs] = useState<{gate: string, msg: string, type: 'info'|'error'}[]>([]);
   const [offlineMode, setOfflineMode] = useState(false);
-  const [cachedActions, setCachedActions] = useState<any[]>([]);
+  const [cachedActions, setCachedActions] = useState<Record<string, unknown>[]>([]);
   const [telemetryPing, setTelemetryPing] = useState(0);
 
   const logMsg = (gate: string, msg: string, type: 'info'|'error' = 'info') => {
@@ -27,8 +27,8 @@ export default function ValidationSandbox() {
       } else {
         logMsg('GATE 1', `ERROR: ${data.error}`, 'error');
       }
-    } catch (e: any) {
-      logMsg('GATE 1', e.message, 'error');
+    } catch (e: unknown) {
+      logMsg('GATE 1', e instanceof Error ? e.message : 'Unknown error', 'error');
     }
   };
 
@@ -50,8 +50,8 @@ export default function ValidationSandbox() {
       } else if (res.status === 400 || res.status === 200) {
         logMsg('GATE 2', `FAIL: Middleware allowed unauthorized role to bypass.`, 'error');
       }
-    } catch (e: any) {
-      logMsg('GATE 2', e.message, 'error');
+    } catch (e: unknown) {
+      logMsg('GATE 2', e instanceof Error ? e.message : 'Unknown error', 'error');
     }
   };
 
@@ -85,8 +85,8 @@ export default function ValidationSandbox() {
       logMsg('GATE 3', `SYNC COMPLETE: ${data.synced} actions reconciled in ${(end - start).toFixed(2)}ms.`);
       setCachedActions([]);
       setOfflineMode(false);
-    } catch (e: any) {
-      logMsg('GATE 3', `SYNC FAILED: ${e.message}`, 'error');
+    } catch (e: unknown) {
+      logMsg('GATE 3', `SYNC FAILED: ${e instanceof Error ? e.message : 'Unknown error'}`, 'error');
     }
   };
 

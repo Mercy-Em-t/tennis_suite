@@ -2,126 +2,274 @@
 
 import React from 'react';
 import useSWR from 'swr';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
+import { motion } from 'framer-motion';
+import { Trophy, Swords, CalendarDays, KeyRound, Star, Medal, Zap, Bell } from 'lucide-react';
+import { DynamicButton } from '@/components/ui/DynamicButton';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 import { AgentChat } from '@/components/AgentChat';
+import Link from 'next/link';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
+
+/* XP level thresholds */
+const XP_LEVELS = [0, 100, 250, 500, 900, 1500, 2500];
+
+function getXpLevel(xp: number) {
+  let level = 1;
+  let nextThreshold = XP_LEVELS[1];
+  let prevThreshold = XP_LEVELS[0];
+  for (let i = 1; i < XP_LEVELS.length; i++) {
+    if (xp >= XP_LEVELS[i]) {
+      level = i + 1;
+      prevThreshold = XP_LEVELS[i];
+      nextThreshold = XP_LEVELS[i + 1] ?? XP_LEVELS[i] + 1000;
+    } else {
+      nextThreshold = XP_LEVELS[i];
+      break;
+    }
+  }
+  const progress = Math.min(((xp - prevThreshold) / (nextThreshold - prevThreshold)) * 100, 100);
+  return { level, nextThreshold, prevThreshold, progress };
+}
 
 export default function TeamDashboard() {
   const { data, error, isLoading } = useSWR('/api/player/dashboard', fetcher);
 
-  if (isLoading) return <div style={{ padding: '48px', color: '#8b949e' }}>Loading Walled Garden...</div>;
-  if (error || !data?.success) return <div style={{ padding: '48px', color: '#f85149' }}>Failed to load profile. Are you logged in?</div>;
+  if (isLoading) return <div style={{ padding: '40px', color: 'var(--text-muted)' }}>Loading Player Hub...</div>;
+  if (error || !data?.success) return <div style={{ padding: '40px', color: '#f85149' }}>Failed to load profile. Are you logged in?</div>;
 
-  const { user, team, schedule } = data;
+  const { user, myTournaments = [], upcomingTournaments = [] } = data;
+  const badges: string[] = Array.isArray(user.badges)
+    ? user.badges
+    : (() => { try { return JSON.parse(user.badges); } catch { return []; } })();
+
+  const { level, nextThreshold, progress } = getXpLevel(user.globalXp || 0);
 
   return (
-    <div style={{ padding: '48px', color: '#f0f6fc', background: '#0d1117', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
-      <header style={{ marginBottom: '48px' }}>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: 900, letterSpacing: '-0.02em', margin: 0 }}>Player Profile</h1>
-        <p style={{ color: '#8b949e', marginTop: '8px', fontSize: '1.1rem' }}>Welcome back, {user.name}</p>
-      </header>
+    <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+      
+      {/* ── Header ── */}
+      <motion.header 
+        initial={{ opacity: 0, y: -20 }} 
+        animate={{ opacity: 1, y: 0 }}
+        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '24px' }}
+      >
+        <div>
+          <h1 style={{ fontSize: '3rem', fontWeight: 800, margin: '0 0 8px 0', background: 'linear-gradient(90deg, #fff, var(--text-muted))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.02em' }}>
+            Player Hub
+          </h1>
+          <p style={{ fontSize: '1.2rem', color: 'var(--primary)', margin: 0, fontWeight: 500 }}>
+            Welcome back, {user.name}
+          </p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <button style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f0f6fc', cursor: 'pointer', position: 'relative' }}>
+            <Bell size={20} />
+            <span style={{ position: 'absolute', top: '10px', right: '12px', width: '8px', height: '8px', background: '#f85149', borderRadius: '50%', border: '2px solid #0d1117' }}></span>
+          </button>
+        </div>
+      </motion.header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '32px' }}>
-        {/* Left Col: Gamification & Team */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <Card style={{ background: '#161b22', border: '1px solid rgba(255,255,255,0.1)', padding: '24px' }}>
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '16px' }}>Gamification Status</h2>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '2rem', fontWeight: 900, color: '#7ee787' }}>{user.globalXp}</span>
-              <span style={{ color: '#8b949e', fontSize: '0.9rem', textTransform: 'uppercase', fontWeight: 700 }}>Global XP</span>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '32px', alignItems: 'start' }}>
+        
+        {/* ── Left Column: Tournaments ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          
+          <section>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ fontSize: '1.5rem', color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Swords size={24} color="var(--primary)" />
+                My Tournaments
+              </h2>
+              <Link href="/team/tournaments/history" style={{ color: 'var(--primary)', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 600 }}>
+                View All →
+              </Link>
             </div>
-            
-            <h3 style={{ fontSize: '0.9rem', color: '#8b949e', marginBottom: '8px', textTransform: 'uppercase', fontWeight: 700 }}>Earned Badges</h3>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {user.badges.map((badge: string, i: number) => (
-                <Badge key={i} variant={i % 2 === 0 ? 'accent' : 'warning'}>{badge}</Badge>
-              ))}
-              {user.badges.length === 0 && <span style={{ color: '#484f58', fontSize: '0.9rem' }}>No badges yet.</span>}
-            </div>
-          </Card>
-
-          <Card style={{ background: '#161b22', border: '1px solid rgba(255,255,255,0.1)', padding: '24px' }}>
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '8px' }}>Active Franchise</h2>
-            {team ? (
-              <>
-                <p style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 4px 0', color: '#58a6ff' }}>{team.franchiseName}</p>
-                <p style={{ color: '#8b949e', fontSize: '0.9rem', margin: 0 }}>Registered for: {team.tournamentName}</p>
-              </>
+            {myTournaments.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>You haven't joined any tournaments yet.</p>
             ) : (
-              <p style={{ color: '#8b949e' }}>You are not registered to any active teams.</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+                {myTournaments.map((t: any, idx: number) => (
+                  <Link href={`/team/tournaments/${t.tournamentId}`} key={t.tournamentId} style={{ textDecoration: 'none' }}>
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                      style={{
+                        background: 'rgba(255,255,255,0.02)',
+                        backdropFilter: 'blur(20px)',
+                        borderRadius: '16px',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        padding: '24px',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        cursor: 'pointer'
+                      }}
+                      whileHover={{ y: -4, borderColor: 'var(--primary)', background: 'rgba(255,255,255,0.04)' }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                        <h3 style={{ margin: 0, color: '#fff', fontSize: '1.25rem', fontWeight: 700 }}>{t.tournamentName}</h3>
+                        <StatusBadge status={t.status === 'ACTIVE' ? 'LIVE' : t.status === 'COMPLETED' ? 'COMPLETED' : 'UPCOMING'} />
+                      </div>
+                      <p style={{ color: 'var(--text-muted)', margin: '0 0 20px 0', fontSize: '0.9rem' }}>
+                        Playing as: <span style={{ color: '#fff', fontWeight: 600 }}>{t.franchiseName}</span>
+                      </p>
+                      
+                      <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>Matches Played</span>
+                          <span style={{ color: '#fff', fontWeight: 700 }}>{t.matchesPlayed}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>Next Match</span>
+                          <span style={{ 
+                            color: t.nextMatchText === 'REPORT TO COURT' ? '#f85149' : '#fff', 
+                            fontWeight: 700,
+                            animation: t.nextMatchText === 'REPORT TO COURT' ? 'pulse 2s infinite' : 'none'
+                          }}>
+                            {t.nextMatchText}
+                          </span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </Link>
+                ))}
+              </div>
             )}
-          </Card>
+          </section>
 
-          <Card style={{ background: '#161b22', border: '1px solid #d2a8ff', padding: '24px' }}>
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '16px', color: '#d2a8ff' }}>Premium Upgrades</h2>
-            <p style={{ color: '#8b949e', fontSize: '0.9rem', marginBottom: '16px', lineHeight: 1.5 }}>
-              Unlock high-resolution camera angles and deep match telemetry data for your portfolio.
-            </p>
-            <Button 
-              variant="primary" 
-              onClick={async () => {
-                await fetch('/api/upsell', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ itemName: 'High-Res Telemetry', quantity: 1 })
-                });
-                alert('Mock Upsell Complete! Ledgers updated.');
-              }}
-              style={{ width: '100%', background: '#d2a8ff', color: '#000' }}
-            >
-              Purchase Telemetry ($50.00)
-            </Button>
-          </Card>
+          <section>
+            <h2 style={{ fontSize: '1.5rem', color: 'var(--text-main)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <CalendarDays size={24} color="var(--primary)" />
+              Discover Tournaments
+            </h2>
+            {upcomingTournaments.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No upcoming tournaments open for registration.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {upcomingTournaments.map((t: any) => (
+                  <div key={t.id} onClick={() => window.location.href = `/tournaments/${t.id}/profile`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--card-border)', borderRadius: '12px', padding: '20px', cursor: 'pointer', transition: 'all 0.2s ease' }} onMouseOver={(e) => (e.currentTarget.style.borderColor = 'var(--primary)')} onMouseOut={(e) => (e.currentTarget.style.borderColor = 'var(--card-border)')}>
+                    <div>
+                      <h3 style={{ margin: '0 0 8px 0', color: '#fff', fontSize: '1.1rem' }}>{t.name}</h3>
+                      <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                        {t.formatType} • {t.location || 'Online'}
+                      </p>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <StatusBadge status="UPCOMING">{t.registrationPhase}</StatusBadge>
+                      <Link href={`/tournaments/${t.id}/register`} style={{ textDecoration: 'none' }} onClick={(e) => e.stopPropagation()}>
+                        <DynamicButton variant="primary">Join</DynamicButton>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
         </div>
 
-        {/* Right Col: Match Schedule & Agent OS */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-          <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '24px' }}>Your Schedule</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {schedule.length === 0 && (
-                <div style={{ padding: '32px', textAlign: 'center', border: '1px dashed rgba(255,255,255,0.2)', borderRadius: '12px', color: '#8b949e' }}>
-                  No matches scheduled yet.
+        {/* ── Right Column: Gamification & Action ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          
+          {/* Umpire Claim */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+            style={{ background: 'linear-gradient(145deg, rgba(210,168,255,0.1) 0%, rgba(210,168,255,0.02) 100%)', border: '1px solid rgba(210,168,255,0.3)', borderRadius: '16px', padding: '24px' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+              <div style={{ background: 'rgba(210,168,255,0.2)', padding: '8px', borderRadius: '8px' }}>
+                <KeyRound size={20} color="#d2a8ff" />
+              </div>
+              <h3 style={{ margin: 0, color: '#d2a8ff', fontSize: '1.2rem', fontWeight: 700 }}>Assigned as Umpire?</h3>
+            </div>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '20px', lineHeight: 1.5 }}>
+              Enter the 6-digit PIN provided by your referee to securely access the scoring terminal.
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <input 
+                type="text" 
+                id="umpire-pin-input"
+                placeholder="000000" 
+                maxLength={6}
+                style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(210,168,255,0.2)', borderRadius: '8px', padding: '12px', color: '#fff', fontSize: '1.2rem', letterSpacing: '4px', textAlign: 'center', outline: 'none' }}
+              />
+              <DynamicButton 
+                variant="outline" 
+                style={{ borderColor: '#d2a8ff', color: '#d2a8ff' }}
+                onClick={async () => {
+                  const pin = (document.getElementById('umpire-pin-input') as HTMLInputElement)?.value;
+                  if (!pin || pin.length !== 6) return alert('Invalid PIN');
+                  const res = await fetch('/api/player/umpire/claim', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin })
+                  });
+                  const d = await res.json();
+                  if (d.success) {
+                    window.location.href = `/team/umpire/${d.tournamentId}/${d.matchId}`;
+                  } else {
+                    alert(d.error || 'Failed to claim match');
+                  }
+                }}
+              >
+                Claim
+              </DynamicButton>
+            </div>
+          </motion.div>
+
+          {/* Gamification */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
+            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: '24px' }}
+          >
+            <h3 style={{ margin: '0 0 24px 0', color: 'var(--text-main)', fontSize: '1.2rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Zap size={20} color="var(--accent)" />
+              Gamification Status
+            </h3>
+            
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: '8px' }}>
+                <span style={{ fontSize: '3.5rem', fontWeight: 900, color: '#fff', letterSpacing: '-0.05em' }}>{user.globalXp || 0}</span>
+                <span style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '1.2rem' }}>XP</span>
+              </div>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                Level <span style={{ color: '#fff', fontWeight: 700 }}>{level}</span>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '8px', background: 'rgba(0,0,0,0.5)', height: '12px', borderRadius: '6px', overflow: 'hidden', position: 'relative' }}>
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                style={{ position: 'absolute', top: 0, left: 0, bottom: 0, background: 'linear-gradient(90deg, var(--primary), var(--accent))', borderRadius: '6px' }}
+              />
+            </div>
+            <p style={{ textAlign: 'right', margin: 0, color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+              {nextThreshold - (user.globalXp || 0)} XP to Level {level + 1}
+            </p>
+
+            <div style={{ marginTop: '32px' }}>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '16px', fontWeight: 700 }}>Earned Badges</p>
+              {badges.length === 0 ? (
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No badges yet. Play matches to earn them!</p>
+              ) : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                  {badges.map((badge, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '8px 12px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      <Medal size={16} color="gold" />
+                      <span style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 500 }}>{badge}</span>
+                    </div>
+                  ))}
                 </div>
               )}
-              {schedule.map((match: any) => (
-                <Card key={match.id} style={{ background: '#161b22', border: '1px solid rgba(255,255,255,0.1)', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                      {match.status === 'IN_PROGRESS' && <Badge variant="warning">LIVE</Badge>}
-                      {match.status === 'COMPLETED' && <Badge variant="success">FINAL</Badge>}
-                      {match.status === 'SCHEDULED' && <Badge variant="accent">UPCOMING</Badge>}
-                      {match.court && <span style={{ fontSize: '0.85rem', color: '#8b949e' }}>• {match.court.name}</span>}
-                    </div>
-                    <div style={{ fontSize: '1.2rem' }}>
-                      <span style={{ color: '#8b949e' }}>vs</span> <strong style={{ fontWeight: 700 }}>{match.opponent}</strong>
-                    </div>
-                  </div>
-
-                  <div style={{ textAlign: 'right' }}>
-                    {(match.status === 'IN_PROGRESS' || match.status === 'COMPLETED') && (
-                      <div style={{ fontFamily: 'monospace', fontSize: '1.5rem', fontWeight: 700, color: match.status === 'COMPLETED' ? '#7ee787' : '#58a6ff' }}>
-                        {JSON.parse(match.scoreState).setsA} - {JSON.parse(match.scoreState).setsB}
-                      </div>
-                    )}
-                    {match.status === 'SCHEDULED' && (
-                      <Button variant="secondary" size="sm">View Details</Button>
-                    )}
-                  </div>
-                </Card>
-              ))}
             </div>
-          </div>
+          </motion.div>
 
-          <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '24px' }}>Agent OS</h2>
-            <AgentChat playerId={user.id} tournamentId={team?.tournamentId || ''} />
-          </div>
         </div>
       </div>
+      <AgentChat playerId={user?.id || ''} tournamentId={myTournaments?.[0]?.tournamentId || ''} />
     </div>
   );
 }

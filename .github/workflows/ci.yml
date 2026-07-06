@@ -1,0 +1,46 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    env:
+      # Dummy Environment variables required by Prisma/Next.js at build time
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/dummy"
+      DIRECT_URL: "postgresql://postgres:postgres@localhost:5432/dummy"
+      STRIPE_SECRET_KEY: "sk_test_dummy"
+      STRIPE_WEBHOOK_SECRET: "whsec_dummy"
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js 20
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install Dependencies
+      run: npm ci || npm install
+
+    - name: Run ESLint
+      run: npm run lint
+
+    - name: Run TypeScript Type Check
+      run: npm run typecheck
+
+    - name: Generate Prisma Client
+      run: npx prisma generate
+
+    - name: Run Vitest Unit Tests
+      run: npm run test
+
+    - name: Verify Next.js Build
+      run: npm run build

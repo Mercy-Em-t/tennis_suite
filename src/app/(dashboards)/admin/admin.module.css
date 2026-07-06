@@ -1,115 +1,371 @@
-.container {
-  display: flex;
-  height: 100vh;
-  background-color: var(--bg-color);
-  color: var(--text-main);
-  overflow: hidden;
-}
+/* ============================================================
+   TENNIS SUITE — ADMIN / HOST DASHBOARD
+   ============================================================ */
 
-.sidebar {
-  width: 250px;
-  background-color: var(--card-bg);
-  border-right: 1px solid var(--card-border);
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.navItem {
-  padding: 12px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.navItem:hover {
-  background-color: var(--card-border);
-  color: var(--text-main);
-}
-
-.navItem.active {
-  background-color: var(--accent-glow);
-  color: var(--accent);
-}
-
-.main {
-  flex: 1;
+.page {
   padding: 48px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
+  color: #f0f6fc;
+  background: #0d1117;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
 }
 
+/* ─── Header ─── */
 .header {
   display: flex;
   justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 28px;
+  margin-bottom: 32px;
+}
+
+.headerLeft {}
+
+.pageTitle {
+  font-size: 2.5rem;
+  font-weight: 900;
+  margin: 0;
+  letter-spacing: -0.03em;
+}
+
+.pageSubtitle {
+  color: #8b949e;
+  margin: 8px 0 0;
+  font-size: 1.05rem;
+}
+
+.headerActions {
+  display: flex;
   align-items: center;
+  gap: 12px;
 }
 
-.title {
-  font-size: 2rem;
+.validationLink {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #d2a8ff;
+  background: rgba(210, 168, 255, 0.08);
+  border: 1px solid rgba(210, 168, 255, 0.2);
+  padding: 6px 14px;
+  border-radius: 100px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.validationLink:hover {
+  background: rgba(210, 168, 255, 0.15);
+}
+
+/* ─── Stat Bar ─── */
+.statBar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 40px;
+}
+
+.statCell {
+  background: #161b22;
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.statCell:last-child {
+  border-right: none;
+}
+
+.statIcon {
+  font-size: 1.6rem;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(88, 166, 255, 0.08);
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.statInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.statNum {
+  font-size: 1.8rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #f0f6fc;
+  letter-spacing: -0.03em;
+}
+
+.statDesc {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #8b949e;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+/* ─── Create Panel ─── */
+.createPanel {
+  background: #161b22;
+  border: 1px solid #58a6ff;
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 36px;
+  box-shadow: 0 0 40px rgba(88, 166, 255, 0.08);
+}
+
+.createTitle {
+  font-size: 1.4rem;
   font-weight: 800;
+  margin: 0 0 20px 0;
 }
 
-/* Scheduler */
-.timeline {
+.formGrid {
   display: flex;
   gap: 16px;
-  overflow-x: auto;
-  padding-bottom: 16px;
-}
-
-.courtCol {
-  min-width: 200px;
-  background-color: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 12px;
-  padding: 16px;
-}
-
-.courtTitle {
-  font-weight: 700;
   margin-bottom: 16px;
-  text-align: center;
-  border-bottom: 1px solid var(--card-border);
-  padding-bottom: 8px;
 }
 
-.timeBlock {
-  background-color: var(--bg-glass);
-  border: 1px solid var(--glass-border);
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 8px;
-  font-size: 0.875rem;
-  cursor: grab;
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
 }
 
-/* Financial Ledger */
-.table {
-  width: 100%;
-  border-collapse: collapse;
-}
+.formField.wide { flex: 2; }
 
-.table th, .table td {
-  padding: 16px;
-  text-align: left;
-  border-bottom: 1px solid var(--card-border);
-}
-
-.table th {
-  color: var(--text-muted);
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.875rem;
-}
-
-.amount {
-  font-family: monospace;
+.formLabel {
+  font-size: 0.82rem;
   font-weight: 700;
-  color: var(--success);
+  color: #8b949e;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.formInput,
+.formSelect {
+  width: 100%;
+  padding: 12px 14px;
+  background: #0d1117;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f0f6fc;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.formInput:focus,
+.formSelect:focus {
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.12);
+}
+
+.formSelect option {
+  background: #161b22;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+/* ─── Section header ─── */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+/* ─── Tournament Card Grid ─── */
+.tournamentGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 20px;
+}
+
+.tournamentCard {
+  background: #161b22;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+}
+
+.tournamentCard:hover {
+  border-color: rgba(88, 166, 255, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+}
+
+.cardBody {
+  padding: 24px;
+}
+
+.cardTopRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.formatChip {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #8b949e;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tournamentName {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 0 0 20px 0;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.fillBarSection {
+  margin-bottom: 20px;
+}
+
+.fillBarLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+
+.fillBarText {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #8b949e;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.fillBarCount {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #f0f6fc;
+}
+
+.fillBarTrack {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.fillBarFill {
+  height: 100%;
+  border-radius: 100px;
+  background: linear-gradient(90deg, #58a6ff, #7ee787);
+  transition: width 0.5s ease;
+}
+
+.cardStats {
+  display: flex;
+  gap: 24px;
+}
+
+.cardStat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cardStatValue {
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.cardStatLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #8b949e;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+/* ─── Card Footer / Actions ─── */
+.cardFooter {
+  padding: 14px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+/* ─── Empty State ─── */
+.emptyState {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  gap: 16px;
+  text-align: center;
+}
+
+.emptyIcon {
+  font-size: 3rem;
+  opacity: 0.4;
+}
+
+.emptyTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #f0f6fc;
+  margin: 0;
+}
+
+.emptyDesc {
+  font-size: 0.9rem;
+  color: #8b949e;
+  margin: 0;
+  max-width: 360px;
+  line-height: 1.5;
+}
+
+/* ─── Loading ─── */
+.loadingState {
+  padding: 80px;
+  color: #8b949e;
+  text-align: center;
+  font-size: 1rem;
 }

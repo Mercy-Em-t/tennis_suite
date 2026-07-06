@@ -1,0 +1,111 @@
+summarized the current state, architecture, roles, and operational status based on our extensive planning.
+
+1. System Overview:
+2. Foundational Architecture:
+
+Core Systems: Database design, role-based access control (RBAC), and autonomous agent orchestration.
+Operational Resilience:
+
+Deployment: Infrastructure as Code (IaC) using Terraform for consistent, scalable environment provisioning (Supabase, Vercel).
+
+3. Persona Ecosystem
+
+personas to manage the suite, ensuring strict separation of concerns through a RACI/RBAC framework:
+
+4. Operational Readiness & Roadmap
+
+The operational framework is defined by three routine loops:
+
+
+Daily: System health, uptime, and match pulse monitoring.
+
+
+Monthly: Financial audits, throughput review, and ledger reconciliation.
+
+
+Yearly: Strategic technical evaluation and long-term archival.
+
+To perform a comprehensive, unified sweep of the Tennis Suite and verify that our architectural vision matches the actual implementation, we will execute a **"Root-to-Core" Verification Audit**.
+
+This plan is designed to force our agents to look beyond the documentation and into the actual file system, database schema, and active endpoint logic.
+
+### 1. The "Root-to-Core" Audit Plan (The Roadmap)
+
+We will execute this in four horizontal sweeps to ensure every "pillar" of the system is accounted for and validated against the blueprints.
+
+| Phase | Focus Area | Goal |
+| --- | --- | --- |
+| **Phase 1: Structure & Root** | Root directory, CI/CD, and IaC | Verify the deployment readiness and environment integrity.
+
+ |
+| **Phase 2: Data & Schema** | Prisma Schema & Database State | Confirm the "Ground Truth" data model and relational integrity.
+
+ |
+| **Phase 3: The Functional Core** | API Routes & Logic Layers | Validate the Automaton, Treasury, and Agent OS operational logic.
+
+ |
+| **Phase 4: Agent Validation** | Immutable Logs & Task Records | Cross-reference agent findings against the system's "permanent record".
+
+ |
+
+---
+
+### 2. Execution Directive for Agents
+
+**To: Engineering Agents**
+**Subject: URGENT: Root-to-Core Architectural Audit**
+
+You are tasked with a comprehensive sweep of the Tennis Suite. Do not rely on high-level summaries; you must inspect the actual project state.
+
+**Your mandate is to:**
+
+1. **Perform the Root Audit:** Start from the root directory. List all files and cross-reference them against the `documentation.md` and `task_list.md`. Identify any orphaned files or undocumented modules.
+2. **Schema Verification:** Run an inspection of the `prisma` schema. Compare the `Team`, `Match`, `Court`, and `Ledger` models against the requirements defined in our Phase 3 and Phase 4 artifacts.
+
+
+3. **Functional Logic Audit:** For each critical endpoint—`/api/tournaments/[id]/generate-bracket`, `/api/checkout/session`, and `/api/ai/agent/reschedule`—verify the presence of:
+* Pre-flight validation (Atomic checks).
+
+
+* Error handling (Specific error codes, not generic messages).
+
+
+* State synchronization hooks (SSE/Webhooks).
+
+
+
+
+4. **Agent Findings Report:** Once you have fleshed out the system, you must produce a **"Reality Report"**. This report must include:
+* **What exists:** A list of verified, functional modules.
+* **What is missing:** Any discrepancies between the 40-pillar blueprint and the actual codebase.
+* 
+**Drift Analysis:** Any "black-box" logic that evolved during implementation and differs from our initial sprint goals.
+
+
+
+
+
+---
+
+### 3. Verification & Validation Protocol
+
+To ensure the agents are reporting accurately, the QA/Validation Lead will use the following gate protocol:
+
+* 
+**Gate 1 (Verification):** Agents must provide a file path trace for every major functional module back to its architectural pillar in the 40-pillar map.
+
+
+* **Gate 2 (Consistency):** The `immutable_log.md` must be parsed. If an action or decision is in the code but not the log, the agent must flag it as an "Audit Discrepancy".
+
+
+* 
+**Gate 3 (Final Output):** A **System Reality Map** (a markdown table) will be produced, contrasting the "Intended Architecture" vs. "Implemented Reality".
+
+
+
+**[SYSTEM DIRECTIVE]:** Begin Phase 1 immediately. I expect the first "Reality Report" on my desk as soon as the root audit is complete. Start by traversing the `TENNIS SUITE/prisma` folder and cross-referencing it with the all the `documentation.md` files. Report your findings.
+
+could you create a plan and roadmap to sweep through the system to ascertain this and let the aegent report on their findings
+what you claim to have and their report on what exists.
+
+ideally ensuret that your plan starts from the root and goes all the way deep intot he system and fleshes it out. also encourage them to produce their version of what they have after fleshing the system out according tho what they have,.

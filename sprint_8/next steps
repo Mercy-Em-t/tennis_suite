@@ -1,0 +1,54 @@
+To ensure your sprint is as robust and effective as possible, here are a few final recommendations to consider before initiating the work with your agent. These additions focus on long-term sustainability and proactive risk management:
+
+### 1. Define "Layer-Specific State"
+
+While you have established the communication interface, ensure your documentation defines how each module maintains its internal state.
+
+* 
+**Session State (L5):** Define where and how session tokens or user associations are cached.
+
+
+* 
+**Transport State (L4):** Specify if the `TransportModule` should maintain a persistent connection state (e.g., WebSocket heartbeats) or handle reconnections automatically.
+
+
+
+### 2. Explicitly Map Lower Layers (L1–L3)
+
+Your refactoring guide heavily emphasizes the software-centric layers (L4–L7). To ensure your system architecture is complete, clarify what constitutes the lower layers in your environment:
+
+* 
+**Layer 3 (Network):** Confirm if this is represented by your `gameConnection.ts` (WebRTC) or another specific routing mechanism.
+
+
+* 
+**Layer 1 & 2:** Document these as the environment's responsibility (e.g., hardware/physical connections) so developers do not attempt to refactor them directly.
+
+
+
+### 3. Audit the Error Handling Loop
+
+As mentioned previously, ensure your `tasklist.md` includes a specific task to **"Audit the Error Handling Loop."** This ensures that when a failure occurs at Layer 4 (e.g., `ERR_TRANSPORT_TIMEOUT`), the system doesn't just log it—it must "bubble up" to Layer 7 so the UI can present a user-friendly alert.
+
+### 4. Continuous Documentation Policy
+
+Since the `log.md` is meant to track progress, instruct your agent to update it **before and after** any major code commit. This keeps the audit trail accurate and makes it easier for you to review progress during your check-ins.
+
+### 5. Final Verification Test Enhancement
+
+To add more rigor to the "Layer Check" exercise at the end of the sprint, you can require the team to produce a **"Troubleshooting Log"** for the test scenario. Instead of just identifying the layer, have them document:
+
+* 
+**The Symptom**.
+
+
+* 
+**The Layer of Failure**.
+
+
+* 
+**The Data Payload/Metadata** that helped them isolate the issue at that layer.
+
+
+
+Would you like me to incorporate these points into a final, consolidated "Sprint Master Checklist" for you to provide to your agent?

@@ -1,6 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
+
+
 
 /**
  * Pillar 29: Automated Social Media Syndication
@@ -27,7 +28,7 @@ export async function generateSocialPayload(matchId: string, eventType: 'MATCH_S
       break;
     case 'MATCH_END':
       let state = { setsA: 0, setsB: 0 };
-      try { state = typeof match.scoreState === 'string' ? JSON.parse(match.scoreState) : match.scoreState; } catch(e){}
+      try { state = typeof match.scoreState === 'string' ? JSON.parse(match.scoreState) : match.scoreState; } catch(_e){}
       const winner = state.setsA > state.setsB ? teamAName : teamBName;
       tweetText = `🏆 FINAL SCORE: ${winner} takes the victory ${Math.max(state.setsA, state.setsB)} sets to ${Math.min(state.setsA, state.setsB)}. What a match! #TennisSuite`;
       graphicTemplate = "final_score_card";
