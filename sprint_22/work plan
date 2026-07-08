@@ -1,0 +1,81 @@
+sprint 22 
+
+welcome to sprint 22
+this is what we aim to get done on this sprint. its quite huge so barace oyurself for it.
+
+
+begin with a rigorous sytem analysis and map out the entire system. 
+everything in this project directory called tennis suite.
+
+due to the size of this work we will use grph based agent frameworks which will be defined in a few.
+
+here is what we expect.
+1. a properly documneted case study of tournamnet management system(spawn this file):
+ to contain a case study of how current systems operate.
+ identify bottlenecks, commendations and necessary relevant details.
+ write it out in this document.
+
+ then draft a section for the cae study in which this systeme the tennos suite will be applicable.
+
+2. a nother document where you interpret the case study and identify problem and stake holders
+define the scope of the project.
+
+3. a document where you define the requirements
+ inlcuding user stories(note the several users in this system,  (admin, player, spectator, etc)
+ functional and non functional requirements
+ acceptance criteria
+ 
+4. develop the use cases
+  fully dressed usecases
+  map out actor-use case identification
+  model as-is and to-be processes
+  propose improvements and process modelling
+
+5. data modelling
+conceptual data modelling
+erd domian modelling
+  buildER diagrams
+  relational schema
+  data dictionaries
+  business rules
+
+  6. trnasition into design
+  validate and prioritize requirements traceability
+  Moscow prioritization
+  traceability matrix
+
+  7. design architecture
+  develop context diagrams
+  deveolp data flow diagrams
+  propose architecture
+  map componenets t requirements
+
+  8 ui design
+  prototypes(available in the sandboxes)
+  usability testing
+  usability principles
+
+  9. program design
+   structured design
+   structure chart from system requirements
+   process model
+   define modules. relationships are they transform or transactional?
+   structure charts for the processes, use cases
+   modules and responsibilites
+   map structure to UML componenets
+
+   10 data design integration
+   map erd to high level logical schemarelate use case to data operation
+   crdu matrixlogical schema draft
+
+   move to implementation. transition to new system
+   develop implementation palan
+   draft test cases
+   UAT test cases
+
+   consolidate artifacts and draft feedback
+   
+
+  
+
+ 

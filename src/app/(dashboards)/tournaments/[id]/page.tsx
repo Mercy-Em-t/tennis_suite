@@ -6,14 +6,29 @@ import Papa from 'papaparse';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { AnimatePresence, motion } from 'framer-motion';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
+
+type Phase = 'EARLY' | 'LATE' | 'CLOSED';
+const PHASE_LABELS: Record<Phase, string> = { EARLY: 'REGISTRATION OPEN', LATE: 'LATE REGISTRATION', CLOSED: 'REGISTRATION CLOSED' };
+const PHASE_VARIANTS: Record<Phase, 'success' | 'warning' | 'secondary'> = { EARLY: 'success', LATE: 'warning', CLOSED: 'secondary' };
+
+function groupByCategory(teams: any[]) {
+  const map: Record<string, any[]> = {};
+  teams?.forEach((t) => {
+    const cats: string[] = JSON.parse(t.categories || '["Open"]');
+    cats.forEach((cat) => { if (!map[cat]) map[cat] = []; map[cat].push(t); });
+  });
+  return map;
+}
 
 export default function TournamentDashboard({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const { data, error, isLoading, mutate } = useSWR(`/api/tournaments/${resolvedParams.id}`, fetcher, { refreshInterval: 5000 });
   const [publishing, setPublishing] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handlePhaseToggle = async (newPhase: string) => {
     setPublishing(true);
@@ -41,12 +56,12 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ rows: results.data })
           });
-          const data = await res.json();
-          if (data.success) {
-            alert(`Successfully ingested ${data.count} franchises!`);
+          const resData = await res.json();
+          if (resData.success) {
+            alert(`Successfully ingested ${resData.count} franchises!`);
             mutate();
           } else {
-            alert(`Ingestion Error: ${data.error}`);
+            alert(`Ingestion Error: ${resData.error}`);
           }
         } catch (err) {
           alert('A network error occurred during ingestion.');
@@ -58,152 +73,160 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
     });
   };
 
-  if (isLoading) return <div style={{ padding: '48px', color: '#8b949e' }}>Loading Command Center...</div>;
-  if (error || !data?.success) return <div style={{ padding: '48px', color: '#f85149' }}>Failed to load tournament data.</div>;
+  if (isLoading) return <div style={{ padding: '48px', color: '#8b949e', background: '#0d1117', minHeight: '100vh' }}>Loading Command Center...</div>;
+  if (error || !data?.success) return <div style={{ padding: '48px', color: '#f85149', background: '#0d1117', minHeight: '100vh' }}>Failed to load tournament data.</div>;
 
   const { tournament } = data;
-  // Basic stats fallback since we might have removed the heavy aggregation in the GET route
-  const stats = data.stats || { completionPercentage: 0, completedMatches: 0, totalMatches: 0, avgDurationSec: 0 };
+  const phase = tournament.registrationPhase as Phase || 'EARLY';
   
+  const statsObj = data.stats || { completionPercentage: 0, completedMatches: 0, totalMatches: 0, avgDurationSec: 0 };
   const magicLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/register?t=${tournament.id}`;
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(magicLink)}&bgcolor=0d1117&color=58a6ff`;
+  const qr = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(magicLink)}&bgcolor=0d1117&color=58a6ff`;
+  
+  const cats = groupByCategory(tournament.teams || []);
+  const fmt = (s: number) => Math.floor(s / 60) + 'm ' + (s % 60) + 's';
+  const handleCopy = () => { navigator.clipboard.writeText(magicLink).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
-  // Group teams by category
-  const categoriesMap: Record<string, any[]> = {};
-  tournament.teams?.forEach((team: any) => {
-    const cats = JSON.parse(team.categories || '["Open"]');
-    cats.forEach((cat: string) => {
-      if (!categoriesMap[cat]) categoriesMap[cat] = [];
-      categoriesMap[cat].push(team);
-    });
-  });
+  const statCards = [
+    { label: 'Completion', value: statsObj.completionPercentage + '%', color: '#58a6ff' },
+    { label: 'Matches', value: statsObj.completedMatches + ' / ' + statsObj.totalMatches, color: '#3fb950' },
+    { label: 'Avg Duration', value: fmt(statsObj.avgDurationSec), color: '#d2a8ff' },
+    { label: 'Teams', value: String((tournament.teams || []).length), color: '#f5a623' },
+  ];
+
+  const S = {
+    page: { padding: '48px', color: '#f0f6fc', background: '#0d1117', minHeight: '100vh', fontFamily: 'Inter, system-ui, sans-serif' } as React.CSSProperties,
+    pill: { background: 'rgba(255,166,0,0.12)', border: '1px solid rgba(255,166,0,0.3)', color: '#f5a623', borderRadius: '999px', padding: '4px 14px', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.08em' } as React.CSSProperties,
+    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '24px', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' } as React.CSSProperties,
+    h1: { fontSize: '2rem', fontWeight: 900, letterSpacing: '-0.02em', margin: 0 } as React.CSSProperties,
+    muted: { color: '#8b949e', margin: 0 } as React.CSSProperties,
+    statGrid: { display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '16px', marginBottom: '32px' } as React.CSSProperties,
+    statCard: { background: '#161b22', border: '1px solid rgba(255,255,255,0.07)', padding: '18px 20px' } as React.CSSProperties,
+    actionGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '48px' } as React.CSSProperties,
+    poolCard: { background: '#161b22', border: '1px solid #d2a8ff', padding: '24px', gridColumn: '1/-1' } as React.CSSProperties,
+    dispCard: { background: '#161b22', border: '1px solid #58a6ff', padding: '24px', gridColumn: '1/-1' } as React.CSSProperties,
+    linkCard: { background: '#161b22', border: '1px solid rgba(255,255,255,0.08)', padding: '24px', display: 'flex', gap: '24px', alignItems: 'flex-start' } as React.CSSProperties,
+    csvCard: { background: '#161b22', border: '1px solid rgba(255,255,255,0.08)', padding: '24px' } as React.CSSProperties,
+    cardRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' } as React.CSSProperties,
+    qr: { width: '130px', height: '130px', borderRadius: '8px', border: '2px solid rgba(255,255,255,0.1)', flexShrink: 0 } as React.CSSProperties,
+    input: { flex: 1, padding: '10px 14px', background: '#0d1117', border: '1px solid rgba(255,255,255,0.15)', color: '#58a6ff', borderRadius: '6px', fontFamily: 'monospace', fontSize: '0.82rem', minWidth: 0 } as React.CSSProperties,
+    teamGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: '16px' } as React.CSSProperties,
+    teamCard: { background: '#161b22', border: '1px solid rgba(255,255,255,0.06)', padding: '18px' } as React.CSSProperties,
+  };
 
   return (
-    <div style={{ padding: '48px', color: '#f0f6fc', background: '#0d1117', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
-      
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '24px', marginBottom: '32px' }}>
+    <div style={S.page}>
+      <header style={S.header}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
-            <h1 style={{ fontSize: '2rem', fontWeight: 900, letterSpacing: '-0.02em', margin: 0 }}>{tournament.name}</h1>
-            {tournament.registrationPhase === 'EARLY' ? <Badge variant="success">REGISTRATION OPEN</Badge> : 
-             tournament.registrationPhase === 'LATE' ? <Badge variant="warning">LATE REGISTRATION</Badge> : 
-             <Badge variant="secondary">REGISTRATION CLOSED</Badge>}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px', flexWrap: 'wrap' }}>
+            <h1 style={S.h1}>{tournament.name}</h1>
+            <Badge variant={PHASE_VARIANTS[phase]}>{PHASE_LABELS[phase]}</Badge>
           </div>
-          <p style={{ color: '#8b949e', margin: 0, fontSize: '1.1rem' }}>ID: {tournament.id}</p>
+          <p style={S.muted}>{tournament.location || 'Location TBA'} | ID: <span style={{ fontFamily: 'monospace', color: '#58a6ff' }}>{tournament.id}</span></p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
-          {tournament.registrationPhase === 'CLOSED' ? (
-            <Button onClick={() => handlePhaseToggle('EARLY')} variant="success" disabled={publishing}>Open Early Registration</Button>
-          ) : tournament.registrationPhase === 'EARLY' ? (
-            <Button onClick={() => handlePhaseToggle('LATE')} variant="warning" disabled={publishing}>Switch to Late Onsite Reg</Button>
-          ) : (
-            <Button onClick={() => handlePhaseToggle('CLOSED')} variant="secondary" disabled={publishing}>Close Registration</Button>
-          )}
+          {phase === 'CLOSED' && <Button variant='success' disabled={publishing} onClick={() => handlePhaseToggle('EARLY')}>Open Early Registration</Button>}
+          {phase === 'EARLY' && <Button variant='secondary' disabled={publishing} onClick={() => handlePhaseToggle('LATE')}>Switch to Late Onsite Reg</Button>}
+          {phase === 'LATE' && <Button variant='secondary' disabled={publishing} onClick={() => handlePhaseToggle('CLOSED')}>Close Registration</Button>}
         </div>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '48px' }}>
-        
-        <Card style={{ background: '#161b22', border: '1px solid #d2a8ff', padding: '24px', gridColumn: '1 / -1' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={S.statGrid}>
+        {statCards.map((s) => (
+          <Card key={s.label} style={S.statCard}>
+            <div style={{ fontSize: '0.78rem', fontWeight: 600, color: s.color, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</div>
+            <div style={{ fontSize: '1.6rem', fontWeight: 800 }}>{s.value}</div>
+          </Card>
+        ))}
+      </div>
+
+      <div style={S.actionGrid}>
+        <Card style={S.poolCard}>
+          <div style={S.cardRow}>
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '8px', color: '#d2a8ff' }}>Pools & Brackets Workspace</h3>
-              <p style={{ color: '#8b949e', margin: 0 }}>
-                {tournament.registrationPhase === 'EARLY' 
-                  ? 'Close main registration to access the pools auto-generator and drag-and-drop workspace.'
-                  : 'Manage seedings, auto-generate pools using Serpentine logic, and export structures.'}
-              </p>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#d2a8ff', margin: '0 0 8px' }}>Pools and Brackets Workspace</h3>
+              <p style={{ color: '#8b949e', margin: 0, lineHeight: 1.6 }}>{phase === 'EARLY' ? 'Close main registration to access the pools auto-generator.' : 'Manage seedings, auto-generate pools and export structures.'}</p>
             </div>
-            <Button 
-              variant="primary" 
-              disabled={tournament.registrationPhase === 'EARLY'}
-              onClick={() => window.location.href = `/tournaments/${tournament.id}/pools`}
-            >
-              Enter Pools Workspace
-            </Button>
+            <Button variant='primary' disabled={phase === 'EARLY'} onClick={() => window.location.href = `/tournaments/${tournament.id}/pools`}>Enter Pools Workspace</Button>
           </div>
         </Card>
 
-        <Card style={{ background: '#161b22', border: '1px solid #58a6ff', padding: '24px', gridColumn: '1 / -1' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Card style={S.dispCard}>
+          <div style={S.cardRow}>
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '8px', color: '#58a6ff' }}>Match Dispatcher & Order of Play</h3>
-              <p style={{ color: '#8b949e', margin: 0 }}>
-                Manage live match states, assign queues to courts, and orchestrate the transition from Pool Stages to Knockouts.
-              </p>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#58a6ff', margin: '0 0 8px' }}>Match Dispatcher and Order of Play</h3>
+              <p style={{ color: '#8b949e', margin: 0, lineHeight: 1.6 }}>Manage live match states, assign queues to courts, and orchestrate Pool Stage to Knockout transitions.</p>
             </div>
-            <Button 
-              variant="primary" 
-              onClick={() => window.location.href = `/tournaments/${tournament.id}/dispatcher`}
-            >
-              Enter Dispatcher Workspace
-            </Button>
+            <Button variant='primary' onClick={() => window.location.href = `/tournaments/${tournament.id}/dispatcher`}>Enter Dispatcher Workspace</Button>
           </div>
         </Card>
 
-        <Card style={{ background: '#161b22', border: '1px solid rgba(255,255,255,0.1)', padding: '24px', display: 'flex', gap: '24px' }}>
-          {tournament.registrationPhase !== 'CLOSED' && (
-            <img src={qrCodeUrl} alt="Registration QR" style={{ width: '150px', height: '150px', borderRadius: '8px', border: '2px solid rgba(255,255,255,0.1)' }} />
-          )}
+        <Card style={S.linkCard}>
+          {phase !== 'CLOSED' && <img src={qr} alt='QR' style={S.qr} />}
           <div style={{ flex: 1 }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '16px' }}>Shareable Magic Link</h3>
-            <p style={{ color: '#8b949e', marginBottom: '16px', lineHeight: 1.5 }}>
-              Send this URL or QR code to players. It will lock them into this exact tournament.
-            </p>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <input readOnly value={magicLink} style={{ flex: 1, padding: '12px', background: '#0d1117', border: '1px solid rgba(255,255,255,0.2)', color: '#58a6ff', borderRadius: '6px', fontFamily: 'monospace', width: '100%' }} />
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 12px' }}>Shareable Magic Link</h3>
+            <p style={{ color: '#8b949e', margin: '0 0 16px', lineHeight: 1.5 }}>Send this URL or QR code to players. It locks them into this exact tournament.</p>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input readOnly value={magicLink} style={S.input} />
+              <button onClick={handleCopy} style={{ padding: '10px 14px', background: copied ? 'rgba(63,185,80,0.15)' : 'rgba(88,166,255,0.1)', border: '1px solid ' + (copied ? '#3fb950' : '#58a6ff'), color: copied ? '#3fb950' : '#58a6ff', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, whiteSpace: 'nowrap' }}>{copied ? 'Copied!' : 'Copy'}</button>
             </div>
           </div>
         </Card>
 
-        <Card style={{ background: '#161b22', border: '1px solid rgba(255,255,255,0.1)', padding: '24px' }}>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '16px' }}>Bulk Ingestion (CSV)</h3>
-          <p style={{ color: '#8b949e', marginBottom: '16px', lineHeight: 1.5 }}>
-            Upload an Excel/CSV file containing your roster. Columns needed: <strong>Team Name, Player 1 Name, Player 1 Email, Player 2 Name, Player 2 Email, Category</strong>.
-          </p>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <input type="file" accept=".csv" onChange={handleFileUpload} disabled={uploading} style={{ padding: '8px', color: '#8b949e' }} />
-            {uploading && <span style={{ color: '#58a6ff' }}>Processing...</span>}
+        <Card style={S.csvCard}>
+          <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 12px' }}>Bulk Ingestion (CSV)</h3>
+          <p style={{ color: '#8b949e', margin: '0 0 16px', lineHeight: 1.5, fontSize: '0.9rem' }}>Upload a CSV containing your roster. Required columns: <strong style={{ color: '#c9d1d9' }}>Team Name, Player 1 Name, Player 1 Email, Player 2 Name, Player 2 Email, Category</strong>.</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <label style={{ padding: '10px 18px', background: 'rgba(88,166,255,0.08)', border: '1px dashed rgba(88,166,255,0.4)', color: '#58a6ff', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              Choose CSV file<input type='file' accept='.csv' onChange={handleFileUpload} disabled={uploading} style={{ display: 'none' }} />
+            </label>
+            {uploading && <span style={{ color: '#58a6ff', fontSize: '0.85rem' }}>Processing...</span>}
           </div>
         </Card>
       </div>
 
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '24px' }}>Registrations Bucket</h2>
-      
-      {Object.keys(categoriesMap).length === 0 ? (
+      <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '24px' }}>
+        Registrations Bucket
+        <span style={{ fontSize: '0.9rem', color: '#8b949e', fontWeight: 500, marginLeft: '12px' }}>{(tournament.teams || []).length} teams registered</span>
+      </h2>
+
+      {Object.keys(cats).length === 0 ? (
         <Card style={{ background: '#161b22', border: '1px dashed rgba(255,255,255,0.2)', padding: '48px', textAlign: 'center' }}>
           <p style={{ color: '#8b949e', margin: 0 }}>No registrations yet.</p>
         </Card>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-          {Object.entries(categoriesMap).map(([category, teams]) => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '36px' }}>
+          {Object.entries(cats).map(([category, teams]) => (
             <div key={category}>
-              <h3 style={{ color: '#d2a8ff', fontSize: '1.2rem', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>
-                {category} <span style={{ color: '#8b949e', fontSize: '0.9rem', marginLeft: '8px' }}>({teams.length} teams)</span>
+              <h3 style={{ color: '#d2a8ff', fontSize: '1.05rem', margin: '0 0 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', paddingBottom: '8px' }}>
+                {category} <span style={{ color: '#8b949e', fontSize: '0.85rem', marginLeft: '8px' }}>({teams.length} teams)</span>
               </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
-                {teams.map((t: any) => (
-                  <Card key={t.id} style={{ background: '#161b22', border: '1px solid rgba(255,255,255,0.05)', padding: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                      <strong style={{ fontSize: '1.1rem', color: '#fff' }}>{t.franchiseName}</strong>
-                      {t.isLateRegistration && <Badge variant="warning">LATE</Badge>}
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {t.players?.map((p: any) => (
-                        <div key={p.id} style={{ fontSize: '0.9rem', color: '#8b949e' }}>
-                          <span style={{ color: '#c9d1d9' }}>{p.name}</span> <br/>
-                          <span style={{ fontSize: '0.8rem' }}>{p.email}</span>
+              <div style={S.teamGrid}>
+                <AnimatePresence>
+                  {teams.map((t: any) => (
+                    <motion.div key={t.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                      <Card style={S.teamCard} hoverable>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                          <strong style={{ fontSize: '1rem', color: '#fff' }}>{t.franchiseName}</strong>
+                          {t.isLateRegistration && <Badge variant='warning'>LATE</Badge>}
                         </div>
-                      ))}
-                    </div>
-                  </Card>
-                ))}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {t.players?.map((p: any) => (
+                            <div key={p.id} style={{ fontSize: '0.875rem', color: '#8b949e' }}>
+                              <span style={{ color: '#c9d1d9', fontWeight: 500 }}>{p.name}</span><br />
+                              <span style={{ fontSize: '0.8rem' }}>{p.email}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
             </div>
           ))}
         </div>
       )}
-
     </div>
   );
 }

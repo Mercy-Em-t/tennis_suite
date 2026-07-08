@@ -1,0 +1,104 @@
+host flow:
+implement in sandbox mode first for testing before wiring up to live paths:
+this is an abstract version of the host flow
+
+so entry is through the landing page.
+at the landing page the host will log in.
+
+at login we ask do they have an account?
+if no sign up:( this will trigger the sign up process)
+if yes log in:(this will trigger the login process)
+
+upon successful login, take the user to their respective host dashboard
+
+att he dashboard, we have different sections that the host can go to.
+-we have the section listing out tournamnets, prioritise active and upcoming tournamnets. othr past tournamnets or ecess should be accessible through a view all section in the tournamnet section. in the view all list all the tournamnets for this host. they can be filtrable by several filters such as staus, dates, etc
+-a section for settings and user profile. a section for provisioning new tournamnet( abstract the tournamnet creation details especially if host already successfully created other tournamnets before)
+
+on the tournamnet section shave the prioritised tournamnet cards.
+clicking this card takes the host to that tournamnent's instance
+
+all operations for that specific tournamnet will be localised and operated withing the confines of that tournamnets instance.
+ensure no interferece witht the other tournamnets whether from sam host or not. no contamination
+
+
+we will oultine the other dashboard sections as we go 
+for now we go into the path where the host from their dashboard selects one of the tournamnet's card and enters the tournamnet management
+
+insisde the tournamnet management we have pretournamnet, during tournamnet and post tournamnetnt
+
+during pre tournamnet:
+we will follow a checklist to see the progress of the pretournamnet activities
+
+
+basic activitiesat this stage
+launching tournamnet. --here we check is the tournamnet properly launched? are there data and details still needed? can we edit or add information and save it.
+(launching tournamnet laso includes assigning staffa nd officials)
+
+once confirmed that it is launched properly now we begin the activities
+open rergistration. geenerate registration link and code. set deadline for early registrations.
+at this stage we receive registrations and show them under the registrations. 
+also allow filtration of registrations, show all, by category, by date etc, for whichever necessary way to manage registrations
+also show a itmer until ealry registrations close.
+also while in registrations phase show the mechanism by which host can import their registrations via a document
+
+
+if registrations are satisfactory, we can close the early registrations. on closing ealy registration host ought to decide if they will continue accepting registration but mark them as late registrtions or if they will implement a hard close on registrations.
+but a typical tournamnet will accept registrations even during the day of the tournamnet. so we should account for that
+
+
+once the host closes early registration only then can they be able to move into the pooling, seeding and match generations
+
+
+    if pooling is ready:
+    move to pool manager
+    here can seed players, put players into pools, can add new pools dynamically 
+    once they have the pools ready they can publish them.(by the way the referee also has the ability to create the pools and present them to the host for approval and publishing.
+
+)
+so the host can also receive draft of pools from the refereee and adjust them then publish.as the single source of truth pool publishing rights are reserved for the host. 
+
+
+    once the pools are satisfactory and published after approval then the match generation stage is unlocked.
+
+        if match generation stage ready:
+        create context aware pool matches.
+        generate list of all pool matches--should be eportable too.CSV, PDF, Excel etc
+
+if match list ready:
+unlock match scheduling
+can add matches to court . asigng matches based on available courts.
+in match sceduling we can define court availability times, even add new courts and dictate the availaility of these courts. we can also remove and mark a court as unavailable
+
+match scheduling is a collaborative space for the host and the referee. as such both can add
+schedule matches and both host and referee can edit/adjust the schedule, but only the host can publish it
+(we will need to handle the collaboration history/ logs here)
+
+on the match schedule page, we can see the schedule in list and grid formats.
+list format shows scheduled matches in a chronological or category-wise list.
+grid format shows matches in a calendar-like grid, with courts and times.
+
+so if matches schedule is set and referee marks matches as ready to start:
+match scoring can begin. this is a dynamic multi match recording ability. referee can assign player umps who will be posting results simultaneously as matches run parallel
+
+referee and host ough to be able to see these match progresion by clicking on the match cards.
+
+completed matches are marked completed and mocved to a pool of completed matches.
+we will be watching the match progression status.
+
+
+
+if matches are all ready, we can proceed to the next stage:
+if pool matches are complete the next knockout stage can be unlocked and populated and matches generated for them.
+
+at this point we hve accounted for most of what running matches entails
+
+
+we can move on to post tournament activities
+
+at post tournamnet we need reviews, log reports
+export tournamnet data
+receive feedback and input
+parfticipant survey etc
+
+after satisfactory detailing of the tournamnet then it can be archived and will now only be available as read only. no further sdjustments can happen to the tournamnet at htis stage

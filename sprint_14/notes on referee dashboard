@@ -1,0 +1,71 @@
+similar to the player when the referr is authenticated succcessfully they should land on their dashboard. in their dashboard they should have the tournamnet card of the tournamnet where they are the refeerr.
+when they click on the tournament card they should be taken to the referee dashboard for that tournament. 
+
+%% Root Level
+    Auth[Login/Auth Gateway] --> RefereeDash[Referee Dashboard Landing]
+
+    Refereedashboard should look same as the player dashboard but with the referee specific features. we can use the same glassmorphism UI.
+
+   at the dashboard for tournament
+
+   we can have the flow move with the tournamnet
+
+   while receiving applications they can view tournamnet applications
+also allowed to import applications which will populate the registration as new registrations 
+
+depending on the registration period set they can have a timer showing how much longer until registrations close.
+
+they can close registrations. and have the option to accept late registrations (soft close that allows them to move into pooling and seeding players)
+
+
+note that for multi category tournamnets they can choose to do the seeding and pooling for all categories at once or do it category by category.
+
+upon soft close then thye can now begin seeding and pooling for the tournament.
+
+when they click on the seeding/pooling button they should be taken to the seeding/pooling page.
+
+so they should see the seeded players in their seeded positions and the pool they are assigned to. with the ability to navigate and switch betweeen categories. so either work simultaneously on parallel tabs or sequentially for each category.
+allow them to save the drafts and pick up from where they left.
+at the seeding pooling page they can view the current seeded and pooled players.
+they can also manually adjust the seeding and pooling of players.
+    
+
+    once they have determined the pools to put their seeded players, they can now place the other players into pools. either by shuffling into pools or manually dragging and appending the players into the pools
+    they can then publish the pools once satisfied. we can have the published pools be officially seconded by the host/ director, for transparency and accountability.
+    so before being fully published, the pols have to go through ammendments and verification by other high ranking officials. 
+
+    once published theyc an see the pools and they can be able to push late registrations into these pools appending them as they go. ensure once published the amendments do not interfere with the matches that have already been played.
+
+    after the pools have been seconded verified and approved they can be published now inot the tournamnets instance. and will be visible to all players, where they can see their assigned pools.
+
+    publishing pools triggeres the egenration of list of matches. so referee is able to see this list of matches to be played during the pool stage.
+    next we move onto scheduling of matches, using the pools the referee can now schedule matches between the players in the pools. 
+    they can schedule matches manually or using an algorithm that will schedule matches based on the pools and the number of courts available. 
+    they can also set the time for the matches, and the courts where the matches will be played. 
+    they can also set the type of matches, such as singles, doubles, or mixed doubles.
+
+    so a list of matches should be filtrable generally first according to categories, and also according to status, and also according to stages of the torunamnet. we will add more filters asa we go.
+    
+    from the list of matches they can then assign matches to be played now. they can also set the status of matches, such as completed, live, or scheduled. (but ofcourse these moves should be backed by appropriate history not just randomly jumping)
+
+    now referee has pools, has list of matches, has order of play.
+    they can start matches officially, htye can record scores or assign player umps to proxy them during matches and record their scores.
+
+    we will need a referee control panel.
+    here they can see all the matches that are scheduled to be played. 
+    they can select a match and see the match details. and based on the match details and current tournament stage (pool stage or knockout stage) they can perform actions
+    For exmaple in pool stage matches if a match is completed the match result updates the pools and triggers the next round of matches to be scheduled. 
+
+    to work well the system needs separation of pretournamnet acctivities from durintg the tournamnet ativities.
+    in the control panel they can be able to update matches, confirm scores, can reassign matches to courts, rearranege order of play(ofcourse not randomly)
+    they can also see the matches that have been played and the results of those matches. 
+
+    also if they need to change the pools of players in a category they should be able to diso that as well. (with checks to ensure that they are not interfering with matches that have already been played)
+
+    once the pool stage is completed and the knockout stage is ready to begin, they can trigger the knockout stage. and the knockout stage matches will be generated. 
+
+    then they can proceed as usual with the knockout stage matches, using the same control panel to manage the matches.
+
+    we also need to implement a system for match reporting and analysis. 
+    
+    

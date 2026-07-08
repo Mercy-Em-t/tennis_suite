@@ -97,8 +97,12 @@ export default function MatchDispatcher({ params }: { params: Promise<{ id: stri
     mutate();
   };
 
-  const readyQueueMatches = localMatches.filter(m => !m.courtId && m.stage === tournament.currentStage);
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const allCategories = Array.from(new Set(localMatches.map(m => m.category).filter(Boolean))) as string[];
+  const categories = ['All', ...allCategories];
 
+  const filteredMatches = localMatches.filter(m => selectedCategory === 'All' || m.category === selectedCategory);
+  const readyQueueMatches = filteredMatches.filter(m => !m.courtId && m.stage === tournament.currentStage);
   return (
     <div style={{ padding: '48px', color: '#f0f6fc', background: '#0d1117', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
       
@@ -117,6 +121,18 @@ export default function MatchDispatcher({ params }: { params: Promise<{ id: stri
         </div>
       </header>
 
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+        {categories.map(cat => (
+          <Button 
+            key={cat} 
+            variant={selectedCategory === cat ? 'primary' : 'secondary'}
+            onClick={() => setSelectedCategory(cat)}
+          >
+            {cat}
+          </Button>
+        ))}
+      </div>
+
       <DndContext collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: '32px' }}>
           
@@ -131,7 +147,7 @@ export default function MatchDispatcher({ params }: { params: Promise<{ id: stri
             <h2 style={{ fontSize: '1.2rem', marginBottom: '16px' }}>Active Courts (Order of Play)</h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
               {courts.map((court: any) => {
-                const courtMatches = localMatches.filter(m => m.courtId === court.id);
+                const courtMatches = filteredMatches.filter(m => m.courtId === court.id);
                 return (
                   <CourtContainer 
                     key={court.id} 

@@ -78,9 +78,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'No teams in this category' }, { status: 400 });
     }
 
-    // Generate Serpentine Seed (1, 2, 3, 4, 4, 3, 2, 1)
-    // Note: teams are not ranked yet, so we just randomize their initial order before serpentine distribution
-    const shuffledTeams = categoryTeams.sort(() => 0.5 - Math.random());
+    // Hybrid Serpentine Seed (1, 2, 3, 4, 4, 3, 2, 1)
+    // Sort by points/ranking if available, otherwise fallback to random
+    let sortedTeams = [...categoryTeams];
+    const hasPoints = categoryTeams.some(t => typeof (t as any).points === 'number');
+    
+    if (hasPoints) {
+      sortedTeams.sort((a: any, b: any) => (b.points || 0) - (a.points || 0));
+    } else {
+      sortedTeams.sort(() => 0.5 - Math.random());
+    }
 
     const poolsMap: Record<number, any[]> = {};
     for (let i = 0; i < numPools; i++) poolsMap[i] = [];
@@ -88,8 +95,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     let poolIndex = 0;
     let direction = 1;
 
-    for (let i = 0; i < shuffledTeams.length; i++) {
-      poolsMap[poolIndex].push(shuffledTeams[i]);
+    for (let i = 0; i < sortedTeams.length; i++) {
+      poolsMap[poolIndex].push(sortedTeams[i]);
       
       poolIndex += direction;
       if (poolIndex >= numPools) {

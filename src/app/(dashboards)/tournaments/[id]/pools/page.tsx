@@ -175,7 +175,8 @@ export default function PoolsWorkspace({ params }: { params: Promise<{ id: strin
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           <Button onClick={exportCSV} variant="secondary">Export CSV</Button>
-          <Button onClick={exportPDF} variant="primary">Export PDF</Button>
+          <Button onClick={exportPDF} variant="secondary">Export PDF</Button>
+          <Button onClick={() => alert('Pools Published!')} variant="success">Publish Pools</Button>
         </div>
       </header>
 

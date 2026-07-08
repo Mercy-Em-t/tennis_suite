@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Trophy, Radio, ShieldAlert, Settings, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Trophy, Radio, ShieldAlert, Settings, LogOut, Menu, X, ClipboardList } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function SandboxLayout({ children }: { children: React.ReactNode }) {
@@ -11,11 +11,13 @@ export default function SandboxLayout({ children }: { children: React.ReactNode 
   const [isOpen, setIsOpen] = useState(true);
 
   // Mock persona toggler for sandbox
-  const [persona, setPersona] = useState<'PLAYER' | 'DIRECTOR'>('PLAYER');
+  const [persona, setPersona] = useState<'PLAYER' | 'DIRECTOR' | 'HOST'>('PLAYER');
 
   const navItems = persona === 'PLAYER' ? [
     { name: 'Player Hub', path: '/sandbox/team', icon: <LayoutDashboard size={20} /> },
     { name: 'Tournaments', path: '/sandbox/tournaments', icon: <Trophy size={20} /> },
+  ] : persona === 'HOST' ? [
+    { name: 'Host Dashboard', path: '/sandbox/host', icon: <ClipboardList size={20} /> },
   ] : [
     { name: 'Crisis Control', path: '/sandbox/director', icon: <ShieldAlert size={20} /> },
     { name: 'Broadcast Mgmt', path: '/sandbox/director/broadcast', icon: <Radio size={20} /> },
@@ -104,6 +106,7 @@ export default function SandboxLayout({ children }: { children: React.ReactNode 
                   style={{ background: '#000', color: '#fff', border: '1px solid #333', padding: '4px 8px', borderRadius: '4px', fontSize: '0.85rem' }}
                 >
                   <option value="PLAYER">Player Persona</option>
+                  <option value="HOST">Host Persona</option>
                   <option value="DIRECTOR">Director Persona</option>
                 </select>
               </div>
