@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { DynamicButton } from '@/components/ui/DynamicButton';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { MapPin, Shield, Calendar, Users, Trophy, Mail, Phone, ChevronLeft } from 'lucide-react';
-import styles from '../../landing.module.css';
+import styles from '@/app/(marketing)/landing.module.css';
 
 export default async function PublicTournamentProfile({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;

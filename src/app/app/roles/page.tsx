@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import styles from '../landing.module.css';
+import styles from '@/app/(marketing)/landing.module.css';
 
 /* ─── Role card data ─── */
 const ROLES = [

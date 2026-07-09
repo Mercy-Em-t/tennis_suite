@@ -164,7 +164,7 @@ export default function OperationsCommandCenter() {
             <h2 style={{ fontSize: '1.5rem', margin: 0 }}>Active Session Clean</h2>
           </div>
           <p style={{ color: 'var(--text-muted)', marginBottom: '24px', minHeight: '48px' }}>
-            Purge stagnant sessions (>12h) from memory and force remote logout payloads to prevent auth drift.
+            Purge stagnant sessions (&gt;12h) from memory and force remote logout payloads to any orphaned clients.
           </p>
           <DynamicButton variant="outline" onClick={runSessionClean} disabled={runningClean} style={{ width: '100%', padding: '16px', borderColor: '#ff7b72', color: '#ff7b72' }}>
             {runningClean ? 'Purging Sessions...' : 'Execute Forced Eviction'}

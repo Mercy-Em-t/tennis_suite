@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import styles from '@/app/(dashboards)/referee/referee.module.css';
+import styles from '@/app/app/dashboards/referee/referee.module.css';
 import { TennisScoreState, createInitialScoreState } from '@/lib/engine/scoring';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import useSWR from 'swr';

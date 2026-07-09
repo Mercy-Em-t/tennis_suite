@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import styles from '@/app/(dashboards)/layout.module.css'; // Adjust if you want inline styles or another module
+import styles from '@/app/app/dashboards/layout.module.css'; // Adjust if you want inline styles or another module
 
 export function LogoutButton() {
   const router = useRouter();
