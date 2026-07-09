@@ -67,7 +67,7 @@ export default function MatchScoringMVP({ params }: { params: Promise<{ id: stri
         <h1 style={{ fontSize: '1.5rem', fontWeight: 900, margin: 0, color: '#58a6ff' }}>Referee Terminal</h1>
         <p style={{ color: '#8b949e', margin: 0 }}>Match ID: {match.id}</p>
         <div style={{ marginTop: '8px' }}>
-          <Badge variant="primary">{match.stage}</Badge>
+          <Badge variant="default">{match.stage}</Badge>
           <span style={{ marginLeft: '12px', color: '#8b949e' }}>Status: {match.status}</span>
         </div>
       </header>

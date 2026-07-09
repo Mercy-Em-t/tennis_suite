@@ -5,7 +5,7 @@ import { verifyToken, signToken } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const token = cookieStore.get('auth_token')?.value;
     if (!token) return new NextResponse('Unauthorized Session Signature', { status: 401 });
 
@@ -40,7 +40,8 @@ export async function POST(request: Request) {
     const newJwtString = await signToken(freshlyMintedPayload);
 
     // 3. Re-bake cookie context at edge layer
-    cookies().set('auth_token', newJwtString, {
+    const cookieStoreToSet = await cookies();
+    cookieStoreToSet.set('auth_token', newJwtString, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

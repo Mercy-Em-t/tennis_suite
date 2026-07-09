@@ -28,9 +28,9 @@ function DraggableMatch({ match }: { match: MatchData }) {
 
   return (
     <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
-      <div style={{ fontSize: '0.8rem', color: '#8b949e', marginBottom: '4px' }}>{match.category} • {match.round}</div>
-      <div style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#f0f6fc' }}>
-        {match.team1Name} <span style={{ color: '#8b949e', fontWeight: 'normal' }}>vs</span> {match.team2Name}
+      <div >{match.category} • {match.round}</div>
+      <div >
+        {match.team1Name} <span >vs</span> {match.team2Name}
       </div>
     </div>
   );
@@ -55,13 +55,13 @@ function DroppableCourt({ court, match, children }: { court: CourtData, match: M
 
   return (
     <div ref={setNodeRef} style={style}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h3 style={{ margin: 0, color: '#fff', fontSize: '1.2rem' }}>{court.name}</h3>
-        <Badge variant={court.status === 'EMPTY' ? 'success' : court.status === 'IN_PROGRESS' ? 'primary' : 'warning'}>
+      <div >
+        <h3 >{court.name}</h3>
+        <Badge variant={court.status === 'EMPTY' ? 'success' : court.status === 'IN_PROGRESS' ? 'default' : 'warning'}>
           {court.status.replace('_', ' ')}
         </Badge>
       </div>
-      <div style={{ flex: 1 }}>
+      <div >
         {children}
       </div>
     </div>
@@ -74,7 +74,7 @@ export default function SpecificMarshallDashboard({ params }: { params: Promise<
   const [chatInput, setChatInput] = useState('');
   const [modals, setModals] = useState<{ type: 'INSPECTION' | 'RESOURCE' | 'SCORE' | null, courtId?: string, matchId?: string }>({ type: null });
 
-  if (!loaded) return <div style={{ padding: '48px', color: '#8b949e', background: '#0d1117', minHeight: '100vh' }}>Loading...</div>;
+  if (!loaded) return <div >Loading...</div>;
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -106,47 +106,47 @@ export default function SpecificMarshallDashboard({ params }: { params: Promise<
 
   return (
     <DndContext onDragEnd={handleDragEnd}>
-      <div style={{ padding: '24px', color: '#f0f6fc', background: '#0d1117', minHeight: '100vh', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <div >
         
         {/* Header */}
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '16px' }}>
+        <header >
           <div>
-            <Button variant="secondary" onClick={() => window.location.href = '/sandbox/marshall'} style={{ padding: '4px 8px', fontSize: '0.8rem', marginBottom: '12px' }}>← Back</Button>
-            <h1 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 900 }}>Event Operations Dispatch</h1>
+            <Button variant="secondary" onClick={() => window.location.href = '/sandbox/marshall'} >← Back</Button>
+            <h1 >Event Operations Dispatch</h1>
           </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <Button variant="warning" onClick={() => setModals({ type: 'INSPECTION' })}>Report Inspection</Button>
-            <Button variant="primary" onClick={() => setModals({ type: 'RESOURCE' })}>Request Resources</Button>
+          <div >
+            <Button variant="danger" onClick={() => setModals({ type: 'INSPECTION' })}>Report Inspection</Button>
+            <Button variant="secondary" onClick={() => setModals({ type: 'RESOURCE' })}>Request Resources</Button>
           </div>
         </header>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '250px 1fr 300px', gap: '24px', height: 'calc(100vh - 150px)' }}>
+        <div >
           
           {/* Scheduled Queue Sidebar */}
-          <div style={{ background: '#161b22', borderRadius: '12px', padding: '16px', border: '1px solid rgba(255,255,255,0.05)', overflowY: 'auto' }}>
-            <h3 style={{ margin: '0 0 16px', color: '#8b949e', fontSize: '0.9rem', textTransform: 'uppercase' }}>Dispatch Queue</h3>
+          <div >
+            <h3 >Dispatch Queue</h3>
             {scheduledMatches.length === 0 ? (
-              <p style={{ color: '#8b949e', fontSize: '0.85rem' }}>No pending matches.</p>
+              <p >No pending matches.</p>
             ) : (
               scheduledMatches.map(m => <DraggableMatch key={m.id} match={m} />)
             )}
           </div>
 
           {/* Court Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px', alignContent: 'start', overflowY: 'auto' }}>
+          <div >
             {courts.map(court => {
               const activeMatch = court.activeMatchId ? matches[court.activeMatchId] : null;
 
               return (
                 <DroppableCourt key={court.id} court={court} match={activeMatch}>
                   {activeMatch ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                    <div >
                       <DraggableMatch match={activeMatch} />
                       
-                      <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div >
                         {activeMatch.status === 'SCHEDULED' && (
                           <Button 
-                            variant="primary" 
+                            variant="secondary" 
                             onClick={() => {
                               updateMatchStatus(activeMatch.id, 'WARMUP');
                               updateCourt(court.id, { status: 'WARMUP' });
@@ -158,14 +158,14 @@ export default function SpecificMarshallDashboard({ params }: { params: Promise<
                         )}
 
                         {activeMatch.status === 'WARMUP' && (
-                          <div style={{ display: 'flex', gap: '8px' }}>
+                          <div >
                             <Button 
                               variant="success" 
-                              style={{ flex: 1 }}
+                              
                               onClick={() => {
                                 updateMatchStatus(activeMatch.id, 'IN_PROGRESS');
                                 updateCourt(court.id, { status: 'IN_PROGRESS' });
-                                addLog(`Referee started Match ${activeMatch.id} on ${court.name}.`, 'INFO', 'System Mock');
+                                addLog(`Referee started Match ${activeMatch.id} on ${court.name}.`, 'INFO', 'You');
                               }}
                             >
                               [Simulate Ref Start]
@@ -174,20 +174,20 @@ export default function SpecificMarshallDashboard({ params }: { params: Promise<
                         )}
 
                         {activeMatch.status === 'IN_PROGRESS' && (
-                          <div style={{ display: 'flex', gap: '8px', flexDirection: 'column' }}>
-                            <div style={{ background: '#0d1117', padding: '8px', borderRadius: '4px', fontSize: '0.8rem', textAlign: 'center', fontFamily: 'monospace' }}>
+                          <div >
+                            <div >
                               Score tracking via Umpire...
                             </div>
-                            <div style={{ display: 'flex', gap: '8px' }}>
+                            <div >
                               <Button 
                                 variant="secondary" 
-                                style={{ flex: 1 }}
+                                
                                 onClick={() => setModals({ type: 'SCORE', matchId: activeMatch.id, courtId: court.id })}
                               >
                                 Manual Score Override
                               </Button>
                               <Button 
-                                variant="warning" 
+                                variant="danger" 
                                 onClick={() => {
                                   updateMatchStatus(activeMatch.id, 'COMPLETED');
                                   updateCourt(court.id, { activeMatchId: null, status: 'EMPTY' });
@@ -202,7 +202,7 @@ export default function SpecificMarshallDashboard({ params }: { params: Promise<
                       </div>
                     </div>
                   ) : (
-                    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8b949e', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '6px' }}>
+                    <div >
                       {court.status === 'MAINTENANCE' ? 'Court under maintenance' : 'Drag match here'}
                     </div>
                   )}
@@ -212,37 +212,31 @@ export default function SpecificMarshallDashboard({ params }: { params: Promise<
           </div>
 
           {/* Comm Center */}
-          <div style={{ background: '#161b22', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-              <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#fff' }}>Comm Center</h3>
+          <div >
+            <div >
+              <h3 >Comm Center</h3>
             </div>
-            <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div >
               {logs.map(log => (
-                <div key={log.id} style={{ 
-                  padding: '8px 12px', 
-                  borderRadius: '8px', 
-                  background: log.type === 'EMERGENCY' ? 'rgba(248,81,73,0.1)' : log.type === 'RESOURCE_REQUEST' ? 'rgba(210,168,255,0.1)' : '#21262d',
-                  border: log.type === 'EMERGENCY' ? '1px solid #f85149' : '1px solid transparent',
-                  fontSize: '0.85rem'
-                }}>
-                  <div style={{ color: '#8b949e', fontSize: '0.7rem', marginBottom: '4px' }}>{log.sender} • {log.timestamp}</div>
-                  <div style={{ color: '#c9d1d9' }}>{log.message}</div>
+                <div key={log.id} >
+                  <div >{log.sender} • {log.timestamp}</div>
+                  <div >{log.message}</div>
                 </div>
               ))}
             </div>
-            <form style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', gap: '8px' }} onSubmit={handleSendChat}>
-              <input type="text" placeholder="Message..." value={chatInput} onChange={e => setChatInput(e.target.value)} style={{ flex: 1, padding: '8px', background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '6px' }} />
-              <Button variant="primary" type="submit">Send</Button>
+            <form  onSubmit={handleSendChat}>
+              <input type="text" placeholder="Message..." value={chatInput} onChange={e => setChatInput(e.target.value)}  />
+              <Button variant="secondary" type="submit">Send</Button>
             </form>
           </div>
         </div>
 
         {/* Modals */}
         {modals.type && (
-          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-            <Card style={{ background: '#0d1117', padding: '32px', width: '400px', border: '1px solid #58a6ff' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
-                <h2 style={{ margin: 0, color: '#fff' }}>
+          <div >
+            <Card >
+              <div >
+                <h2 >
                   {modals.type === 'INSPECTION' ? 'Court Inspection' : modals.type === 'RESOURCE' ? 'Request Resources' : 'Manual Score Override'}
                 </h2>
                 <Button variant="secondary" onClick={() => setModals({ type: null })}>X</Button>
@@ -250,11 +244,11 @@ export default function SpecificMarshallDashboard({ params }: { params: Promise<
 
               {modals.type === 'INSPECTION' && (
                 <div>
-                  <p style={{ color: '#8b949e', marginBottom: '16px' }}>Flag a court for maintenance.</p>
-                  <select id="inspection-court" style={{ width: '100%', padding: '8px', background: '#161b22', color: '#fff', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px' }}>
+                  <p >Flag a court for maintenance.</p>
+                  <select id="inspection-court" >
                     {courts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
-                  <Button variant="warning" style={{ width: '100%' }} onClick={() => {
+                  <Button variant="danger"  onClick={() => {
                     const el = document.getElementById('inspection-court') as HTMLSelectElement;
                     updateCourt(el.value, { status: 'MAINTENANCE' });
                     addLog(`Court ${el.value} flagged for MAINTENANCE.`, 'EMERGENCY', 'You');
@@ -265,8 +259,8 @@ export default function SpecificMarshallDashboard({ params }: { params: Promise<
 
               {modals.type === 'RESOURCE' && (
                 <div>
-                  <p style={{ color: '#8b949e', marginBottom: '16px' }}>Ping Delegate for resources.</p>
-                  <div style={{ display: 'flex', gap: '8px', flexDirection: 'column' }}>
+                  <p >Ping Delegate for resources.</p>
+                  <div >
                     <Button variant="secondary" onClick={() => { addLog('Requesting Ball Kids for Court 1', 'RESOURCE_REQUEST', 'You'); setModals({ type: null }); }}>Request Ball Kids</Button>
                     <Button variant="secondary" onClick={() => { addLog('Requesting Towels/Water for Center Court', 'RESOURCE_REQUEST', 'You'); setModals({ type: null }); }}>Request Towels & Water</Button>
                   </div>
@@ -275,8 +269,8 @@ export default function SpecificMarshallDashboard({ params }: { params: Promise<
 
               {modals.type === 'SCORE' && (
                 <div>
-                  <p style={{ color: '#8b949e', marginBottom: '16px' }}>Only use if umpire tablet fails.</p>
-                  <Button variant="primary" style={{ width: '100%' }} onClick={() => {
+                  <p >Only use if umpire tablet fails.</p>
+                  <Button variant="secondary"  onClick={() => {
                     addLog(`Manual score override requested by Marshall for Match ${modals.matchId}.`, 'INFO', 'You');
                     setModals({ type: null });
                   }}>Ping Referee for Score Access</Button>

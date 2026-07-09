@@ -156,7 +156,7 @@ export function DrawViewer({ tournamentId, myTeamId }: DrawViewerProps) {
                               boxShadow: s.teamId === myTeamId ? 'inset 2px 0 0 #58a6ff' : 'none'
                             }}>
                               <td style={{ padding: '12px 8px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: s.teamId === myTeamId ? 700 : 400, color: '#f0f6fc' }}>
-                                <Badge variant="default" style={{ background: 'transparent' }}>{idx + 1}</Badge>
+                                <Badge variant="default">{idx + 1}</Badge>
                                 {s.name}
                               </td>
                               <td style={{ padding: '12px 8px', textAlign: 'center', color: '#3fb950', fontWeight: 700 }}>{s.stats.wins}</td>

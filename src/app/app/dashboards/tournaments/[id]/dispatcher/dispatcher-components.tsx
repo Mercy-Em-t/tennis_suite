@@ -6,6 +6,7 @@ import { useSortable, SortableContext, horizontalListSortingStrategy } from '@dn
 import { CSS } from '@dnd-kit/utilities';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 
 export function SortableMatch({ match }: { match: any }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: match.id });
@@ -64,10 +65,10 @@ export function SortableMatch({ match }: { match: any }) {
           {match.stage} 
           {warningMessage && <span style={{ color: '#ff7b72', marginLeft: '8px', fontWeight: 'bold' }}>{warningMessage}</span>}
         </span>
-        {match.status === 'IN_PROGRESS' && <Badge variant="primary">LIVE</Badge>}
-        {match.status === 'PENDING' && <Badge variant="secondary">PENDING</Badge>}
+        {match.status === 'IN_PROGRESS' && <Badge variant="default">LIVE</Badge>}
+        {match.status === 'PENDING' && <Badge variant="default">PENDING</Badge>}
         {match.status === 'COMPLETED' && <Badge variant="success">FINISHED</Badge>}
-        {match.status === 'REQUIRES_INTERVENTION' && <Badge variant="destructive">PAUSED</Badge>}
+        {match.status === 'REQUIRES_INTERVENTION' && <Badge variant="error">PAUSED</Badge>}
       </div>
       
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -82,7 +83,7 @@ export function SortableMatch({ match }: { match: any }) {
       
       {match.status === 'REQUIRES_INTERVENTION' && (
         <div style={{ marginTop: '12px' }}>
-          <Button variant="destructive" onClick={handleManageWithdrawal} style={{ width: '100%', fontSize: '0.8rem', padding: '4px' }}>
+          <Button variant="danger" onClick={handleManageWithdrawal} style={{ width: '100%', fontSize: '0.8rem', padding: '4px' }}>
             Manage Withdrawal
           </Button>
         </div>

@@ -2,8 +2,6 @@ import { prisma } from '@/lib/prisma';
 
 import { TennisScoreState } from './scoring';
 
-
-
 /**
  * Pillar 11: Edge-Case Match Resolution (The Dispute Engine)
  * Pillar 37: Incident & Emergency Protocol
@@ -33,7 +31,7 @@ export async function resolveScoreDispute(matchId: string, hostId: string, overr
 
 export async function triggerMedicalTimeout(matchId: string, refereeId: string, details: string) {
   // 1. Pause the Match State Machine
-  await prisma.match.update({
+  const match = await prisma.match.update({
     where: { id: matchId },
     data: {
       status: "PAUSED",
@@ -44,6 +42,7 @@ export async function triggerMedicalTimeout(matchId: string, refereeId: string, 
   // 2. Log Incident for Legal/Liability (Pillar 37)
   const incident = await prisma.incidentReport.create({
     data: {
+      tournamentId: match.tournamentId,
       matchId,
       reportedBy: refereeId,
       incidentType: "MEDICAL",

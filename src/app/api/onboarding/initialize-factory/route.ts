@@ -5,7 +5,7 @@ import { verifyToken, signToken } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const token = cookieStore.get('auth_token')?.value;
     if (!token) return new NextResponse('Unauthorized API Access Call', { status: 401 });
 
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     const newJwtString = await signToken(freshlyMintedPayload);
 
     // 5. Re-bake cookie context at edge layer securely
-    cookies().set('auth_token', newJwtString, {
+    (await cookies()).set('auth_token', newJwtString, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

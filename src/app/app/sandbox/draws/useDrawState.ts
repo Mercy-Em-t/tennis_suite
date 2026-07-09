@@ -39,7 +39,7 @@ const MOCK_PLAYERS: Player[] = Array.from({ length: 45 }).map((_, i) => ({
   id: `P${i}`,
   name: `Player ${i + 1}`,
   ranking: Math.floor(Math.random() * 1000) + 1,
-  category: Math.random() > 0.4 ? "MEN_SINGLES" : "WOMEN_SINGLES"
+  category: (Math.random() > 0.4 ? "MEN_SINGLES" : "WOMEN_SINGLES") as any
 })).sort((a, b) => b.ranking - a.ranking);
 
 export function useDrawState() {

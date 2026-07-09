@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const payload = await verifyToken(token);
-    if (!payload || !payload.id) return NextResponse.json({ error: 'Invalid Token' }, { status: 401 });
+    if (!payload || !payload.sub) return NextResponse.json({ error: 'Invalid Token' }, { status: 401 });
 
     // Find the match with this umpire code
     const match = await prisma.match.findFirst({
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     await prisma.match.update({
       where: { id: match.id },
       data: { 
-        umpireId: payload.id,
+        umpireId: payload.sub,
         // Optional: We can choose to clear the PIN after use, or keep it so they can log back in.
         // We will keep it so they can reconnect if they refresh.
       }

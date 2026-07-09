@@ -16,10 +16,10 @@ export default function TournamentInstanceSandbox({ params }: { params: Promise<
   const { tournaments, updateTournament, loaded } = useSandboxTournaments();
   const [activeTab, setActiveTab] = useState<Tab>('PRE');
 
-  if (!loaded) return <div style={{ padding: '48px', color: '#8b949e', background: '#0d1117', minHeight: '100vh' }}>Loading...</div>;
+  if (!loaded) return <div >Loading...</div>;
 
   const tournament = tournaments.find(t => t.id === resolvedParams.id);
-  if (!tournament) return <div style={{ padding: '48px', color: '#f85149', background: '#0d1117', minHeight: '100vh' }}>Tournament not found</div>;
+  if (!tournament) return <div >Tournament not found</div>;
 
   const S = {
     page: { padding: '48px', color: '#f0f6fc', background: '#0d1117', minHeight: '100vh', fontFamily: 'Inter, system-ui, sans-serif' } as React.CSSProperties,
@@ -40,19 +40,19 @@ export default function TournamentInstanceSandbox({ params }: { params: Promise<
 
   return (
     <div style={S.page}>
-      <Button variant="secondary" onClick={() => window.location.href = '/sandbox/host'} style={{ marginBottom: '24px', fontSize: '0.8rem' }}>
+      <Button variant="secondary" onClick={() => window.location.href = '/sandbox/host'} >
         ← Back to Dashboard
       </Button>
       
       <header style={S.header}>
         <div style={S.topRow}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div >
             <h1 style={S.h1}>
               {tournament.name}
-              <Badge variant={tournament.status === 'ACTIVE' ? 'primary' : 'warning'}>{tournament.status}</Badge>
-              {tournament.isArchived && <Badge variant="secondary">ARCHIVED (READ-ONLY)</Badge>}
+              <Badge variant={tournament.status === 'ACTIVE' ? 'default' : 'warning'}>{tournament.status}</Badge>
+              {tournament.isArchived && <Badge variant="default">ARCHIVED (READ-ONLY)</Badge>}
             </h1>
-            {tournament.isArchived && <span style={{ color: '#ff7b72', fontSize: '0.85rem' }}>This tournament has been archived. No further modifications are permitted.</span>}
+            {tournament.isArchived && <span >This tournament has been archived. No further modifications are permitted.</span>}
           </div>
           <Button variant="secondary" disabled={tournament.isArchived}>Tournament Settings</Button>
         </div>

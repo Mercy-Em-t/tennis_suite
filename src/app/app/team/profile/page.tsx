@@ -24,7 +24,7 @@ export default async function PlayerProfilePage() {
 
   // Fetch the current user from DB
   const user = await prisma.user.findUnique({
-    where: { id: payload.id }
+    where: { id: payload.sub }
   });
 
   if (!user) {

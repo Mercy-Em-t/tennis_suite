@@ -116,7 +116,7 @@ export default function GlobalHostDashboard() {
               <div className={styles.cardBody}>
                 <div className={styles.cardTopRow}>
                   {t.isArchived ? (
-                    <Badge variant="secondary">Past</Badge>
+                    <Badge variant="default">Past</Badge>
                   ) : t.isActive ? (
                     <Badge variant="success">Active</Badge>
                   ) : (

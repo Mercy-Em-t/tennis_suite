@@ -47,7 +47,7 @@ export default function PlayerTournamentDashboard({ params }: { params: Promise<
       </div>
 
       <header style={{ marginBottom: '48px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '32px' }}>
-        <Badge variant={tournament.status === 'ACTIVE' ? 'success' : 'secondary'} style={{ marginBottom: '16px' }}>{tournament.status}</Badge>
+        <Badge variant={tournament.status === 'ACTIVE' ? 'success' : 'default'} >{tournament.status}</Badge>
         <h1 style={{ margin: '0 0 12px', fontSize: '3rem', fontWeight: 900, color: '#f0f6fc' }}>{tournament.name}</h1>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div style={{ display: 'flex', gap: '24px', color: '#8b949e', fontSize: '1.1rem' }}>
@@ -55,7 +55,7 @@ export default function PlayerTournamentDashboard({ params }: { params: Promise<
             <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><MapPin size={20} /> {tournament.location || 'Global Server'}</span>
           </div>
           <Button 
-            variant={team.isCheckedIn ? 'outline' : 'primary'} 
+            variant={team.isCheckedIn ? 'secondary' : 'primary'} 
             onClick={handleCheckIn}
             style={{ 
               borderColor: team.isCheckedIn ? '#3fb950' : undefined,
@@ -137,7 +137,7 @@ export default function PlayerTournamentDashboard({ params }: { params: Promise<
                       }}>
                         <div>
                           <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
-                            <Badge variant={isReady ? 'primary' : 'outline'}>{m.stage}</Badge>
+                            <Badge variant={isReady ? 'default' : 'default'}>{m.stage}</Badge>
                             <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#8b949e', fontSize: '0.9rem' }}>
                               <MapPin size={14} /> {m.court?.name || 'Court TBA'}
                             </span>
@@ -150,7 +150,7 @@ export default function PlayerTournamentDashboard({ params }: { params: Promise<
 
                         <div style={{ textAlign: 'right' }}>
                           <div style={{ marginBottom: '8px' }}>
-                            <Badge variant={m.status === 'COMPLETED' ? 'outline' : m.status === 'IN_PROGRESS' ? 'success' : isReady ? 'primary' : 'secondary'}>
+                            <Badge variant={m.status === 'COMPLETED' ? 'default' : m.status === 'IN_PROGRESS' ? 'success' : isReady ? 'default' : 'default'}>
                               {isReady ? 'REPORT TO COURT' : m.status.replace('_', ' ')}
                             </Badge>
                           </div>
@@ -214,7 +214,7 @@ export default function PlayerTournamentDashboard({ params }: { params: Promise<
                   <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#f0f6fc' }}>$0.00</div>
                 </div>
               </div>
-              <Button variant="outline" style={{ width: '100%' }}>Connect Stripe Express</Button>
+              <Button variant="secondary" style={{ width: '100%' }}>Connect Stripe Express</Button>
             </Card>
           </section>
 

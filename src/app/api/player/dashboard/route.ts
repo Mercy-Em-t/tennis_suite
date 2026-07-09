@@ -16,13 +16,13 @@ export async function GET(request: Request) {
     }
 
     const payload = await verifyToken(token);
-    if (!payload || !payload.id) {
+    if (!payload || !payload.sub) {
       return NextResponse.json({ error: 'Invalid Token' }, { status: 401 });
     }
 
     // Fetch User and their Teams with Matches
     const user = await prisma.user.findUnique({
-      where: { id: payload.id },
+      where: { id: payload.sub },
       include: {
         teams: {
           include: {

@@ -43,7 +43,7 @@ export async function requireAuth(
   }
 
   if (allowedRoles && allowedRoles.length > 0) {
-    const role = payload.role.toUpperCase();
+    const role = (payload.roles[0] || 'PLAYER').toUpperCase();
     if (!allowedRoles.map(r => r.toUpperCase()).includes(role)) {
       return NextResponse.json(
         {
@@ -54,7 +54,7 @@ export async function requireAuth(
     }
   }
 
-  return { id: payload.id, role: payload.role.toUpperCase() };
+  return { id: payload.sub, role: (payload.roles[0] || 'PLAYER').toUpperCase() };
 }
 
 

@@ -7,12 +7,12 @@ const prisma = new PrismaClient();
 
 export async function POST(request: Request) {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const token = cookieStore.get('auth_token')?.value;
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const payload = await verifyToken(token);
-    if (!payload || payload.role !== 'DIRECTOR') {
+    if (!payload || !payload.roles.includes('DIRECTOR')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
         data: {
           action: 'STAFF_REASSIGNED',
           details: `Staff manually updated on Court ${courtId}. Reason: ${reason}`,
-          userId: payload.id,
+          userId: payload.sub,
           tournamentId
         }
       });

@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { verifyToken, TennisSuiteToken } from '@/lib/auth';
 
 export default async function CentralSortingHatPage() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token = cookieStore.get('auth_token')?.value;
 
   // Route 1: Unauthenticated context goes straight back to auth shell

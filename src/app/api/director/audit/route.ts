@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 export async function GET(request: Request) {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const token = cookieStore.get('auth_token')?.value;
     
     if (!token) {
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     }
 
     const payload = await verifyToken(token);
-    if (!payload || payload.role !== 'DIRECTOR') {
+    if (!payload || !payload.roles.includes('DIRECTOR')) {
       return NextResponse.json({ error: 'Forbidden: Requires Delegate Authority' }, { status: 403 });
     }
 

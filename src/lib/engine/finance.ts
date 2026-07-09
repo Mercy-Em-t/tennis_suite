@@ -9,7 +9,7 @@ import { prisma } from '@/lib/prisma';
  * 
  * Automatically calculates and routes percentages of incoming revenue to Partners and "Rainmakers" (Sales reps).
  */
-export async function processRegistrationRevenue(registrationFee: number, rainmakerId: string | null) {
+export async function processRegistrationRevenue(registrationFee: number, rainmakerId: string | null, tournamentId: string) {
   // Configurable platform take rate
   const platformFeePercentage = 0.10; // 10%
   const rainmakerPercentage = 0.05;   // 5%
@@ -23,6 +23,7 @@ export async function processRegistrationRevenue(registrationFee: number, rainma
     
     await prisma.rainmakerFee.create({
       data: {
+        tournamentId,
         brokerName: `Broker_${rainmakerId}`,
         dealAmount: registrationFee,
         feePercent: rainmakerPercentage,

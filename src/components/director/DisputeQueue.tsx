@@ -117,7 +117,7 @@ export function DisputeQueue() {
 
             {/* Final Ruling Form */}
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', color: '#fca5a5', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <label style={{ marginBottom: '0.5rem', color: '#fca5a5', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Gavel size={18} /> OFFICIAL RULING
               </label>
               <textarea

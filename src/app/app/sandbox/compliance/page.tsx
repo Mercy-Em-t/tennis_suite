@@ -83,57 +83,57 @@ export default function ComplianceDashboard() {
   };
 
   return (
-    <div style={{ padding: '48px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
+    <div >
       
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '24px', marginBottom: '40px' }}>
+      <header >
         <div>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 900, margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '12px', color: '#fff' }}>
+          <h1 >
             <Scale size={36} color="var(--primary)" />
             Compliance & Archival Control
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>
+          <p >
             Monthly Reconciliation & Annual Data Defregmentation
           </p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: injectErrors ? '#ff7b72' : '#c9d1d9', fontWeight: 600, cursor: 'pointer' }}>
+        <div >
+          <label >
             <input 
               type="checkbox" 
               checked={injectErrors} 
               onChange={(e) => setInjectErrors(e.target.checked)} 
-              style={{ width: '18px', height: '18px' }}
+              
             />
             Inject Critical Faults (Sandbox)
           </label>
         </div>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px', marginBottom: '40px' }}>
+      <div >
         
         {/* Monthly Cadence */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <h2 style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '12px' }}>The Monthly Cadence</h2>
+        <div >
+          <h2 >The Monthly Cadence</h2>
           
-          <Card style={{ padding: '24px', background: '#161b22' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+          <Card >
+            <div >
               <Scale size={24} color="#d29922" />
-              <h3 style={{ fontSize: '1.3rem', margin: 0 }}>Ledger Invariant Verification</h3>
+              <h3 >Ledger Invariant Verification</h3>
             </div>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
+            <p >
               Cross-references every row in the `LedgerEntry` table to mathematically prove Gross == PlatformFee + HostPayout.
             </p>
-            <DynamicButton variant="primary" onClick={runLedgerVerify} disabled={loading} style={{ width: '100%' }}>
+            <DynamicButton variant="secondary" onClick={runLedgerVerify} disabled={loading} >
               Verify Mathematical Invariants
             </DynamicButton>
             
             {ledgerReport && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ marginTop: '24px', padding: '16px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', borderLeft: `4px solid ${ledgerReport.status === 'PASSED' ? 'var(--success)' : '#ff7b72'}` }}>
-                <div style={{ fontWeight: 700, marginBottom: '8px', color: ledgerReport.status === 'PASSED' ? 'var(--success)' : '#ff7b72', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div >
                   {ledgerReport.status === 'PASSED' ? <CheckCircle2 size={18}/> : <AlertOctagon size={18}/>}
                   {ledgerReport.status}
                 </div>
                 {ledgerReport.violations.length > 0 && (
-                  <ul style={{ color: '#ff7b72', fontSize: '0.9rem', paddingLeft: '20px' }}>
+                  <ul >
                     {ledgerReport.violations.map((v: string, i: number) => <li key={i}>{v}</li>)}
                   </ul>
                 )}
@@ -141,26 +141,26 @@ export default function ComplianceDashboard() {
             )}
           </Card>
 
-          <Card style={{ padding: '24px', background: '#161b22' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+          <Card >
+            <div >
               <Lock size={24} color="var(--primary)" />
-              <h3 style={{ fontSize: '1.3rem', margin: 0 }}>Multi-Tenant Isolation Scan</h3>
+              <h3 >Multi-Tenant Isolation Scan</h3>
             </div>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
+            <p >
               Scans all active matches and ledger entries to strictly guarantee no cross-tournament data leakage occurred.
             </p>
-            <DynamicButton variant="primary" onClick={runIsolationScan} disabled={loading} style={{ width: '100%' }}>
+            <DynamicButton variant="secondary" onClick={runIsolationScan} disabled={loading} >
               Run Security Boundary Scan
             </DynamicButton>
             
             {isolationReport && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ marginTop: '24px', padding: '16px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', borderLeft: `4px solid ${isolationReport.status === 'SECURE' ? 'var(--success)' : '#ff7b72'}` }}>
-                <div style={{ fontWeight: 700, marginBottom: '8px', color: isolationReport.status === 'SECURE' ? 'var(--success)' : '#ff7b72', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div >
                   {isolationReport.status === 'SECURE' ? <CheckCircle2 size={18}/> : <AlertOctagon size={18}/>}
                   {isolationReport.status}
                 </div>
                 {isolationReport.leakageViolations.length > 0 && (
-                  <ul style={{ color: '#ff7b72', fontSize: '0.9rem', paddingLeft: '20px' }}>
+                  <ul >
                     {isolationReport.leakageViolations.map((v: string, i: number) => <li key={i}>{v}</li>)}
                   </ul>
                 )}
@@ -170,38 +170,38 @@ export default function ComplianceDashboard() {
         </div>
 
         {/* Annual Cadence */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <h2 style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '12px' }}>The Annual Cadence</h2>
+        <div >
+          <h2 >The Annual Cadence</h2>
 
-          <Card style={{ padding: '24px', background: '#161b22' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+          <Card >
+            <div >
               <Download size={24} color="#58a6ff" />
-              <h3 style={{ fontSize: '1.3rem', margin: 0 }}>Tax & Compliance Exports</h3>
+              <h3 >Tax & Compliance Exports</h3>
             </div>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
+            <p >
               Compiles the structural revenue distributions (Platform vs Host Cuts) into a clean CSV for legal auditing.
             </p>
-            <DynamicButton variant="outline" onClick={runTaxExport} disabled={loading} style={{ width: '100%' }}>
+            <DynamicButton variant="secondary" onClick={runTaxExport} disabled={loading} >
               Export CSV Ledger
             </DynamicButton>
           </Card>
 
-          <Card style={{ padding: '24px', background: '#161b22' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+          <Card >
+            <div >
               <Database size={24} color="#ff7b72" />
-              <h3 style={{ fontSize: '1.3rem', margin: 0 }}>Archival & Defragmentation</h3>
+              <h3 >Archival & Defragmentation</h3>
             </div>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
+            <p >
               Offloads finalized structural data into a cold-storage JSON payload and physically deletes relational rows to preserve database indexing speed.
             </p>
-            <DynamicButton variant="primary" onClick={executeArchiveAndPrune} disabled={loading || archiveResult} style={{ width: '100%', background: '#ff7b72', color: '#000', border: 'none' }}>
+            <DynamicButton variant="secondary" onClick={executeArchiveAndPrune} disabled={loading || archiveResult} >
               {archiveResult ? 'Archived & Pruned' : 'Execute Immutable Snapshot & Prune'}
             </DynamicButton>
             
             {archiveResult && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ marginTop: '24px', padding: '16px', background: 'rgba(46,160,67,0.1)', borderRadius: '8px', borderLeft: `4px solid var(--success)` }}>
-                <div style={{ fontWeight: 700, color: 'var(--success)', marginBottom: '4px' }}>{archiveResult.message}</div>
-                <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Snapshot downloaded. Relational DB payload cleared.</div>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} >
+                <div >{archiveResult.message}</div>
+                <div >Snapshot downloaded. Relational DB payload cleared.</div>
               </motion.div>
             )}
           </Card>

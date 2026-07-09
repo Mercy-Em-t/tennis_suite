@@ -21,7 +21,7 @@ export async function GET(
           const payload = `data: ${JSON.stringify(data)}\n\n`;
           controller.enqueue(payload);
         } catch (error) {
-          logger.error('Error stringifying registration SSE payload:', error);
+          logger.error('Error stringifying registration SSE payload:', { error: String(error) });
         }
       };
 

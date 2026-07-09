@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     
     const payload = await verifyToken(token);
-    if (!payload || !payload.id) {
+    if (!payload || !payload.sub) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
     // Identify the user's primary team to link the pre-order
     const user = await prisma.user.findUnique({
-      where: { id: payload.id },
+      where: { id: payload.sub },
       include: { teams: true }
     });
 
@@ -34,10 +34,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'You must belong to a team to place an order.' }, { status: 400 });
     }
 
-    const teamId = user.teams[0].id; // Assign to first team for MVP
+    const team = user.teams[0]; // Assign to first team for MVP
+    const teamId = team.id;
+    const tournamentId = team.tournamentId;
 
     const preOrder = await prisma.preOrder.create({
       data: {
+        tournamentId,
         teamId,
         itemName,
         size: size || 'N/A',
@@ -48,6 +51,7 @@ export async function POST(request: Request) {
     // Mock Ledgers for upsell
     await prisma.rainmakerFee.create({
       data: {
+        tournamentId,
         brokerName: 'Stripe Gateway (Upsell)',
         dealAmount: 50, // Mock fixed $50 upsell price
         feePercent: 5.0,

@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     
     const rows = ledgers.map(l => [
       `"${l.tournament.name}"`,
-      `"${l.team.name}"`,
+      `"${l.team.franchiseName}"`,
       l.grossAmount,
       l.platformFee,
       l.hostPayout,

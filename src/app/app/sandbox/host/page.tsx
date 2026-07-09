@@ -11,7 +11,7 @@ export default function GlobalHostDashboard() {
   const [showAll, setShowAll] = useState(false);
   const [filter, setFilter] = useState('ALL');
 
-  if (!loaded) return <div style={{ padding: '48px', color: '#8b949e', background: '#0d1117', minHeight: '100vh' }}>Loading...</div>;
+  if (!loaded) return <div >Loading...</div>;
 
   const activeUpcoming = tournaments.filter(t => t.status === 'UPCOMING' || t.status === 'ACTIVE');
   
@@ -39,30 +39,30 @@ export default function GlobalHostDashboard() {
       <header style={S.header}>
         <div>
           <h1 style={S.h1}>Host Dashboard</h1>
-          <p style={{ color: '#8b949e', margin: 0, marginTop: '8px' }}>Manage your tennis tournaments globally.</p>
+          <p >Manage your tennis tournaments globally.</p>
         </div>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginRight: '16px' }}>
-            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Host" alt="Profile" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#21262d' }} />
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Host Jane</span>
-              <span style={{ fontSize: '0.75rem', color: '#8b949e' }}>Settings & Profile</span>
+        <div >
+          <div >
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Host" alt="Profile"  />
+            <div >
+              <span >Host Jane</span>
+              <span >Settings & Profile</span>
             </div>
           </div>
           <Button variant="success" onClick={handleCreate}>+ Provision New Tournament</Button>
         </div>
       </header>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0 }}>
+      <div >
+        <h2 >
           {showAll ? 'All Tournaments' : 'Priority (Active & Upcoming)'}
         </h2>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div >
           {showAll && (
             <select 
               value={filter} 
               onChange={(e) => setFilter(e.target.value)}
-              style={{ background: '#161b22', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: '6px', fontSize: '0.85rem' }}
+              
             >
               <option value="ALL">All Statuses</option>
               <option value="UPCOMING">Upcoming</option>
@@ -84,21 +84,21 @@ export default function GlobalHostDashboard() {
             hoverable 
             onClick={() => window.location.href = `/sandbox/host/tournament/${t.id}`}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: '#f0f6fc' }}>{t.name}</h3>
-              <Badge variant={t.status === 'ACTIVE' ? 'primary' : t.status === 'COMPLETED' ? 'secondary' : 'warning'}>
+            <div >
+              <h3 >{t.name}</h3>
+              <Badge variant="default">
                 {t.status}
               </Badge>
             </div>
-            <div style={{ fontSize: '0.85rem', color: '#8b949e', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div >
               <span>📅 {t.date}</span>
               <span>👥 {t.teamsRegistered} Teams Registered</span>
-              <span style={{ fontFamily: 'monospace', marginTop: '8px' }}>ID: {t.id}</span>
+              <span >ID: {t.id}</span>
             </div>
           </Card>
         ))}
         {displayedTournaments.length === 0 && (
-          <div style={{ gridColumn: '1/-1', padding: '48px', textAlign: 'center', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '8px', color: '#8b949e' }}>
+          <div >
             No tournaments found matching the criteria.
           </div>
         )}

@@ -109,7 +109,7 @@ export default function TeamDashboard() {
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                         <h3 style={{ margin: 0, color: '#fff', fontSize: '1.25rem', fontWeight: 700 }}>{t.tournamentName}</h3>
-                        <StatusBadge status={t.status === 'ACTIVE' ? 'LIVE' : t.status === 'COMPLETED' ? 'COMPLETED' : 'UPCOMING'} />
+                        <StatusBadge status={t.status === 'ACTIVE' ? 'success' : t.status === 'success' ? 'success' : 'info'} >{t.status}</StatusBadge>
                       </div>
                       <p style={{ color: 'var(--text-muted)', margin: '0 0 20px 0', fontSize: '0.9rem' }}>
                         Playing as: <span style={{ color: '#fff', fontWeight: 600 }}>{t.franchiseName}</span>
@@ -156,7 +156,7 @@ export default function TeamDashboard() {
                       </p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                      <StatusBadge status="UPCOMING">{t.registrationPhase}</StatusBadge>
+                      <StatusBadge status="info">{t.registrationPhase}</StatusBadge>
                       <Link href={`/tournaments/${t.id}/register`} style={{ textDecoration: 'none' }} onClick={(e) => e.stopPropagation()}>
                         <DynamicButton variant="primary">Join</DynamicButton>
                       </Link>
@@ -195,7 +195,7 @@ export default function TeamDashboard() {
                 style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(210,168,255,0.2)', borderRadius: '8px', padding: '12px', color: '#fff', fontSize: '1.2rem', letterSpacing: '4px', textAlign: 'center', outline: 'none' }}
               />
               <DynamicButton 
-                variant="outline" 
+                variant="secondary" 
                 style={{ borderColor: '#d2a8ff', color: '#d2a8ff' }}
                 onClick={async () => {
                   const pin = (document.getElementById('umpire-pin-input') as HTMLInputElement)?.value;

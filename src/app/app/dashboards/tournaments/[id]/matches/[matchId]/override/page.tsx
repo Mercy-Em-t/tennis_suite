@@ -113,7 +113,7 @@ export default function MatchOverrideWorkspace({ params }: { params: Promise<{ i
           <h2 style={{ fontSize: '1.5rem', marginBottom: '16px' }}>Recommended Replacement</h2>
           <Card style={{ background: '#161b22', border: '2px solid #58a6ff', padding: '32px', marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <Badge variant="primary" style={{ marginBottom: '12px' }}>Next Highest Ranked</Badge>
+              <Badge variant="default">Next Highest Ranked</Badge>
               <h3 style={{ margin: '0 0 8px', fontSize: '1.5rem' }}>{recommendedCandidate.team.franchiseName}</h3>
               <p style={{ margin: 0, color: '#8b949e' }}>Source: {sourcePool?.name} • Seed: {recommendedCandidate.seed || 'Unseeded'}</p>
             </div>
@@ -144,7 +144,7 @@ export default function MatchOverrideWorkspace({ params }: { params: Promise<{ i
                         <h4 style={{ margin: '0 0 4px' }}>{pt.team.franchiseName}</h4>
                         <span style={{ fontSize: '0.8rem', color: '#8b949e' }}>Seed: {pt.seed || 'Unseeded'}</span>
                       </div>
-                      <Button variant="outline" onClick={() => handleOverride(pt.teamId)} disabled={submitting}>
+                      <Button variant="secondary" onClick={() => handleOverride(pt.teamId)} disabled={submitting}>
                         Select
                       </Button>
                     </Card>

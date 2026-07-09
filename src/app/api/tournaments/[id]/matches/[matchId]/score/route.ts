@@ -27,12 +27,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     // Authorization Matrix
     let authorized = false;
-    if (payload.role === 'HOST' || payload.role === 'REFEREE') {
+    if (payload.roles.includes('HOST') || payload.roles.includes('REFEREE')) {
       // Could still verify tournament access for extra safety, but skipping for brevity
       authorized = true; 
-    } else if (payload.role === 'PLAYER') {
+    } else if (payload.roles.includes('PLAYER')) {
       // The Player-Ump Security Bridge
-      if (matchToVerify.umpireId === payload.id) {
+      if (matchToVerify.umpireId === payload.sub) {
         authorized = true;
       }
     }
@@ -61,7 +61,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         where: { id: matchId },
         data: updateData,
         include: { 
-          pool: { include: { poolTeams: true } },
           teamA: { include: { players: true } },
           teamB: { include: { players: true } }
         }
@@ -95,14 +94,21 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       }
 
       // 2. Progression Engine: Pool Lockdown
-      if (status === 'COMPLETED' && updatedMatch.poolId && updatedMatch.pool) {
-        // Check if all matches in this pool are completed
-        const poolMatches = await tx.match.findMany({
-          where: { poolId: updatedMatch.poolId }
+      if (status === 'COMPLETED' && updatedMatch.poolId) {
+        // Fetch pool explicitly
+        const pool = await tx.pool.findUnique({
+          where: { id: updatedMatch.poolId },
+          include: { poolTeams: true }
         });
 
-        const allCompleted = poolMatches.every(m => m.status === 'COMPLETED');
-        if (allCompleted && updatedMatch.pool.status !== 'LOCKED') {
+        if (pool) {
+          // Check if all matches in this pool are completed
+          const poolMatches = await tx.match.findMany({
+            where: { poolId: updatedMatch.poolId }
+          });
+
+          const allCompleted = poolMatches.every(m => m.status === 'COMPLETED');
+          if (allCompleted && pool.status !== 'LOCKED') {
           // Lock the pool
           await tx.pool.update({
             where: { id: updatedMatch.poolId },
@@ -118,7 +124,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           });
 
           // Sort pool teams by wins
-          const rankedTeams = [...updatedMatch.pool.poolTeams].sort((a, b) => {
+          const rankedTeams = [...pool.poolTeams].sort((a, b) => {
             const winsA = teamWins[a.teamId] || 0;
             const winsB = teamWins[b.teamId] || 0;
             return winsB - winsA;
@@ -127,8 +133,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           const top2 = rankedTeams.slice(0, 2);
 
           // Find knockouts that have placeholders for this pool
-          // e.g. "Pool A Pos 1" -> we need updatedMatch.pool.name + " Pos 1"
-          const poolName = updatedMatch.pool.name;
+          // e.g. "Pool A Pos 1" -> we need pool.name + " Pos 1"
+          const poolName = pool.name;
           const pos1Placeholder = `${poolName} Pos 1`;
           const pos2Placeholder = `${poolName} Pos 2`;
 
@@ -175,6 +181,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           logger.info(`Pool ${poolName} LOCKED. Knockout placeholders updated.`);
         }
       }
+    }
     });
 
     return NextResponse.json({ success: true });

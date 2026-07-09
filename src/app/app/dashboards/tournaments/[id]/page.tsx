@@ -12,7 +12,7 @@ const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 type Phase = 'EARLY' | 'LATE' | 'CLOSED';
 const PHASE_LABELS: Record<Phase, string> = { EARLY: 'REGISTRATION OPEN', LATE: 'LATE REGISTRATION', CLOSED: 'REGISTRATION CLOSED' };
-const PHASE_VARIANTS: Record<Phase, 'success' | 'warning' | 'secondary'> = { EARLY: 'success', LATE: 'warning', CLOSED: 'secondary' };
+const PHASE_VARIANTS: Record<Phase, 'success' | 'warning' | 'default'> = { EARLY: 'success', LATE: 'warning', CLOSED: 'default' };
 
 function groupByCategory(teams: any[]) {
   const map: Record<string, any[]> = {};

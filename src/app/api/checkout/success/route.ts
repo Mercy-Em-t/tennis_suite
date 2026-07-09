@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     
     const payload = await verifyToken(token);
-    if (!payload || !payload.id) {
+    if (!payload || !payload.sub) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
         data: {
           franchiseName,
           tournamentId,
-          players: { connect: { id: payload.id } }
+          players: { connect: { id: payload.sub } }
         }
       });
 
@@ -42,6 +42,7 @@ export async function POST(request: Request) {
 
       await tx.rainmakerFee.create({
         data: {
+          tournamentId,
           brokerName: 'Stripe Gateway (Mock)',
           dealAmount: ENTRY_FEE,
           feePercent: PLATFORM_FEE_PERCENT,
@@ -52,6 +53,7 @@ export async function POST(request: Request) {
       // 3. Mock Partner Payout (e.g., local club gets 10%)
       await tx.partnerPayout.create({
         data: {
+          tournamentId,
           partnerName: 'Local Country Club',
           service: 'FACILITY_FEE',
           amountOwed: ENTRY_FEE * 0.10,

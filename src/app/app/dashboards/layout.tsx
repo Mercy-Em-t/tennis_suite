@@ -13,7 +13,7 @@ export default async function DashboardsLayout({ children }: { children: React.R
   
   if (token) {
     const payload = await verifyToken(token);
-    role = payload?.role || '';
+    role = payload?.roles?.[0] || '';
   }
 
   // Define navigation based on actual role

@@ -79,7 +79,7 @@ export async function POST(request: Request) {
       success: true,
       message: 'Logged in successfully',
       role: user.role,
-      hasClub
+      hasClub: !!organizationId
     });
 
     response.cookies.set({

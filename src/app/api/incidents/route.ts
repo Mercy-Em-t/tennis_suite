@@ -17,8 +17,14 @@ export async function POST(request: Request) {
   try {
     const { matchId, reportedBy, incidentType, description } = await request.json();
 
+    const match = await prisma.match.findUnique({
+      where: { id: matchId },
+      select: { tournamentId: true }
+    });
+    if (!match) return NextResponse.json({ error: 'Match not found' }, { status: 404 });
+
     const incident = await prisma.incidentReport.create({
-      data: { matchId, reportedBy, incidentType, description }
+      data: { tournamentId: match.tournamentId, matchId, reportedBy, incidentType, description }
     });
 
     // If MEDICAL, this would also trigger the Referee UI timer protocol (e.g. 3-minute physio window)

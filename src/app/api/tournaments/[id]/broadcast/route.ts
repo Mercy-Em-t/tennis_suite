@@ -15,7 +15,7 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     
     const payload = await verifyToken(token);
-    if (!payload || !['HOST', 'ADMIN'].includes(payload.role)) {
+    if (!payload || !payload.roles.some(r => ['HOST', 'ADMIN'].includes(r))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

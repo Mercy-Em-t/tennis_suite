@@ -87,8 +87,8 @@ export default function PoolsWorkspace({ params }: { params: Promise<{ id: strin
     const overId = over.id;
 
     // Find source pool
-    let sourcePoolId = null;
-    let targetPoolId = null;
+    let sourcePoolId: string | null = null;
+    let targetPoolId: string | null = null;
     
     localPools.forEach(p => {
       if (p.poolTeams.find((pt: any) => pt.id === activePoolTeamId)) sourcePoolId = p.id;

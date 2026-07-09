@@ -17,7 +17,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
 
     await prisma.$transaction(async (tx) => {
-      const match = await tx.match.findUnique({ where: { id: matchId }, include: { pool: true } });
+      const match = await tx.match.findUnique({ where: { id: matchId } });
       if (!match) throw new Error("Match not found");
       if (match.status === 'COMPLETED') throw new Error("Match is already completed.");
 
@@ -45,13 +45,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       });
 
       // 3. Pool progression trigger (if it's a pool match)
-      if (match.poolId && match.pool) {
+      if (match.poolId) {
+        const pool = await tx.pool.findUnique({ where: { id: match.poolId } });
         const poolMatches = await tx.match.findMany({ where: { poolId: match.poolId } });
         // Set this match as completed in memory for the check
         const updatedPoolMatches = poolMatches.map(m => m.id === matchId ? { ...m, status: 'COMPLETED', winnerId } : m);
         
         const allCompleted = updatedPoolMatches.every(m => m.status === 'COMPLETED');
-        if (allCompleted && match.pool.status !== 'LOCKED') {
+        if (allCompleted && pool && pool.status !== 'LOCKED') {
           await tx.pool.update({ where: { id: match.poolId }, data: { status: 'LOCKED' } });
           // Note: Full progression logic (standings calculation and knockout injection) 
           // usually happens in the standard score engine. 

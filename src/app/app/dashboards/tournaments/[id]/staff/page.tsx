@@ -98,7 +98,7 @@ export default function StaffManagementWorkspace({ params }: { params: Promise<{
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <Button variant="primary" onClick={() => handleUpdateStatus(staff.id, 'APPROVED')} disabled={submitting}>Approve</Button>
-                    <Button variant="destructive" onClick={() => handleUpdateStatus(staff.id, 'REJECTED')} disabled={submitting}>Reject</Button>
+                    <Button variant="danger" onClick={() => handleUpdateStatus(staff.id, 'REJECTED')} disabled={submitting}>Reject</Button>
                   </div>
                 </Card>
               ))}
@@ -118,7 +118,7 @@ export default function StaffManagementWorkspace({ params }: { params: Promise<{
                     <h4 style={{ margin: '0 0 4px' }}>{staff.user?.name || staff.user?.email || 'Unknown User'}</h4>
                     <span style={{ fontSize: '0.8rem', color: '#8b949e' }}>Role: <strong>{staff.role}</strong></span>
                   </div>
-                  <Button variant="destructive" onClick={() => handleUpdateStatus(staff.id, 'REJECTED')} disabled={submitting}>Revoke Access</Button>
+                  <Button variant="danger" onClick={() => handleUpdateStatus(staff.id, 'REJECTED')} disabled={submitting}>Revoke Access</Button>
                 </Card>
               ))}
             </div>

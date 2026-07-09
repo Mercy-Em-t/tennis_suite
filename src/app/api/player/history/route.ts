@@ -11,10 +11,10 @@ export async function GET(request: Request) {
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const payload = await verifyToken(token);
-    if (!payload || !payload.id) return NextResponse.json({ error: 'Invalid Token' }, { status: 401 });
+    if (!payload || !payload.sub) return NextResponse.json({ error: 'Invalid Token' }, { status: 401 });
 
     const user = await prisma.user.findUnique({
-      where: { id: payload.id },
+      where: { id: payload.sub },
       include: {
         teams: {
           include: {

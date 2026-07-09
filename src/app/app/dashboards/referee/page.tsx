@@ -37,7 +37,7 @@ export default function RefereeHub() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h2 style={{ fontSize: '1.5rem', margin: 0 }}>{tournament.name}</h2>
                 <Link href={`/tournaments/${tournament.id}`}>
-                  <Button variant="outline" size="sm">
+                  <Button variant="secondary" size="sm">
                     Open Command Center →
                   </Button>
                 </Link>
@@ -49,7 +49,7 @@ export default function RefereeHub() {
                 ) : (
                   tournament.courts.map((court: any) => (
                     <Card key={court.id} style={{ background: '#161b22', border: '1px solid rgba(255,255,255,0.1)', padding: '24px' }}>
-                      <h3 style={{ margin: '0 0 16px', color: '#fff' }}>{court.name} <Badge variant="secondary">Assigned</Badge></h3>
+                      <h3 style={{ margin: '0 0 16px', color: '#fff' }}>{court.name} <Badge variant="default">Assigned</Badge></h3>
                       
                       {court.matches.length === 0 ? (
                         <p style={{ color: '#8b949e', fontSize: '0.9rem' }}>No matches currently queued on this court.</p>
@@ -68,9 +68,9 @@ export default function RefereeHub() {
                               <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                                   <span style={{ fontSize: '0.8rem', color: '#8b949e', textTransform: 'uppercase' }}>{match.stage} Match</span>
-                                  {match.status === 'IN_PROGRESS' && <Badge variant="primary">LIVE</Badge>}
-                                  {match.status === 'SCHEDULED' && <Badge variant="secondary">UPCOMING</Badge>}
-                                  {match.status === 'REQUIRES_INTERVENTION' && <Badge variant="destructive">PAUSED</Badge>}
+                                  {match.status === 'IN_PROGRESS' && <Badge variant="default">LIVE</Badge>}
+                                  {match.status === 'SCHEDULED' && <Badge variant="default">UPCOMING</Badge>}
+                                  {match.status === 'REQUIRES_INTERVENTION' && <Badge variant="error">PAUSED</Badge>}
                                 </div>
                                 <div style={{ color: '#fff', fontSize: '1.1rem' }}>
                                   {match.teamA?.franchiseName || match.placeholderA || 'TBD'} vs {match.teamB?.franchiseName || match.placeholderB || 'TBD'}
@@ -88,7 +88,7 @@ export default function RefereeHub() {
                                     </Button>
                                     {!match.umpireCode ? (
                                       <Button 
-                                        variant="outline"
+                                        variant="secondary"
                                         style={{ borderColor: '#d2a8ff', color: '#d2a8ff' }}
                                         onClick={async () => {
                                           const res = await fetch(`/api/referee/matches/${match.id}/umpire-pin`, {

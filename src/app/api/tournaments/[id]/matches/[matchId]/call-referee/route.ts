@@ -23,10 +23,10 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     if (!matchToVerify) return NextResponse.json({ error: 'Match not found' }, { status: 404 });
 
     let authorized = false;
-    if (payload.role === 'HOST' || payload.role === 'REFEREE') {
+    if (payload.roles.includes('HOST') || payload.roles.includes('REFEREE')) {
       authorized = true; 
-    } else if (payload.role === 'PLAYER') {
-      if (matchToVerify.umpireId === payload.id) {
+    } else if (payload.roles.includes('PLAYER')) {
+      if (matchToVerify.umpireId === payload.sub) {
         authorized = true;
       }
     }

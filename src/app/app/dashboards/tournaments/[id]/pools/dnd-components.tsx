@@ -50,7 +50,7 @@ export function PoolContainer({ pool }: { pool: any }) {
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#58a6ff' }}>{pool.name}</h3>
-        <Badge variant="secondary">{pool.versionId}</Badge>
+        <Badge variant="default">{pool.versionId}</Badge>
       </div>
 
       <div ref={setNodeRef} style={{ minHeight: '200px', background: '#161b22', borderRadius: '6px', padding: '8px' }}>

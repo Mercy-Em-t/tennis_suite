@@ -52,27 +52,27 @@ export default function HostDashboard() {
   }, [sandboxState?.tournamentId]);
 
   return (
-    <div style={{ padding: '48px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
+    <div >
       
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '24px', marginBottom: '48px' }}>
+      <header >
         <div>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 900, margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <h1 >
             <LayoutDashboard size={36} color="var(--primary)" />
             Host Command Center
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>
+          <p >
             Rainmaker Open 2026 Dashboard
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <DynamicButton variant="outline" onClick={loadSandbox} disabled={loading}>
+        <div >
+          <DynamicButton variant="secondary" onClick={loadSandbox} disabled={loading}>
             Reset Sandbox Data
           </DynamicButton>
         </div>
       </header>
 
       {error && (
-        <div style={{ background: 'rgba(248,81,73,0.1)', color: 'var(--danger)', padding: '16px', borderRadius: '8px', marginBottom: '24px', border: '1px solid rgba(248,81,73,0.2)' }}>
+        <div >
           {error}
         </div>
       )}
@@ -80,20 +80,20 @@ export default function HostDashboard() {
       {!sandboxState ? (
         <p>Loading Dashboard...</p>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
+        <div >
           
-          <Card style={{ padding: '32px', background: '#161b22', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden' }}>
+          <Card >
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div >
+              <div >
                 <Users size={24} color="var(--primary)" />
-                <h2 style={{ fontSize: '1.2rem', margin: 0, fontWeight: 600 }}>Team Matrix</h2>
+                <h2 >Team Matrix</h2>
               </div>
-              <Badge variant="primary">LIVE</Badge>
+              <Badge variant="default">LIVE</Badge>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-              <span style={{ color: 'var(--text-muted)', fontSize: '1.2rem' }}>Registered Teams:</span>
+            <div >
+              <span >Registered Teams:</span>
               
               <AnimatePresence mode="popLayout">
                 <motion.span
@@ -101,22 +101,22 @@ export default function HostDashboard() {
                   initial={{ opacity: 0, y: 20, color: 'var(--primary)', scale: 1.5 }}
                   animate={{ opacity: 1, y: 0, color: '#fff', scale: 1 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                  style={{ fontSize: '3rem', fontWeight: 900, display: 'inline-block' }}
+                  
                 >
                   {registeredCount}
                 </motion.span>
               </AnimatePresence>
               
-              <span style={{ fontSize: '2rem', color: 'var(--text-muted)', fontWeight: 300 }}>
+              <span >
                 / {maxTeams}
               </span>
             </div>
 
-            <div style={{ marginTop: '32px', background: 'rgba(255,255,255,0.05)', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
+            <div >
               <motion.div 
                 animate={{ width: `${(registeredCount / maxTeams) * 100}%` }}
                 transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-                style={{ height: '100%', background: 'var(--primary)', borderRadius: '4px' }}
+                
               />
             </div>
 

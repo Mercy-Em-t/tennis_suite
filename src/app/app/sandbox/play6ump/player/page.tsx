@@ -106,13 +106,13 @@ export default function AdaptivePlayerDashboard() {
         color: isUmpire ? '#f0e6d2' : '#c9d1d9'
       }}
       transition={{ duration: 0.5 }}
-      style={{ minHeight: '100vh', padding: '48px', fontFamily: 'Inter, sans-serif' }}
+      
     >
-      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+      <div >
         
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: `1px solid ${isUmpire ? 'rgba(210,153,34,0.2)' : 'rgba(255,255,255,0.1)'}`, paddingBottom: '24px', marginBottom: '40px' }}>
           <div>
-            <h1 style={{ fontSize: '2.5rem', fontWeight: 900, margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <h1 >
               <User size={36} color={isUmpire ? '#d29922' : 'var(--primary)'} />
               Player Dashboard
             </h1>
@@ -123,7 +123,7 @@ export default function AdaptivePlayerDashboard() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  style={{ color: '#d29922', fontSize: '1.1rem', margin: 0, fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}
+                  
                 >
                   <Zap size={20} fill="#d29922" />
                   UMPIRE RIGHTS ACTIVATED
@@ -134,7 +134,7 @@ export default function AdaptivePlayerDashboard() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}
+                  
                 >
                   <Lock size={16} />
                   Read-Only View
@@ -142,13 +142,13 @@ export default function AdaptivePlayerDashboard() {
               )}
             </AnimatePresence>
           </div>
-          <DynamicButton variant="outline" onClick={loadSandbox} disabled={loading || actionLoading}>
+          <DynamicButton variant="secondary" onClick={loadSandbox} disabled={loading || actionLoading}>
             Reset State
           </DynamicButton>
         </header>
 
         {error && (
-          <div style={{ background: 'rgba(248,81,73,0.1)', color: 'var(--danger)', padding: '16px', borderRadius: '8px', marginBottom: '24px', border: '1px solid rgba(248,81,73,0.2)' }}>
+          <div >
             {error}
           </div>
         )}
@@ -163,44 +163,39 @@ export default function AdaptivePlayerDashboard() {
               boxShadow: isUmpire ? '0 0 40px rgba(210,153,34,0.1)' : 'none'
             }}
             transition={{ duration: 0.5 }}
-            style={{ 
-              padding: '40px', 
-              background: isUmpire ? '#231e11' : '#161b22', 
-              border: '1px solid',
-              borderRadius: '16px' 
-            }}
+            
           >
             
-            <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-              <div style={{ fontSize: '1rem', color: isUmpire ? '#d29922' : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '16px', fontWeight: 600 }}>
+            <div >
+              <div >
                 {matchData?.status === 'COMPLETED' ? 'Final Score' : 'Live Match'}
               </div>
               
               {/* Scoreboard Layout */}
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '32px' }}>
+              <div >
                 {/* Team A */}
-                <div style={{ textAlign: 'right', flex: 1 }}>
-                  <h2 style={{ fontSize: '1.8rem', margin: '0 0 8px 0', color: '#fff' }}>{matchData?.teamA?.franchiseName}</h2>
-                  <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end', alignItems: 'center' }}>
-                    <div style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>Sets: <span style={{ color: '#fff', fontWeight: 700 }}>{scores.setsA}</span></div>
-                    <div style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>Games: <span style={{ color: '#fff', fontWeight: 700 }}>{scores.gamesA}</span></div>
-                    <div style={{ fontSize: '3rem', fontWeight: 900, color: isUmpire ? '#d29922' : 'var(--primary)', width: '80px', textAlign: 'center' }}>
+                <div >
+                  <h2 >{matchData?.teamA?.franchiseName}</h2>
+                  <div >
+                    <div >Sets: <span >{scores.setsA}</span></div>
+                    <div >Games: <span >{scores.gamesA}</span></div>
+                    <div >
                       {scores.pointsA}
                     </div>
                   </div>
                 </div>
 
-                <div style={{ fontSize: '1.5rem', color: 'rgba(255,255,255,0.2)', fontWeight: 300 }}>VS</div>
+                <div >VS</div>
 
                 {/* Team B */}
-                <div style={{ textAlign: 'left', flex: 1 }}>
-                  <h2 style={{ fontSize: '1.8rem', margin: '0 0 8px 0', color: '#fff' }}>{matchData?.teamB?.franchiseName}</h2>
-                  <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-start', alignItems: 'center' }}>
-                    <div style={{ fontSize: '3rem', fontWeight: 900, color: isUmpire ? '#d29922' : 'var(--primary)', width: '80px', textAlign: 'center' }}>
+                <div >
+                  <h2 >{matchData?.teamB?.franchiseName}</h2>
+                  <div >
+                    <div >
                       {scores.pointsB}
                     </div>
-                    <div style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>Games: <span style={{ color: '#fff', fontWeight: 700 }}>{scores.gamesB}</span></div>
-                    <div style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>Sets: <span style={{ color: '#fff', fontWeight: 700 }}>{scores.setsB}</span></div>
+                    <div >Games: <span >{scores.gamesB}</span></div>
+                    <div >Sets: <span >{scores.setsB}</span></div>
                   </div>
                 </div>
               </div>
@@ -213,33 +208,33 @@ export default function AdaptivePlayerDashboard() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  style={{ borderTop: '1px solid rgba(210,153,34,0.2)', paddingTop: '32px', overflow: 'hidden' }}
+                  
                 >
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+                  <div >
                     <DynamicButton 
-                      variant="primary" 
+                      variant="secondary" 
                       onClick={() => handleScore(matchData.teamAId)}
                       disabled={actionLoading}
-                      style={{ padding: '24px', fontSize: '1.2rem', background: '#d29922', color: '#000' }}
+                      
                     >
                       +1 Point {matchData?.teamA?.franchiseName}
                     </DynamicButton>
                     <DynamicButton 
-                      variant="primary" 
+                      variant="secondary" 
                       onClick={() => handleScore(matchData.teamBId)}
                       disabled={actionLoading}
-                      style={{ padding: '24px', fontSize: '1.2rem', background: '#d29922', color: '#000' }}
+                      
                     >
                       +1 Point {matchData?.teamB?.franchiseName}
                     </DynamicButton>
                   </div>
                   <DynamicButton 
-                    variant="outline" 
+                    variant="secondary" 
                     onClick={handleFinalize}
                     disabled={actionLoading}
-                    style={{ width: '100%', padding: '16px', borderColor: 'var(--success)', color: 'var(--success)' }}
+                    
                   >
-                    <Activity size={20} style={{ marginRight: '8px' }} />
+                    <Activity size={20}  />
                     Finalize Match Results
                   </DynamicButton>
                 </motion.div>
@@ -250,7 +245,7 @@ export default function AdaptivePlayerDashboard() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                style={{ textAlign: 'center', color: 'var(--success)', fontWeight: 700, fontSize: '1.2rem', padding: '24px', background: 'rgba(46,160,67,0.1)', borderRadius: '8px', border: '1px solid rgba(46,160,67,0.2)' }}
+                
               >
                 Match Completed & Results Finalized
               </motion.div>

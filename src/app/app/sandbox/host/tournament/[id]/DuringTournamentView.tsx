@@ -14,9 +14,9 @@ interface Props {
 export default function DuringTournamentView({ tournament, updateTournament }: Props) {
   if (tournament.status !== 'ACTIVE') {
     return (
-      <div style={{ padding: '48px', textAlign: 'center', background: '#161b22', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '8px' }}>
-        <h2 style={{ color: '#8b949e', margin: '0 0 16px' }}>Event is not Active</h2>
-        <p style={{ color: '#8b949e' }}>You must publish the schedule in the Pre-Tournament view to begin the event.</p>
+      <div >
+        <h2 >Event is not Active</h2>
+        <p >You must publish the schedule in the Pre-Tournament view to begin the event.</p>
       </div>
     );
   }
@@ -33,44 +33,44 @@ export default function DuringTournamentView({ tournament, updateTournament }: P
     <div style={S.grid}>
       <div>
         <Card style={S.card}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <div >
             <h3 style={S.h3}>Live Event Radar</h3>
-            <Badge variant="primary">LIVE</Badge>
+            <Badge variant="default">LIVE</Badge>
           </div>
-          <p style={{ color: '#8b949e', marginBottom: '24px' }}>Monitor match progression. Referees and Umpires are updating scores simultaneously.</p>
+          <p >Monitor match progression. Referees and Umpires are updating scores simultaneously.</p>
 
           <div style={S.matchCard}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.85rem', color: '#8b949e' }}>
+            <div >
               <span>Court 1 • Pool A</span>
-              <span style={{ color: '#58a6ff' }}>In Progress (42m)</span>
+              <span >In Progress (42m)</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <span style={{ color: '#fff', fontWeight: 600 }}>Team Alpha</span>
-              <div style={{ display: 'flex', gap: '8px' }}>
+            <div >
+              <span >Team Alpha</span>
+              <div >
                 <span style={S.scoreBox}>6</span>
-                <span style={{ ...S.scoreBox, color: '#58a6ff' }}>4</span>
+                <span >4</span>
               </div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#fff', fontWeight: 600 }}>Team Delta</span>
-              <div style={{ display: 'flex', gap: '8px' }}>
+            <div >
+              <span >Team Delta</span>
+              <div >
                 <span style={S.scoreBox}>3</span>
-                <span style={{ ...S.scoreBox, color: '#58a6ff' }}>2</span>
+                <span >2</span>
               </div>
             </div>
           </div>
 
-          <div style={{ ...S.matchCard, border: '1px solid rgba(255,255,255,0.1)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.85rem', color: '#8b949e' }}>
+          <div >
+            <div >
               <span>Court 2 • Pool B</span>
               <span>Pending</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <span style={{ color: '#fff', fontWeight: 600 }}>Team Bravo</span>
+            <div >
+              <span >Team Bravo</span>
               <span style={S.scoreBox}>0</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#fff', fontWeight: 600 }}>Team Charlie</span>
+            <div >
+              <span >Team Charlie</span>
               <span style={S.scoreBox}>0</span>
             </div>
           </div>
@@ -78,28 +78,28 @@ export default function DuringTournamentView({ tournament, updateTournament }: P
 
         <Card style={S.card}>
           <h3 style={S.h3}>Pool Stages Completion</h3>
-          <div style={{ background: '#0d1117', height: '8px', borderRadius: '4px', overflow: 'hidden', marginBottom: '12px' }}>
-            <div style={{ background: '#3fb950', width: '65%', height: '100%' }}></div>
+          <div >
+            <div ></div>
           </div>
-          <p style={{ fontSize: '0.85rem', color: '#8b949e' }}>65% of pool matches completed.</p>
+          <p >65% of pool matches completed.</p>
         </Card>
       </div>
 
       <div>
         <Card style={S.card}>
           <h3 style={S.h3}>Action Center</h3>
-          <Button variant="secondary" style={{ width: '100%', marginBottom: '12px' }}>Pause Tournament</Button>
-          <Button variant="success" style={{ width: '100%', marginBottom: '12px' }} disabled>Unlock Knockout Stage (Locked)</Button>
-          <Button variant="warning" style={{ width: '100%' }} onClick={() => {
+          <Button variant="secondary" >Pause Tournament</Button>
+          <Button variant="success"  disabled>Unlock Knockout Stage (Locked)</Button>
+          <Button variant="danger"  onClick={() => {
             updateTournament({ status: 'COMPLETED' });
             window.location.reload();
           }}>Force Complete Tournament</Button>
         </Card>
 
-        <div style={{ borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '16px' }}>
-          <h4 style={{ margin: '0 0 16px', color: '#8b949e', textTransform: 'uppercase', fontSize: '0.75rem' }}>Activity Log</h4>
-          <div style={{ fontSize: '0.8rem', color: '#c9d1d9', marginBottom: '8px' }}>• Umpire Tim started match on Court 1.</div>
-          <div style={{ fontSize: '0.8rem', color: '#c9d1d9', marginBottom: '8px' }}>• Ref John resolved dispute on Court 3.</div>
+        <div >
+          <h4 >Activity Log</h4>
+          <div >• Umpire Tim started match on Court 1.</div>
+          <div >• Ref John resolved dispute on Court 3.</div>
         </div>
       </div>
     </div>

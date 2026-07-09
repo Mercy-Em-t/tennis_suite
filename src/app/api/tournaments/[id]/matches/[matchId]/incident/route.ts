@@ -20,6 +20,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       // 1. Create Incident Report
       await tx.incidentReport.create({
         data: {
+          tournamentId: id,
           matchId,
           reportedBy: userId,
           incidentType,

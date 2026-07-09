@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 type OnboardingState = 'ORG_PROVISIONING' | 'FINANCIAL_SETUP' | 'INFRASTRUCTURE' | 'SYNCING';
 
-export default function HostOnboardingWizard() {
+function HostOnboardingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep] = useState<OnboardingState>('ORG_PROVISIONING');
@@ -141,5 +141,13 @@ export default function HostOnboardingWizard() {
 
       </div>
     </div>
+  );
+}
+
+export default function HostOnboardingWizard() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#0a0a0a', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>}>
+      <HostOnboardingContent />
+    </Suspense>
   );
 }

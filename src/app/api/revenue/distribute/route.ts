@@ -10,19 +10,23 @@ import { NextResponse } from 'next/server';
  */
 export async function POST(request: Request) {
   try {
-    const { dealAmount, brokerName } = await request.json();
+    const { dealAmount, brokerName, tournamentId } = await request.json();
+
+    if (!tournamentId) {
+      return NextResponse.json({ error: 'tournamentId is required' }, { status: 400 });
+    }
 
     // The "Rainmaker" Fee Engine (e.g. 15% commission)
     const feePercent = 0.15;
     const payoutAmount = Math.floor(dealAmount * feePercent);
 
     const rainmakerFee = await prisma.rainmakerFee.create({
-      data: { brokerName, dealAmount, feePercent, payoutAmount }
+      data: { tournamentId, brokerName, dealAmount, feePercent, payoutAmount }
     });
 
     // We might also log a Partner Payout for video services etc.
     const partnerPayout = await prisma.partnerPayout.create({
-      data: { partnerName: "Elite Video Co", service: "VIDEOGRAPHY", amountOwed: 50000 }
+      data: { tournamentId, partnerName: "Elite Video Co", service: "VIDEOGRAPHY", amountOwed: 50000 }
     });
 
     return NextResponse.json({ 

@@ -8,6 +8,7 @@ import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import useSWR from 'swr';
 import { useParams, useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 
 type MatchStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'REQUIRES_INTERVENTION' | 'PENDING';
 
@@ -471,7 +472,7 @@ export default function RefereeArena() {
                     <option value="EQUIPMENT_ISSUE">Equipment Issue</option>
                     <option value="DISPUTE">Score Dispute</option>
                   </select>
-                  <Button variant="warning" onClick={() => handleIntervention('PAUSE', interventionReason)} disabled={isUpdating}>
+                  <Button variant="danger" onClick={() => handleIntervention('PAUSE', interventionReason)} disabled={isUpdating}>
                     Pause Match
                   </Button>
                 </div>

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useTournamentContext } from '@/lib/context/TournamentContext';
 import { Shuffle, ShieldAlert } from 'lucide-react';
 
 interface SeedSlot {

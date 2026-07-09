@@ -82,7 +82,7 @@ export default function TournamentHistoryPage() {
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                   <h3 style={{ margin: 0, color: '#fff', fontSize: '1.25rem', fontWeight: 700 }}>{t.tournamentName}</h3>
-                  <StatusBadge status={t.status === 'ACTIVE' ? 'LIVE' : t.category === 'UPCOMING' ? 'UPCOMING' : 'COMPLETED'} />
+                  <StatusBadge status={t.status === 'ACTIVE' ? 'success' : t.category === 'info' ? 'info' : 'success'} >{t.status}</StatusBadge>
                 </div>
                 
                 <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '4px' }}>

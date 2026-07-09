@@ -15,11 +15,11 @@ export async function POST(request: Request) {
     });
 
     const team1 = await prisma.team.create({
-      data: { name: 'Audit Team 1', franchiseName: 'Audit Franchise 1', tournamentId: tournament.id, paymentStatus: 'PAID' }
+      data: { franchiseName: 'Audit Franchise 1', tournamentId: tournament.id, paymentStatus: 'PAID' }
     });
 
     const team2 = await prisma.team.create({
-      data: { name: 'Audit Team 2', franchiseName: 'Audit Franchise 2', tournamentId: tournament.id, paymentStatus: 'PAID' }
+      data: { franchiseName: 'Audit Franchise 2', tournamentId: tournament.id, paymentStatus: 'PAID' }
     });
 
     // Valid Ledger Entry (Gross: 5000, Platform: 500, Host: 4500) -> 500+4500 = 5000
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
       
       // Inject orphaned record for Isolation Scan
       const orphanTourney = await prisma.tournament.create({
-        data: { name: 'Orphan Ghost Tournament', formatType: 'Standard' }
+        data: { name: 'Orphan Ghost Tournament', formatType: 'Standard', maxTeams: 8 }
       });
       await prisma.match.create({
         data: {

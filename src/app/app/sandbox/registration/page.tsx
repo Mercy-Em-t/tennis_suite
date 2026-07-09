@@ -60,15 +60,15 @@ function RegistrationContent() {
 
   if (success) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'Inter, sans-serif' }}>
+      <div >
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring' }}>
-          <CheckCircle size={80} color="var(--success)" style={{ marginBottom: '24px' }} />
+          <CheckCircle size={80} color="var(--success)"  />
         </motion.div>
-        <h1 style={{ fontSize: '2.5rem', margin: '0 0 16px 0' }}>Payment Successful!</h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', marginBottom: '32px' }}>
+        <h1 >Payment Successful!</h1>
+        <p >
           Your team is now officially registered for the tournament.
         </p>
-        <DynamicButton variant="outline" onClick={() => window.location.href = '/sandbox/registration'}>
+        <DynamicButton variant="secondary" onClick={() => window.location.href = '/sandbox/registration'}>
           Return to Portal
         </DynamicButton>
       </div>
@@ -76,67 +76,67 @@ function RegistrationContent() {
   }
 
   return (
-    <div style={{ padding: '64px', maxWidth: '800px', margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
+    <div >
       
-      <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-        <h1 style={{ fontSize: '3rem', fontWeight: 900, letterSpacing: '-1px', margin: '0 0 16px 0' }}>
+      <div >
+        <h1 >
           Rainmaker Gateway
         </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem' }}>
+        <p >
           Secure Checkout for Tournament Registration
         </p>
       </div>
 
       {error && (
-        <div style={{ background: 'rgba(248,81,73,0.1)', color: 'var(--danger)', padding: '16px', borderRadius: '8px', marginBottom: '24px', border: '1px solid rgba(248,81,73,0.2)' }}>
+        <div >
           {error}
         </div>
       )}
 
       {canceled && (
-        <div style={{ background: 'rgba(210,153,34,0.1)', color: '#d29922', padding: '16px', borderRadius: '8px', marginBottom: '24px', border: '1px solid rgba(210,153,34,0.2)' }}>
+        <div >
           Checkout was canceled. You have not been charged.
         </div>
       )}
 
       {!sandboxState && loading ? (
-        <p style={{ textAlign: 'center' }}>Initializing Gateway...</p>
+        <p >Initializing Gateway...</p>
       ) : sandboxState ? (
-        <Card style={{ padding: '48px', border: '1px solid rgba(255,255,255,0.1)', background: 'linear-gradient(145deg, #161b22, #0d1117)' }}>
+        <Card >
           
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
+          <div >
             <div>
-              <div style={{ color: 'var(--primary)', fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
+              <div >
                 Event Registration
               </div>
-              <h2 style={{ fontSize: '2rem', margin: 0 }}>Rainmaker Open 2026</h2>
+              <h2 >Rainmaker Open 2026</h2>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '2.5rem', fontWeight: 900 }}>$50<span style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>.00</span></div>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Entry Fee</div>
+            <div >
+              <div >$50<span >.00</span></div>
+              <div >Entry Fee</div>
             </div>
           </div>
 
-          <div style={{ background: 'rgba(0,0,0,0.3)', padding: '24px', borderRadius: '12px', marginBottom: '40px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Team ID:</span>
-              <span style={{ fontFamily: 'monospace' }}>{sandboxState.pendingTeamId}</span>
+          <div >
+            <div >
+              <span >Team ID:</span>
+              <span >{sandboxState.pendingTeamId}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Status:</span>
-              <span style={{ color: '#d29922', fontWeight: 600 }}>PENDING PAYMENT</span>
+            <div >
+              <span >Status:</span>
+              <span >PENDING PAYMENT</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Platform Fee (10%):</span>
+            <div >
+              <span >Platform Fee (10%):</span>
               <span>$5.00</span>
             </div>
           </div>
 
           <DynamicButton 
-            variant="primary" 
+            variant="secondary" 
             onClick={handleCheckout}
             disabled={checkoutLoading}
-            style={{ width: '100%', padding: '20px', fontSize: '1.2rem', display: 'flex', justifyContent: 'center', gap: '12px' }}
+            
           >
             {checkoutLoading ? 'Initiating...' : (
               <>
@@ -146,7 +146,7 @@ function RegistrationContent() {
             )}
           </DynamicButton>
 
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '24px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+          <div >
             <ShieldCheck size={16} />
             Payments secured by Stripe
           </div>
@@ -160,7 +160,7 @@ function RegistrationContent() {
 
 export default function RegistrationPortal() {
   return (
-    <Suspense fallback={<div style={{ padding: '64px', textAlign: 'center' }}>Loading Portal...</div>}>
+    <Suspense fallback={<div >Loading Portal...</div>}>
       <RegistrationContent />
     </Suspense>
   );

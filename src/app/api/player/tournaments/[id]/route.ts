@@ -15,13 +15,13 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const payload = await verifyToken(token);
-    if (!payload || !payload.id) return NextResponse.json({ error: 'Invalid Token' }, { status: 401 });
+    if (!payload || !payload.sub) return NextResponse.json({ error: 'Invalid Token' }, { status: 401 });
 
     // Ensure user is actually in this tournament
     const team = await prisma.team.findFirst({
       where: {
         tournamentId: params.id,
-        players: { some: { id: payload.id } }
+        players: { some: { id: payload.sub } }
       },
       include: {
         tournament: true,

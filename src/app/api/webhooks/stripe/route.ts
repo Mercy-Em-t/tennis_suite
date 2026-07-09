@@ -4,7 +4,7 @@ import Stripe from 'stripe';
 import { matchEventEmitter } from '@/lib/eventEmitter';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy', {
-  apiVersion: '2025-02-24.acacia',
+  apiVersion: '2026-06-24.dahlia',
 });
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_dummy';
@@ -60,6 +60,7 @@ export async function POST(request: Request) {
           if (rainmakerAmount > 0) {
             await tx.rainmakerFee.create({
               data: {
+                tournamentId,
                 brokerName: "Tennis Suite Platform",
                 dealAmount: totalAmount,
                 feePercent: rainmakerFeePercent,

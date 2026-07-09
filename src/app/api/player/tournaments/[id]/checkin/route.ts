@@ -12,7 +12,7 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const payload = await verifyToken(token);
-    if (!payload || !payload.id) return NextResponse.json({ error: 'Invalid Token' }, { status: 401 });
+    if (!payload || !payload.sub) return NextResponse.json({ error: 'Invalid Token' }, { status: 401 });
 
     const body = await request.json();
     const isCheckedIn = body.isCheckedIn === true;
@@ -21,7 +21,7 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     const team = await prisma.team.findFirst({
       where: {
         tournamentId: params.id,
-        players: { some: { id: payload.id } }
+        players: { some: { id: payload.sub } }
       }
     });
 

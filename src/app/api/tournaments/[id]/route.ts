@@ -15,7 +15,7 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     
     const payload = await verifyToken(token);
-    if (!payload || !['HOST', 'ADMIN', 'MARSHALL'].includes(payload.role)) {
+    if (!payload || !payload.roles.some(r => ['HOST', 'ADMIN', 'MARSHALL'].includes(r))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -82,7 +82,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     
     const payload = await verifyToken(token);
-    if (!payload || !['HOST', 'ADMIN'].includes(payload.role)) {
+    if (!payload || !payload.roles.some(r => ['HOST', 'ADMIN'].includes(r))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

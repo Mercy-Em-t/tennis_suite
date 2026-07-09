@@ -22,7 +22,7 @@ export async function GET(
           const payload = `data: ${JSON.stringify({ type: 'update', pool: data })}\n\n`;
           controller.enqueue(payload);
         } catch (error) {
-          logger.error('Error stringifying pool SSE payload:', error);
+          logger.error('Error stringifying pool SSE payload:', {}, error);
         }
       };
 

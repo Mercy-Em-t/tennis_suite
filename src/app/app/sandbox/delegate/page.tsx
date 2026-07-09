@@ -131,31 +131,31 @@ export default function DelegateOverrideDashboard() {
   };
 
   return (
-    <div style={{ padding: '48px', maxWidth: '1000px', margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
+    <div >
       
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '24px', marginBottom: '40px' }}>
+      <header >
         <div>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 900, margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '12px', color: '#ff7b72' }}>
+          <h1 >
             <Settings size={36} />
             Delegate God-Mode
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>
+          <p >
             Redundant Verification & Master Override
           </p>
         </div>
-        <DynamicButton variant="outline" onClick={loadSandbox} disabled={loading || submitting}>
+        <DynamicButton variant="secondary" onClick={loadSandbox} disabled={loading || submitting}>
           Reset Match Data
         </DynamicButton>
       </header>
 
       {error && (
-        <div style={{ background: 'rgba(248,81,73,0.1)', color: '#ff7b72', padding: '16px', borderRadius: '8px', marginBottom: '24px', border: '1px solid rgba(248,81,73,0.2)' }}>
+        <div >
           {error}
         </div>
       )}
       
       {successMsg && (
-        <div style={{ background: 'rgba(46,160,67,0.1)', color: 'var(--success)', padding: '16px', borderRadius: '8px', marginBottom: '24px', border: '1px solid rgba(46,160,67,0.2)' }}>
+        <div >
           {successMsg}
         </div>
       )}
@@ -163,71 +163,71 @@ export default function DelegateOverrideDashboard() {
       {!sandboxState ? (
         <p>Loading...</p>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '32px' }}>
+        <div >
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-            <Card style={{ padding: '32px', background: '#161b22', border: '1px solid #ff7b72' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', color: '#ff7b72' }}>
+          <div >
+            <Card >
+              <div >
                 <AlertTriangle size={24} />
-                <h2 style={{ fontSize: '1.5rem', margin: 0 }}>Force Mutation</h2>
+                <h2 >Force Mutation</h2>
               </div>
-              <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
+              <p >
                 WARNING: Overriding this match will forcefully cascade through the Automaton Engine and recalculate pool standings globally.
               </p>
               
               <form onSubmit={handleOverrideSubmit}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+                <div >
                   <div>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#fff' }}>{matchData?.teamA?.franchiseName} Sets</label>
+                    <label >{matchData?.teamA?.franchiseName} Sets</label>
                     <input 
                       type="number" 
                       min="0"
                       value={overrideSetsA}
                       onChange={(e) => setOverrideSetsA(Number(e.target.value))}
-                      style={{ width: '100%', padding: '12px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff' }}
+                      
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#fff' }}>{matchData?.teamB?.franchiseName} Sets</label>
+                    <label >{matchData?.teamB?.franchiseName} Sets</label>
                     <input 
                       type="number" 
                       min="0"
                       value={overrideSetsB}
                       onChange={(e) => setOverrideSetsB(Number(e.target.value))}
-                      style={{ width: '100%', padding: '12px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff' }}
+                      
                     />
                   </div>
                 </div>
 
-                <div style={{ marginBottom: '24px' }}>
-                  <label style={{ display: 'block', marginBottom: '8px', color: '#fff' }}>Force Winner</label>
+                <div >
+                  <label >Force Winner</label>
                   <select 
                     value={overrideWinnerId}
                     onChange={(e) => setOverrideWinnerId(e.target.value)}
-                    style={{ width: '100%', padding: '12px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff' }}
+                    
                   >
                     <option value={matchData?.teamAId}>{matchData?.teamA?.franchiseName}</option>
                     <option value={matchData?.teamBId}>{matchData?.teamB?.franchiseName}</option>
                   </select>
                 </div>
 
-                <div style={{ marginBottom: '32px' }}>
-                  <label style={{ display: 'block', marginBottom: '8px', color: '#fff' }}>
-                    Mandatory Justification <span style={{ color: '#ff7b72' }}>*</span>
+                <div >
+                  <label >
+                    Mandatory Justification <span >*</span>
                   </label>
                   <textarea 
                     value={justification}
                     onChange={(e) => setJustification(e.target.value)}
                     placeholder="e.g. Umpire incorrectly logged the final set."
-                    style={{ width: '100%', padding: '12px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', minHeight: '100px' }}
+                    
                   />
                 </div>
 
                 <DynamicButton 
                   type="submit"
-                  variant="primary" 
+                  variant="secondary" 
                   disabled={submitting || justification.trim().length < 10}
-                  style={{ width: '100%', padding: '16px', fontSize: '1.1rem', background: '#ff7b72', color: '#000', fontWeight: 700 }}
+                  
                 >
                   {submitting ? 'Cascading Mutation...' : 'Execute Override Transaction'}
                 </DynamicButton>
@@ -235,32 +235,32 @@ export default function DelegateOverrideDashboard() {
             </Card>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-            <Card style={{ padding: '24px', background: '#161b22', border: '1px solid rgba(255,255,255,0.05)', maxHeight: '600px', overflowY: 'auto' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+          <div >
+            <Card >
+              <div >
                 <FileText size={20} color="var(--primary)" />
-                <h2 style={{ fontSize: '1.2rem', margin: 0 }}>Immutable Audit Trail</h2>
+                <h2 >Immutable Audit Trail</h2>
               </div>
               
               {auditLogs.length === 0 ? (
-                <p style={{ color: 'var(--text-muted)' }}>No logs recorded for this match.</p>
+                <p >No logs recorded for this match.</p>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div >
                   <AnimatePresence>
                     {auditLogs.map(log => (
                       <motion.div 
                         key={log.id} 
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        style={{ padding: '12px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', borderLeft: '4px solid #ff7b72' }}
+                        
                       >
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                        <div >
                           {new Date(log.createdAt).toLocaleTimeString()}
                         </div>
-                        <div style={{ fontWeight: 700, color: '#fff', marginBottom: '8px' }}>
+                        <div >
                           {log.action}
                         </div>
-                        <div style={{ fontSize: '0.9rem', color: '#c9d1d9', wordBreak: 'break-word' }}>
+                        <div >
                           {JSON.parse(log.details).justification}
                         </div>
                       </motion.div>

@@ -30,7 +30,7 @@ export async function GET(request: Request) {
       if (entry.grossAmount !== (entry.platformFee + entry.hostPayout)) {
         status = 'CRITICAL_AUDIT_FLAG';
         violations.push(
-          `Math Mismatch on Ledger ID ${entry.id} (Team: ${entry.team.name}): Gross ${entry.grossAmount} != ${entry.platformFee} + ${entry.hostPayout}`
+          `Math Mismatch on Ledger ID ${entry.id} (Team: ${entry.team.franchiseName}): Gross ${entry.grossAmount} != ${entry.platformFee} + ${entry.hostPayout}`
         );
       }
     }
