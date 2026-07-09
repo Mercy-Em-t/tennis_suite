@@ -45,6 +45,17 @@ export const apiLimiter = new Ratelimit({
 });
 
 /**
+ * Login limiter — 5 requests per user/IP per 5-minute sliding window.
+ * Protects against brute-force credential stuffing on the auth endpoint.
+ */
+export const loginLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, '5 m'),
+  analytics: true,
+  prefix: 'ratelimit:login',
+});
+
+/**
  * Extracts the best available IP identifier from a Request.
  * Falls back to a constant so rate limiting degrades gracefully in local dev.
  */

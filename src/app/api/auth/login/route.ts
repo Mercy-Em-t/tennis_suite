@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 
 import { signToken } from '@/lib/auth';
 import { verifyPassword } from '@/lib/auth/password';
+import { loginLimiter, getIpIdentifier } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 
 
@@ -15,6 +16,20 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Email and password are required.' },
         { status: 400 }
+      );
+    }
+
+    // Rate Limiting Protection against Brute Force
+    const ip = getIpIdentifier(request);
+    // Track both IP and email to prevent distributed credential stuffing on a single account
+    const identifier = `${ip}:${email}`;
+    const { success } = await loginLimiter.limit(identifier);
+    
+    if (!success) {
+      logger.warn('Login rate limit exceeded', { email, ip });
+      return NextResponse.json(
+        { error: 'Too many login attempts. Please try again in 5 minutes.' },
+        { status: 429 }
       );
     }
 
@@ -39,11 +54,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid credentials.' }, { status: 401 });
     }
 
-    const token = await signToken({ id: user.id, role: user.role });
+    // Check if the user is a HOST and has hosted any tournaments
+    let organizationId = null;
+    if (user.role === 'HOST') {
+      const clubCheck = await prisma.tournament.findFirst({ where: { hostId: user.id } });
+      if (clubCheck) organizationId = clubCheck.clubId || 'legacy_org';
+    }
+
+    const tokenPayload = {
+      sub: user.id,
+      roles: [user.role],
+      context: {
+        activeRole: user.role,
+        organizationId: organizationId,
+        activeTournamentId: null,
+        assignedCourtId: null,
+        hasClub: !!organizationId
+      }
+    };
+
+    const token = await signToken(tokenPayload);
 
     const response = NextResponse.json({
       success: true,
-      user: { id: user.id, name: user.name, role: user.role },
+      message: 'Logged in successfully',
+      role: user.role,
+      hasClub
     });
 
     response.cookies.set({

@@ -56,7 +56,19 @@ export async function POST(request: Request) {
     }
 
     // Automatically issue session token on successful registration
-    const token = await signToken({ id: user.id, role: user.role });
+    const tokenPayload = {
+      sub: user.id,
+      roles: [user.role],
+      context: {
+        activeRole: user.role,
+        organizationId: null, // Always null on fresh registration
+        activeTournamentId: null,
+        assignedCourtId: null,
+        hasClub: false
+      }
+    };
+
+    const token = await signToken(tokenPayload);
 
     const response = NextResponse.json({
       success: true,

@@ -83,6 +83,7 @@ model Tournament {
   staff       Staff[]
   pools       Pool[]
   auditLogs   AuditLog[]
+  ledgerEntries LedgerEntry[]
 }
 
 model Team {
@@ -103,6 +104,7 @@ model Team {
   paymentStatus  String      @default("PENDING_PAYMENT") // PENDING_PAYMENT, REGISTERED
   stripeSessionId String?    @unique
   poolTeams      PoolTeam[]
+  ledgerEntries  LedgerEntry[]
 }
 
 model Pool {
@@ -187,6 +189,7 @@ model Court {
   id           String   @id @default(cuid())
   name         String
   courtType    String   @default("TENNIS_HARD") // e.g., PADEL, PICKLEBALL, TENNIS_CLAY
+  status       String   @default("IDLE") // IDLE, WARMUP, IN_PROGRESS, MAINTENANCE
   tournamentId String
   tournament   Tournament @relation(fields: [tournamentId], references: [id])
   matches      Match[]
@@ -233,6 +236,7 @@ model Club {
 
 model PreOrder {
   id        String   @id @default(cuid())
+  tournamentId String
   teamId    String
   team      Team     @relation(fields: [teamId], references: [id])
   itemName  String
@@ -243,6 +247,7 @@ model PreOrder {
 
 model PlayerStat {
   id             String   @id @default(cuid())
+  tournamentId   String
   playerId       String   
   matchId        String
   aces           Int      @default(0)
@@ -262,6 +267,7 @@ model FanPrediction {
 
 model RainmakerFee {
   id          String   @id @default(cuid())
+  tournamentId String
   brokerName  String
   dealAmount  Int
   feePercent  Float
@@ -271,11 +277,24 @@ model RainmakerFee {
 
 model PartnerPayout {
   id          String   @id @default(cuid())
+  tournamentId String
   partnerName String
   service     String   // e.g. "VIDEOGRAPHY"
   amountOwed  Int
   status      String   @default("PENDING")
   createdAt   DateTime @default(now())
+}
+
+model LedgerEntry {
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  teamId       String
+  team         Team       @relation(fields: [teamId], references: [id])
+  grossAmount  Int        // stored in cents
+  platformFee  Int        // Rainmaker cut
+  hostPayout   Int        // Net to organizer
+  createdAt    DateTime   @default(now())
 }
 
 model SponsorROI {
@@ -289,6 +308,7 @@ model SponsorROI {
 
 model Equipment {
   id           String   @id @default(cuid())
+  tournamentId String
   itemName     String   // e.g. "Camera A", "Shotgun Mic"
   checkedOutBy String?  // Staff ID or Name
   status       String   @default("AVAILABLE") // AVAILABLE, IN_USE, MAINTENANCE
@@ -297,6 +317,7 @@ model Equipment {
 
 model BallCan {
   id           String   @id @default(cuid())
+  tournamentId String
   brand        String
   setsPlayed   Int      @default(0)
   status       String   @default("NEW") // NEW, IN_PLAY, RETIRED
@@ -315,6 +336,7 @@ model FreeAgent {
 
 model IncidentReport {
   id           String   @id @default(cuid())
+  tournamentId String
   matchId      String
   reportedBy   String   // Referee ID
   incidentType String   // MEDICAL, CODE_VIOLATION, DISPUTE
