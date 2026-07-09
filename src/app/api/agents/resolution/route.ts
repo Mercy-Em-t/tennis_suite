@@ -12,11 +12,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing incident details' }, { status: 400 });
     }
 
+    const match = await prisma.match.findUnique({
+      where: { id: matchId },
+      select: { tournamentId: true }
+    });
+
+    if (!match) {
+      return NextResponse.json({ error: 'Match not found' }, { status: 404 });
+    }
+
     // Wrap in transaction: Create Report + Create Agent Resolution Log
     const result = await prisma.$transaction(async (tx) => {
       // 1. Log the Incident
       const incident = await tx.incidentReport.create({
         data: {
+          tournamentId: match.tournamentId,
           matchId,
           reportedBy: reportedBy || 'SYSTEM',
           incidentType,
