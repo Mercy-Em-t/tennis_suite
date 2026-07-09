@@ -5,7 +5,6 @@ import useSWR from 'swr';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { Input } from '@/components/ui/Input';
 import { useRouter } from 'next/navigation';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
@@ -134,13 +133,13 @@ export default function StaffManagementWorkspace({ params }: { params: Promise<{
             <form onSubmit={handleDirectAssign}>
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', marginBottom: '8px', color: '#8b949e' }}>User Email</label>
-                <Input 
+                <input 
                   type="email" 
                   required 
                   value={directEmail} 
                   onChange={(e) => setDirectEmail(e.target.value)} 
                   placeholder="e.g. ref@example.com"
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', padding: '12px', background: '#0d1117', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px' }}
                 />
               </div>
               <div style={{ marginBottom: '24px' }}>
