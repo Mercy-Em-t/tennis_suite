@@ -53,7 +53,7 @@ export default function ApplyPage() {
             <p style={{ color: '#8b949e', marginBottom: '24px' }}>
               Your application to be a {role} has been submitted. The Tournament Host will review it shortly.
             </p>
-            <Button onClick={() => router.push('/')} variant="outline" style={{ width: '100%' }}>Return Home</Button>
+            <Button onClick={() => router.push('/')} variant="secondary" style={{ width: '100%' }}>Return Home</Button>
           </div>
         ) : (
           <>
