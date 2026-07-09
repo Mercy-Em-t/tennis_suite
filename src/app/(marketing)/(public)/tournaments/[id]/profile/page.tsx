@@ -46,9 +46,9 @@ export default async function PublicTournamentProfile({ params }: { params: Prom
             <div>
               <div style={{ marginBottom: '16px' }}>
                 <StatusBadge 
-                  status={tournament.status === 'ACTIVE' ? 'success' : tournament.status === 'COMPLETED' ? 'info' : 'warning'}
+                  status={tournament.isActive ? 'success' : tournament.isArchived ? 'info' : 'warning'}
                 >
-                  {tournament.status === 'ACTIVE' ? 'LIVE' : tournament.status}
+                  {tournament.isActive ? 'LIVE' : tournament.isArchived ? 'COMPLETED' : 'UPCOMING'}
                 </StatusBadge>
               </div>
               <h1 style={{ fontSize: '3.5rem', fontWeight: 900, color: 'var(--text-main)', margin: '0 0 16px 0', lineHeight: 1.1 }}>
