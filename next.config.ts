@@ -1,31 +1,51 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
+const isDev = process.env.NODE_ENV === "development";
+
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Allow HMR from both IPv4 localhost and IPv6 [::1] loopback
+  // Fixes: "Blocked cross-origin request to /_next/webpack-hmr from [::1]"
+  allowedDevOrigins: ["localhost", "[::1]"],
+
+  experimental: {
+    // Enables Turbopack's filesystem cache for faster incremental dev builds.
+    // The "Slow filesystem" warning is cosmetic — actual compile times improved.
+    turbopackFileSystemCacheForDev: true,
+    turbopackFileSystemCacheForBuild: false,
+  },
 };
 
-export default withSentryConfig(nextConfig, {
-  // Sentry organization and project slugs (fill in from sentry.io)
-  org: process.env.SENTRY_ORG || "tennis-suite",
-  project: process.env.SENTRY_PROJECT || "tennis-suite-nextjs",
 
-  // Only upload source maps in CI/production to keep dev builds fast
-  silent: !process.env.CI,
+// Skip Sentry wrapping entirely in dev — Turbopack ignores all webpack-based
+// Sentry options anyway, so wrapping in dev only adds startup overhead with no benefit.
+if (isDev) {
+  module.exports = nextConfig;
+} else {
+  module.exports = withSentryConfig(nextConfig, {
+    org: process.env.SENTRY_ORG || "tennis-suite",
+    project: process.env.SENTRY_PROJECT || "tennis-suite-nextjs",
 
-  // Automatically annotate React components with Sentry data
-  reactComponentAnnotation: {
-    enabled: true,
-  },
+    // Only upload source maps in CI/production
+    silent: !process.env.CI,
 
-  // Disable the Sentry telemetry tunnel in dev to avoid noise
-  tunnelRoute: "/monitoring",
+    // Updated API: replaces deprecated reactComponentAnnotation
+    webpack: {
+      reactComponentAnnotation: {
+        enabled: true,
+      },
+      // Updated API: replaces deprecated disableLogger
+      treeshake: {
+        removeDebugLogging: true,
+      },
+    },
 
-  // Hide source maps from the browser bundle
-  sourcemaps: {
-    deleteSourcemapsAfterUpload: true,
-  },
+    // Tunnel Sentry events through Next.js to avoid ad-blockers
+    tunnelRoute: "/monitoring",
 
-  // Automatically tree-shake Sentry logger statements in production
-  disableLogger: true,
-});
+    // Hide source maps from the browser bundle
+    sourcemaps: {
+      deleteSourcemapsAfterUpload: true,
+    },
+  });
+}
