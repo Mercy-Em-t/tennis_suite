@@ -18,18 +18,28 @@ const protectedPrefixes = ['/dashboards/host', '/dashboards/referee', '/dashboar
 
 const defaultBaseDomains = ['localhost', 'sports.tmsavannah.com', 'tennis-suite.vercel.app'];
 
+function normalizeDomain(domain: string) {
+  return domain
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, '')
+    .replace(/\/.*$/, '')
+    .replace(/\.$/, '');
+}
+
 function getAllowedDomains() {
   const configuredDomains = process.env.ALLOWED_BASE_DOMAINS
     ?.split(',')
-    .map((domain) => domain.trim().toLowerCase())
+    .map((domain) => normalizeDomain(domain))
     .filter(Boolean);
 
-  return configuredDomains && configuredDomains.length > 0 ? configuredDomains : defaultBaseDomains;
+  return Array.from(new Set([...(configuredDomains ?? []), ...defaultBaseDomains.map(normalizeDomain)]));
 }
 
 export async function proxy(request: NextRequest) {
   const url = request.nextUrl.clone();
-  const { pathname } = request.nextUrl;
+  const pathname = request.nextUrl.pathname || '/';
+  url.pathname = pathname;
 
   const isProtected = protectedPrefixes.some(prefix => {
     if (pathname.startsWith(prefix)) {
@@ -73,7 +83,7 @@ export async function proxy(request: NextRequest) {
 
   // 2. Subdomain Routing Logic
   let hostname = request.headers.get('host') || '';
-  hostname = hostname.split(':')[0].toLowerCase(); // normalize port
+  hostname = normalizeDomain(hostname.split(':')[0]); // normalize port
 
   const allowedDomains = getAllowedDomains();
   const isAppSubdomain = hostname.startsWith('app.');
