@@ -16,6 +16,17 @@ const roleDashboardMap: Record<string, string> = {
 
 const protectedPrefixes = ['/dashboards/host', '/dashboards/referee', '/dashboards/broadcast', '/dashboards/player', '/dashboards/marshal', '/dashboards/delegate', '/validation', '/monitor', '/tournaments'];
 
+const defaultBaseDomains = ['localhost', 'sports.tmsavannah.com', 'tennis-suite.vercel.app'];
+
+function getAllowedDomains() {
+  const configuredDomains = process.env.ALLOWED_BASE_DOMAINS
+    ?.split(',')
+    .map((domain) => domain.trim().toLowerCase())
+    .filter(Boolean);
+
+  return configuredDomains && configuredDomains.length > 0 ? configuredDomains : defaultBaseDomains;
+}
+
 export async function proxy(request: NextRequest) {
   const url = request.nextUrl.clone();
   const { pathname } = request.nextUrl;
@@ -62,9 +73,9 @@ export async function proxy(request: NextRequest) {
 
   // 2. Subdomain Routing Logic
   let hostname = request.headers.get('host') || '';
-  hostname = hostname.split(':')[0]; // normalize port
+  hostname = hostname.split(':')[0].toLowerCase(); // normalize port
 
-  const allowedDomains = ['yourdomain.com', 'localhost'];
+  const allowedDomains = getAllowedDomains();
   const isAppSubdomain = hostname.startsWith('app.');
 
   // App Subdomain Routing
