@@ -1,0 +1,141 @@
+# Sprint 23 — Tennis Suite Smartwatch Extension
+
+## Research Findings
+
+> [!IMPORTANT]
+> **PWAs cannot be installed on smartwatches.** Neither Apple Watch nor Wear OS support installable PWAs or WebViews on the watch face. This is a platform-level restriction as of 2026.
+
+### What's Actually Possible
+
+| Approach | Description | Feasibility |
+|---|---|---|
+| **Native Wear OS app** (Kotlin + Compose for Wear) | Direct REST/WebSocket to Tennis Suite API | ✅ Primary target |
+| **Native watchOS app** (Swift + WatchKit) | `URLSessionWebSocketTask` — native WS support | ✅ Phase 2 |
+| **Push Notification mirroring** | Server → FCM/APNs → phone → watch auto-mirrors | ✅ Ships this sprint |
+| **Web Bluetooth (BLE)** | Browser ↔ watch direct | ❌ Not supported on watches |
+| **Samsung Internet browsing** | Web page viewable but not installable | 🟡 Fallback only |
+
+---
+
+## Architecture — The Bridge Model
+
+```
+┌──────────────────────────────────────────────┐
+│         TENNIS SUITE BACKEND                  │
+│    Next.js API + Supabase + WebSocket         │
+└────────────┬──────────────────────────────────┘
+             │ REST + WebSocket
+    ┌────────┼────────┐
+    ▼        ▼        ▼
+ Browser  Android    iOS
+  (Web)    Phone     Phone
+           │ BT       │ BT
+           ▼          ▼
+       Wear OS     watchOS
+       Watch App   Watch App
+       (Kotlin)    (Swift)
+```
+
+### Connection Logic Per Platform
+
+**Android / Wear OS:**
+- Watch connects **directly** to Tennis Suite API over Wi-Fi (standalone mode)
+- Falls back to Bluetooth relay via Wearable Data Layer API when off Wi-Fi
+- No phone app required for basic usage
+
+**Apple Watch / watchOS:**
+- Native `URLSessionWebSocketTask` (since watchOS 6)  
+- Foreground-only — Apple kills background WebSocket connections  
+- APNs push notifications handle background score alerts  
+- iPhone companion app relays auth token via `WCSession`
+
+---
+
+## What Gets Built This Sprint
+
+### Part A — Watch API Endpoints (Next.js)
+
+Ultra-compact endpoints returning minimal payloads:
+
+```
+GET  /api/watch/match/[matchId]          → live score state (~150 bytes)
+GET  /api/watch/tournament/[id]          → tournament status
+POST /api/watch/score                    → referee awards a point
+GET  /api/watch/notifications/[userId]   → pending alerts
+```
+
+**Payload format** (optimized for watch bandwidth):
+```json
+{ "m": "Team A v Team B", "s": "3-2, 40-15", "srv": 1, "t": 1720595234 }
+```
+
+### Part B — Watch UI Simulator (Next.js /watch routes)
+
+A **browser-based circular watch viewport** (390×390px) for design iteration without a physical device.
+
+```
+/watch                     → home / role picker
+/watch/score/[matchId]     → referee point-scoring pad  
+/watch/live/[matchId]      → live score display
+/watch/alert               → notification feed
+/watch/status              → tournament at a glance
+```
+
+### Part C — Wear OS Native App Scaffold
+
+Kotlin + Jetpack Compose for Wear OS in `/watch-app/`:
+- JWT auth via shared token from the web session
+- OkHttp WebSocket client → `/api/watch/live/[matchId]`
+- Haptic feedback on every point scored
+- Tap +/− to award points (referee mode)
+
+### Part D — Push Notification Bridge (Quick Win)
+
+Wire FCM/APNs through the existing `/api/notifications` system:
+- Score events → push → phone → **automatically mirrored to any paired watch**
+- Works on ALL watch brands immediately, no native app needed
+- Zero additional user setup
+
+---
+
+## Watch UI Design Rules
+
+| Constraint | Specification |
+|---|---|
+| Viewport | **390×390px** (circular) |
+| Safe zone | Center **70%** of screen — avoid bezels |
+| Tap targets | Minimum **48×48px** |
+| Text lines | Max **3 visible lines** at once |
+| Theme | **OLED dark** — pitch black `#000000` background |
+| Animation | Minimal — respect battery constraints |
+| Haptics | Every point scored = wrist pulse |
+
+---
+
+## Role Use Cases
+
+| Role | Watch Feature |
+|---|---|
+| **Referee** | Tap `+` buttons to score points mid-rally |
+| **Player** | Current score + set progress between games |
+| **Marshal** | Court assignment alerts, match-start pings |
+| **Broadcaster** | Live score ticker during commentary |
+| **Host** | Tournament health dashboard, incident alerts |
+
+---
+
+## Open Questions
+
+> [!IMPORTANT]
+> **1. Which platform first?**  
+> Wear OS (Android/Kotlin) or watchOS (Swift)?
+> *Recommendation: Wear OS — better emulator support, easier dev setup*
+
+> [!IMPORTANT]
+> **2. Standalone or companion?**  
+> Should the watch app require the phone app, or hit the API directly?
+> *Recommendation: Standalone (direct API) — more resilient*
+
+> [!IMPORTANT]
+> **3. Referee scoring UI depth?**  
+> Full point-by-point interface, or just `+Point` and `Fault` buttons?

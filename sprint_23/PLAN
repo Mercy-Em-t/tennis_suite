@@ -1,0 +1,94 @@
+Good — you flagged all three as "advise." Here's my honest recommendation on each, specific to the Tennis Suite context:
+
+---
+
+## Advisory: 3 Open Questions
+
+---
+
+### 1. 🟢 Platform First — **Wear OS (Android)**
+
+**Recommendation: Wear OS without question.** Here's why this is specific to *you*, not generic advice:
+
+| Factor | Wear OS (Android) | watchOS (Apple) |
+|---|---|---|
+| **Dev setup** | Android Studio + free emulator | Requires a Mac + Xcode + $99/yr Apple Developer account |
+| **Market in Kenya/EA** | Android dominates **85-90%** of the market | iOS is a minority (< 10%) |
+| **Watch hardware** | Samsung Galaxy Watch 4/5/6 (Wear OS) widely available | Apple Watch tied to iPhone ownership |
+| **Emulator** | Excellent circular watch emulator in Android Studio | Watchos simulator requires physical Xcode on Mac |
+| **Release** | Google Play Store, sideloading possible | Apple App Store only, strict review |
+
+**Verdict:** Your users are predominantly Android. Wear OS first is the only rational choice. Apple Watch comes in Sprint 24 or later.
+
+---
+
+### 2. 🟢 Architecture — **Standalone (Direct API)**
+
+**Recommendation: Standalone, strongly.** Context-specific reasoning:
+
+The Tennis Suite referee workflow is **on-court, active, physical**. The referee won't have their phone in hand — they're moving around the court. If the watch requires the phone to be nearby and active, it will fail precisely when needed most.
+
+```
+Standalone model:
+  Watch → Wi-Fi → Tennis Suite API ✅ reliable on-court
+
+Companion model:
+  Watch → Bluetooth → Phone → Tennis Suite API
+           ↑ breaks if phone is in bag, pocket, steps away ❌
+```
+
+**Practical setup:** On first login, the user scans a QR code from the web app which gives the watch a JWT token. After that, the watch operates completely independently. The Wearable Data Layer can optionally sync tokens, but the watch doesn't *depend* on it.
+
+---
+
+### 3. 🟢 Referee Scoring — **5-Button Simple UI, Engine Stays Server-Side**
+
+**Recommendation: Do NOT put scoring logic on the watch.** The Tennis Engine lives at `src/lib/engine/` and that's where it stays. The watch is just a **remote control** that fires events to the API.
+
+**UI: 5 large tap targets, nothing more:**
+
+```
+┌─────────────────────┐
+│   3-2  •  40 - 15  │  ← current score (display only)
+│                     │
+│  ┌───────┐ ┌──────┐ │
+│  │ POINT │ │POINT │ │  ← Server / Receiver
+│  │  SRV  │ │ RCV  │ │
+│  └───────┘ └──────┘ │
+│  ┌──────────────┐   │
+│  │    FAULT     │   │  ← First/second auto-tracked by engine
+│  └──────────────┘   │
+│  ┌──────┐ ┌──────┐  │
+│  │  LET │ │UNDO  │  │  ← Let / undo last point
+│  └──────┘ └──────┘  │
+└─────────────────────┘
+```
+
+**Why not full point-by-point?** Tennis scoring (deuce, advantage, tiebreak, super tiebreak) is non-trivial. Running it on-device risks the watch and the web app going out of sync. Instead:
+
+- Watch sends: `POST /api/watch/score { event: "POINT_SERVER" }`
+- Server engine processes the event, updates state
+- WebSocket pushes updated score back to the watch display
+- Watch is always in sync because it's always reading from the source of truth
+
+**The watch is a wrist-mounted scoring remote. The brain is the server.**
+
+---
+
+## Decision Summary
+
+| Question | Decision |
+|---|---|
+| Platform | ✅ **Wear OS (Android/Kotlin) first** |
+| Architecture | ✅ **Standalone — direct API over Wi-Fi** |
+| Scoring UI | ✅ **5-button remote (Point Srv / Point Rcv / Fault / Let / Undo)** |
+
+---
+
+Ready to build. I'll start in this order:
+
+1. **`/api/watch/*` endpoints** — the API the watch will hit
+2. **`/watch` browser simulator** — design the UI without needing hardware
+3. **Wear OS Kotlin scaffold** — the native app
+
+Shall I proceed?
