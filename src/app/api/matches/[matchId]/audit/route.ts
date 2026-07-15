@@ -9,8 +9,17 @@ export async function GET(
     const params = await props.params;
     const { matchId } = params;
 
+    const match = await prisma.match.findUnique({
+      where: { id: matchId },
+      select: { tournamentId: true }
+    });
+
+    if (!match) {
+      return NextResponse.json({ error: 'Match not found' }, { status: 404 });
+    }
+
     const logs = await prisma.auditLog.findMany({
-      where: { matchId },
+      where: { matchId, tournamentId: match.tournamentId },
       orderBy: { createdAt: 'desc' }
     });
 

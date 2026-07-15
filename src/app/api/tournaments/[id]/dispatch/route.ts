@@ -36,6 +36,32 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
         throw new Error('Target match must be in SCHEDULED state.');
       }
 
+      // Validation: Check for player double-booking (scheduling collision)
+      if (targetMatch.teamAId && targetMatch.teamBId) {
+        const teams = await tx.team.findMany({
+          where: { id: { in: [targetMatch.teamAId, targetMatch.teamBId] } },
+          include: { players: true }
+        });
+        
+        const playerIds = teams.flatMap(t => t.players.map(p => p.id));
+        
+        if (playerIds.length > 0) {
+          const activeMatches = await tx.match.findMany({
+            where: {
+              status: { in: ['IN_PROGRESS', 'WARMUP'] },
+              OR: [
+                { teamA: { players: { some: { id: { in: playerIds } } } } },
+                { teamB: { players: { some: { id: { in: playerIds } } } } }
+              ]
+            }
+          });
+          
+          if (activeMatches.length > 0) {
+            throw new Error('Player double-booking detected. One or more players are currently in an active match.');
+          }
+        }
+      }
+
       // Atomic State Mutation
       const updatedMatch = await tx.match.update({
         where: { id: matchId },
@@ -81,7 +107,7 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
 
   } catch (error: any) {
     logger.error('[tournaments/dispatch/POST]', error.message);
-    const status = error.message.includes('occupied') || error.message.includes('SCHEDULED') ? 409 : 400;
+    const status = error.message.includes('occupied') || error.message.includes('SCHEDULED') || error.message.includes('double-booking') ? 409 : 400;
     return NextResponse.json({ error: error.message }, { status });
   }
 }

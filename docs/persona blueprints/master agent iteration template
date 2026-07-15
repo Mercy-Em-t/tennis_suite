@@ -1,0 +1,118 @@
+To allow your automated engineering agents to process and iterate through each of the **7 core user personas** efficiently, this structured markdown execution template should be used.
+
+This template structures your requirements by separating security boundaries, transaction logic, UI integration targets, and health monitoring parameters. This structure prevents feature creep and ensures that every persona's specification remains fully consistent with the master architecture.
+
+---
+
+# 📋 MASTER AGENT ITERATION TEMPLATE: USER PERSONA HARDENING
+
+**Target Persona:** `[Insert Persona Name e.g., Referee / Court Marshal]`
+
+**Target Module/Interface:** `[e.g., PWA Scorepad / Dispatch Dashboard]`
+
+**Current Phase Tracking:** `Phase [1/2/3/4] Execution`
+
+---
+
+## 1. Multi-Tenant Data & Security Boundaries (Phase 1)
+
+*Agents must audit row-level context gating and permission restrictions to confirm the interface handles multi-tenant properties securely.*
+
+* **Row Isolation Filtering Constraints:** Provide the exact query schema filters enforcing `tournamentId` row-level partitioning for this persona's read/write actions.
+```tsx
+// Agent Blueprint Code Check
+where: {
+  id: context.id,
+  tournamentId: session.user.activeTournamentId, // Strict gate validation
+}
+
+```
+
+
+* **RBAC Matrix Mapping:** * **Allowed Read Scopes:** `[e.g., Live Match list, Court availability status]`
+* **Allowed Write/Execute Scopes:** `[e.g., Point increments, Player check-in mutations]`
+* **Explicit Walled-Garden Prohibitions:** `[Specify exactly what this role cannot touch, e.g., Cannot modify match scoring rules or interact with financial payouts]`
+
+
+
+---
+
+## 2. State Machinery & Core Wiring Logic (Phase 2)
+
+*Agents must trace input triggers from the interface back to the underlying core logic engines.*
+
+* **Central State Engine Integration:** Map how this persona's input sockets interact directly with the Finite State Machine (FSM) or registration handler modules.
+* **Transaction Atomicity Blueprint:** Detail how write requests from this persona are processed inside atomic database transactions to ensure data consistency and prevent partial mutations.
+```ts
+// Verification requirement: Ensure zero ghost states or mismatched ledgers
+await prisma.$transaction([ ... ])
+
+```
+
+
+* **Server Initialization State Tracking (If Applicable):** Define edge case variations (e.g., standard games vs. super tiebreaks or automated replacement logic tracking).
+
+---
+
+## 3. UI/UX Shell & Synchronization Mechanics (Phase 3)
+
+*Agents must verify that the interface matches the premium dark-mode glassmorphism design specifications while maintaining high-speed updates.*
+
+* **Next.js Edge Middleware Routing Requirements:** Detail custom subdomain routing policies (`app.yourdomain.com`) or workspace rewrite filters specific to this user profile.
+* **Real-Time Synchronization Plan (<200ms Target):** Map the end-to-end WebSocket / SSE architecture path for updates initiated by this user.
+* *Input Source Component:* `[e.g., Tap target button cell]`
+* *Downstream Subscribed Targets:* `[e.g., Broadcaster overlay bug, Public Fan scoreboard]`
+
+
+* **Offline Caching & Outbox Caching Fallbacks:** Define the IndexedDB / SQLite local caching rules if this persona encounters on-site network drop-offs.
+* *Local Storage Strategy:* `[e.g., Cache point updates with chronological offlineVersion increments]`
+* *Conflict Resolution Policy:* `[e.g., Linear chronological state rehydration on socket reconnection]`
+
+
+
+---
+
+## 4. Operational Oversight, Heartbeats & Audit Logs (Phase 4)
+
+*Agents must ensure this interface integrates cleanly with systemic telemetry panels and logs administrative changes.*
+
+* **System Health Telemetry Hook (`/monitor` Integration):** Define the health pulse signal details that this persona's device must broadcast to the technical monitor panel.
+* *Lapse Threshold Alert:* Flag status as `Amber` if pulse is missing for `>3 seconds`; trigger `Red` alert or visual drop-out warnings if missing for `>5 seconds`.
+
+
+* **Permanent Audit Log Traceability Mapping:** Detail user actions that must be stamped with a unique session context. For administrative overrides or bracket shifts, require a mandatory descriptive text payload.
+```json
+{
+  "timestamp": "ISO-8601",
+  "actorId": "session.user.id",
+  "action": "OVERRIDE_SCORE / FORCE_DISPATCH",
+  "payload": { "courtId": 3, "matchId": 104 },
+  "reasoning_string": "REQUIRED_USER_TEXT_INPUT"
+}
+
+```
+
+
+
+---
+
+## 5. Agent Gated Verification Checklist & Compliance Artifacts
+
+*The processing agent must complete this verification log before changing this persona's status to `[COMPLETED]`.*
+
+* [ ] **Data Isolation Verified:** Checked that 100% of data reads and writes include strict `tournamentId` row filtering.
+* [ ] **State Logic Atomicity Confirmed:** Verified that state mutations utilize complete multi-row database transaction rollbacks.
+* [ ] **Symmetry Latency Profile Tested:** Documented that synchronization telemetry stays within the `<200ms` window.
+* [ ] **Audit Path Complete:** Verified that administrative modifications cannot be submitted without an associated descriptive reason text string.
+
+**Generated Artifact Destination:** `docs/personas/phase[X]_[persona_name]_spec.md`
+
+**Current Process Status:** `[PENDING_NEXT_AGENT_ASSIGNMENT]`
+
+---
+
+### 🚀 How to Execute This Loop with Your Agents
+
+When spawning or tasking child agents to systematically process the platform's roles, pass them this command prompt:
+
+> *"Locate and process the **[Insert Target Role e.g., Referee Dashboard]** blueprint. Initialize a new spec file inside the project directory matching the formatting rules of the **Master Agent Iteration Template**. Ensure every design, security parameter, and network fallback trace is clearly defined. Do not proceed to the next persona until your completed spec output passes all gated validation checks and you have updated the Master Project Status Grid."*

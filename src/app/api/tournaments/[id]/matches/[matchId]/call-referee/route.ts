@@ -16,8 +16,8 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     const payload = await require('@/lib/auth').verifyToken(token);
     if (!payload) return NextResponse.json({ error: 'Invalid Token' }, { status: 401 });
 
-    const matchToVerify = await prisma.match.findUnique({
-      where: { id: matchId }
+    const matchToVerify = await prisma.match.findFirst({
+      where: { id: matchId, tournamentId: id }
     });
 
     if (!matchToVerify) return NextResponse.json({ error: 'Match not found' }, { status: 404 });
@@ -36,8 +36,8 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     }
 
     // Set status to REQUIRES_INTERVENTION
-    await prisma.match.update({
-      where: { id: matchId },
+    await prisma.match.updateMany({
+      where: { id: matchId, tournamentId: id },
       data: {
         status: 'REQUIRES_INTERVENTION',
         interventionReason: 'PLAYER_REQUEST',

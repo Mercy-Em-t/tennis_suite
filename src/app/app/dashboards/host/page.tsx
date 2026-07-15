@@ -1,27 +1,24 @@
 'use client';
 
 import React, { useState } from 'react';
-import useSWR from 'swr';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { useRouter } from 'next/navigation';
 import TournamentFactory from '@/components/tennis/TournamentFactory';
 import styles from './admin.module.css';
-
-const fetcher = (url: string) => fetch(url).then(r => r.json());
+import { useHostTournaments } from '@/lib/services/hostService';
 
 export default function GlobalHostDashboard() {
   const router = useRouter();
-  const { data, error, mutate } = useSWR('/api/tournaments', fetcher);
+  const [isSandbox, setIsSandbox] = useState(false);
+  const { tournaments, isLoading, error, mutate } = useHostTournaments(isSandbox);
   const [isCreating, setIsCreating] = useState(false);
 
-  if (!data && !error) {
+  if (isLoading) {
     return <div className={styles.loadingState}>Loading Host Command...</div>;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const tournaments: any[] = data?.tournaments ?? [];
   const activeCount  = tournaments.filter((t: any) => t.isActive).length;
   const totalTeams   = tournaments.reduce((acc: number, t: any) => acc + (t._count?.teams ?? 0), 0);
   const totalMatches = tournaments.reduce((acc: number, t: any) => acc + (t._count?.matches ?? 0), 0);
@@ -36,6 +33,17 @@ export default function GlobalHostDashboard() {
           <p className={styles.pageSubtitle}>Manage your localized operations</p>
         </div>
         <div className={styles.headerActions}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginRight: '16px' }}>
+            <span style={{ fontSize: '14px', color: isSandbox ? 'var(--warning)' : 'var(--text-muted)' }}>
+              Sandbox Mode
+            </span>
+            <input
+              type="checkbox"
+              checked={isSandbox}
+              onChange={(e) => setIsSandbox(e.target.checked)}
+              style={{ cursor: 'pointer' }}
+            />
+          </div>
           <a className={styles.validationLink} href="/validation">
             Validation Sandbox ↗
           </a>
@@ -161,7 +169,13 @@ export default function GlobalHostDashboard() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => router.push(`/tournaments/${t.id}`)}
+                  onClick={() => {
+                    if (isSandbox) {
+                      router.push(`/sandbox/host/tournament/${t.id}`);
+                    } else {
+                      router.push(`/tournaments/${t.id}`);
+                    }
+                  }}
                 >
                   Manage →
                 </Button>

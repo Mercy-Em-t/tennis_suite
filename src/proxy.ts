@@ -6,7 +6,7 @@ import { verifyToken } from '@/lib/auth'
 const roleDashboardMap: Record<string, string> = {
   HOST: '/dashboards/host',
   ADMIN: '/dashboards/host',
-  REFEREE: '/dashboards/referee',
+  REFEREE: '/referee',
   BROADCASTER: '/dashboards/broadcast',
   PLAYER: '/dashboards/player',
   MARSHALL: '/dashboards/marshal',
@@ -14,7 +14,7 @@ const roleDashboardMap: Record<string, string> = {
   MONITOR: '/monitor'
 };
 
-const protectedPrefixes = ['/dashboards/host', '/dashboards/referee', '/dashboards/broadcast', '/dashboards/player', '/dashboards/marshal', '/dashboards/delegate', '/validation', '/monitor', '/tournaments'];
+const protectedPrefixes = ['/dashboards/host', '/dashboards/referee', '/referee', '/dashboards/broadcast', '/dashboards/player', '/dashboards/marshal', '/dashboards/delegate', '/validation', '/monitor', '/tournaments'];
 
 const defaultBaseDomains = ['localhost', 'sports.tmsavannah.com', 'tennis-suite.vercel.app'];
 
@@ -40,6 +40,13 @@ export async function proxy(request: NextRequest) {
   const url = request.nextUrl.clone();
   const pathname = request.nextUrl.pathname || '/';
   url.pathname = pathname;
+
+  // Gate 2 Policy: Enforce /referee
+  if (pathname.startsWith('/dashboards/referee')) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = pathname.replace(/^\/dashboards\/referee/, '/referee');
+    return NextResponse.redirect(redirectUrl);
+  }
 
   const isProtected = protectedPrefixes.some(prefix => {
     if (pathname.startsWith(prefix)) {
@@ -72,13 +79,13 @@ export async function proxy(request: NextRequest) {
   if (isProtected && payload) {
     const role = payload.context.activeRole.toUpperCase();
     
-    if (pathname.startsWith('/dashboards/host') && !['HOST', 'ADMIN'].includes(role)) return NextResponse.redirect(new URL('/app', request.url));
-    if (pathname.startsWith('/dashboards/referee') && !['REFEREE', 'ADMIN', 'UMPIRE'].includes(role)) return NextResponse.redirect(new URL('/app', request.url));
-    if (pathname.startsWith('/dashboards/broadcast') && !['BROADCASTER', 'ADMIN', 'HOST'].includes(role)) return NextResponse.redirect(new URL('/app', request.url));
-    if (pathname.startsWith('/dashboards/player') && !['PLAYER', 'ADMIN'].includes(role)) return NextResponse.redirect(new URL('/app', request.url));
-    if (pathname.startsWith('/dashboards/marshal') && !['HOST', 'ADMIN', 'MARSHALL', 'PLAYER'].includes(role)) return NextResponse.redirect(new URL('/app', request.url));
-    if (pathname.startsWith('/dashboards/delegate') && !['DIRECTOR', 'ADMIN'].includes(role)) return NextResponse.redirect(new URL('/app', request.url));
-    if (pathname.startsWith('/monitor') && !['MONITOR', 'ADMIN', 'HOST'].includes(role)) return NextResponse.redirect(new URL('/app', request.url));
+    if (pathname.startsWith('/dashboards/host') && !['HOST', 'ADMIN'].includes(role)) return NextResponse.redirect(new URL('/', request.url));
+    if (pathname.startsWith('/referee') && !['REFEREE', 'ADMIN', 'UMPIRE'].includes(role)) return NextResponse.redirect(new URL('/', request.url));
+    if (pathname.startsWith('/dashboards/broadcast') && !['BROADCASTER', 'ADMIN', 'HOST'].includes(role)) return NextResponse.redirect(new URL('/', request.url));
+    if (pathname.startsWith('/dashboards/player') && !['PLAYER', 'ADMIN'].includes(role)) return NextResponse.redirect(new URL('/', request.url));
+    if (pathname.startsWith('/dashboards/marshal') && !['HOST', 'ADMIN', 'MARSHALL', 'PLAYER'].includes(role)) return NextResponse.redirect(new URL('/', request.url));
+    if (pathname.startsWith('/dashboards/delegate') && !['DIRECTOR', 'ADMIN'].includes(role)) return NextResponse.redirect(new URL('/', request.url));
+    if (pathname.startsWith('/monitor') && !['MONITOR', 'ADMIN', 'HOST'].includes(role)) return NextResponse.redirect(new URL('/', request.url));
   }
 
   // 2. Subdomain Routing Logic
@@ -90,7 +97,14 @@ export async function proxy(request: NextRequest) {
 
   // App Subdomain Routing
   if (isAppSubdomain) {
-    url.pathname = `/app${url.pathname}`;
+    // Enforce Gate 2 physical mapping
+    if (url.pathname.startsWith('/referee')) {
+      url.pathname = `/app/dashboards${url.pathname}`;
+    } else if (url.pathname.startsWith('/tournaments')) {
+      url.pathname = `/app/dashboards${url.pathname}`;
+    } else {
+      url.pathname = `/app${url.pathname}`;
+    }
     return NextResponse.rewrite(url);
   }
 

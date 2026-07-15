@@ -9,6 +9,7 @@ import useSWR from 'swr';
 import { useParams, useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { OverrideConfirmationModal } from '@/components/director/OverrideConfirmationModal';
 
 type MatchStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'REQUIRES_INTERVENTION' | 'PENDING';
 
@@ -34,6 +35,7 @@ export default function RefereeArena() {
   const [showSyncToast, setShowSyncToast] = useState(false);
   const [showControlPanel, setShowControlPanel] = useState(false);
   const [activeTab, setActiveTab] = useState<'PAUSE'|'FORFEIT'|'INCIDENT'>('PAUSE');
+  const [overrideModal, setOverrideModal] = useState<{isOpen: boolean, targetTeamId: string}>({ isOpen: false, targetTeamId: '' });
   
   // Incident/Forfeit Form State
   const [interventionReason, setInterventionReason] = useState('MEDICAL_TIMEOUT');
@@ -181,16 +183,15 @@ export default function RefereeArena() {
     setIsUpdating(false);
   };
 
-  const handleForfeit = async (forfeitingTeamId: string) => {
+  const handleForfeit = async (forfeitingTeamId: string, customReason?: string) => {
     if (!isOnline) { alert("Must be online to forfeit"); return; }
-    if (!confirm('Are you absolutely sure you want to forfeit this team? This ends the match immediately.')) return;
     
     setIsUpdating(true);
     try {
       const res = await fetch(`/api/tournaments/${tournamentId}/matches/${matchId}/forfeit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ forfeitingTeamId, reason: forfeitReason })
+        body: JSON.stringify({ forfeitingTeamId, reason: customReason || forfeitReason })
       });
       if (res.ok) {
         setMatchStatus('COMPLETED');
@@ -487,10 +488,10 @@ export default function RefereeArena() {
                     <option value="DISQUALIFICATION">Disqualification</option>
                   </select>
                   <div style={{ display: 'flex', gap: '16px' }}>
-                    <Button style={{ flex: 1, background: '#f85149', color: '#fff' }} onClick={() => handleForfeit(matchData.teamAId)} disabled={isUpdating}>
+                    <Button style={{ flex: 1, background: '#f85149', color: '#fff' }} onClick={() => setOverrideModal({isOpen: true, targetTeamId: matchData.teamAId})} disabled={isUpdating}>
                       Forfeit {teamAName}
                     </Button>
-                    <Button style={{ flex: 1, background: '#f85149', color: '#fff' }} onClick={() => handleForfeit(matchData.teamBId)} disabled={isUpdating}>
+                    <Button style={{ flex: 1, background: '#f85149', color: '#fff' }} onClick={() => setOverrideModal({isOpen: true, targetTeamId: matchData.teamBId})} disabled={isUpdating}>
                       Forfeit {teamBName}
                     </Button>
                   </div>
@@ -525,6 +526,17 @@ export default function RefereeArena() {
           </>
         )}
       </AnimatePresence>
+
+      <OverrideConfirmationModal 
+        isOpen={overrideModal.isOpen}
+        onClose={() => setOverrideModal({isOpen: false, targetTeamId: ''})}
+        onConfirm={(reason) => {
+          setOverrideModal({isOpen: false, targetTeamId: ''});
+          handleForfeit(overrideModal.targetTeamId, reason);
+        }}
+        title="God-Mode Forfeit Match"
+        description="You are about to instantly end this match and declare a forfeit. This action is irreversible."
+      />
 
     </div>
   );

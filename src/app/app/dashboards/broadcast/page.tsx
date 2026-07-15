@@ -1,4 +1,4 @@
-import BroadcasterOverlay from '@/components/BroadcasterOverlay';
+import BroadcasterOverlay from '@/components/broadcast/BroadcasterOverlay';
 
 /**
  * Pillar 5: The Broadcaster & Cinematic Interface

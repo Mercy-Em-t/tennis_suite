@@ -1,13 +1,14 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
-
-
-
 export async function POST(request: Request) {
   try {
-    const { teamId, query } = await request.json();
+    const { teamId, query, tournamentId } = await request.json();
 
+    if (!tournamentId) {
+      return NextResponse.json({ success: false, error: 'Tournament context is required' }, { status: 400 });
+    }
+    
     if (!teamId) {
       return NextResponse.json({ error: 'teamId is required for personalized agent query' }, { status: 400 });
     }
@@ -21,6 +22,7 @@ export async function POST(request: Request) {
       // Find the player's next SCHEDULED match
       const nextMatch = await prisma.match.findFirst({
         where: {
+          tournamentId,
           OR: [
             { teamAId: teamId },
             { teamBId: teamId }

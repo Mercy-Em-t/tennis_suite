@@ -35,13 +35,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       };
 
       if (sourcePoolId) {
-        const sp = await tx.pool.findUnique({ where: { id: sourcePoolId } });
-        if (sp) await tx.pool.update({ where: { id: sourcePoolId }, data: { versionId: incrementVersion(sp.versionId) } });
+        const sp = await tx.pool.findFirst({ where: { id: sourcePoolId, tournamentId: id } });
+        if (sp) await tx.pool.updateMany({ where: { id: sourcePoolId, tournamentId: id }, data: { versionId: incrementVersion(sp.versionId) } });
       }
 
       if (sourcePoolId !== targetPoolId) {
-        const tp = await tx.pool.findUnique({ where: { id: targetPoolId } });
-        if (tp) await tx.pool.update({ where: { id: targetPoolId }, data: { versionId: incrementVersion(tp.versionId) } });
+        const tp = await tx.pool.findFirst({ where: { id: targetPoolId, tournamentId: id } });
+        if (tp) await tx.pool.updateMany({ where: { id: targetPoolId, tournamentId: id }, data: { versionId: incrementVersion(tp.versionId) } });
       }
 
       // 3. We could also re-order seeds here if required (advanced implementation)

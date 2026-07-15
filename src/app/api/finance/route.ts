@@ -4,21 +4,34 @@ import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/require-auth';
 import { logger } from '@/lib/logger';
 
-
-
 export async function GET(request: Request) {
   const authResult = await requireAuth(['HOST', 'ADMIN']);
   if (authResult instanceof NextResponse) return authResult;
 
   try {
+    const { searchParams } = new URL(request.url);
+    const tournamentId = searchParams.get('tournamentId');
+
+    if (!tournamentId) {
+      return NextResponse.json({ success: false, error: 'Tournament context is required' }, { status: 400 });
+    }
+
     const payouts = await prisma.partnerPayout.findMany({
+      where: { tournamentId },
       take: 10,
       orderBy: { createdAt: 'desc' }
     });
 
     const fees = await prisma.rainmakerFee.findMany({
+      where: { tournamentId },
       take: 10,
       orderBy: { createdAt: 'desc' }
+    });
+
+    const ledgerEntries = await prisma.ledgerEntry.findMany({
+      where: { tournamentId },
+      orderBy: { createdAt: 'desc' },
+      include: { team: true }
     });
 
     // Merge them into a single timeline for the UI ledger
@@ -39,7 +52,7 @@ export async function GET(request: Request) {
       }))
     ].sort((a, b) => b.date.getTime() - a.date.getTime());
 
-    return NextResponse.json({ success: true, ledger });
+    return NextResponse.json({ success: true, ledger, ledgerEntries });
   } catch (error) {
     logger.error('[finance] Failed to fetch financial data', {}, error);
     return NextResponse.json({ error: 'Failed to fetch financial data' }, { status: 500 });

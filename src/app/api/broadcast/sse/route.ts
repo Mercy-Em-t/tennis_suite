@@ -1,25 +1,15 @@
 import { prisma } from '@/lib/prisma';
 
-
-/**
- * Pillar 5: The Broadcaster & Cinematic Interface
- * Pillar 38: Dynamic Load Balancing
- *
- * SSE streaming endpoint. Keeps a persistent HTTP connection open with each
- * broadcast client and pushes scoreState deltas as `text/event-stream` events
- * the instant the database changes, achieving sub-200ms latency without
- * WebSocket state management overhead.
- *
- * Compatible with Vercel Edge Functions and any serverless deployment.
- */
-
-// Note: Cannot use Edge runtime with PrismaClient directly.
-// We poll our own /api/broadcast/latest at a high cadence and push on change.
 export const dynamic = 'force-dynamic';
 
-
-
 export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const tournamentId = searchParams.get('tournamentId');
+
+  if (!tournamentId) {
+    return new Response(JSON.stringify({ error: 'Tournament context is required' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+  }
+
   const encoder = new TextEncoder();
   let lastScoreState = '';
   let lastMatchId = '';
@@ -33,6 +23,7 @@ export async function GET(request: Request) {
       // Push initial state immediately on connect
       try {
         const match = await prisma.match.findFirst({
+          where: { tournamentId },
           orderBy: { updatedAt: 'desc' },
           include: { teamA: true, teamB: true }
         });
@@ -56,6 +47,7 @@ export async function GET(request: Request) {
       const intervalId = setInterval(async () => {
         try {
           const match = await prisma.match.findFirst({
+            where: { tournamentId },
             orderBy: { updatedAt: 'desc' },
             include: { teamA: true, teamB: true }
           });

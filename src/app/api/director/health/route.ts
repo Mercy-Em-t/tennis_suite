@@ -19,18 +19,22 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const tournamentId = searchParams.get('tournamentId');
 
+    if (!tournamentId) {
+      return NextResponse.json({ success: false, error: 'Tournament context is required' }, { status: 400 });
+    }
+
     // Aggregate health metrics
     const activeMatches = await prisma.match.count({
-      where: { tournamentId: tournamentId || undefined, status: 'IN_PROGRESS' }
+      where: { tournamentId, status: 'IN_PROGRESS' }
     });
 
     const activeDisputes = await prisma.incidentReport.count({
-      where: { incidentType: 'DISPUTE' }
+      where: { tournamentId, incidentType: 'DISPUTE' }
     });
 
     const recentAudits = await prisma.auditLog.count({
       where: { 
-        tournamentId: tournamentId || undefined,
+        tournamentId,
         createdAt: { gte: new Date(Date.now() - 1000 * 60 * 60) } // Last hour
       }
     });

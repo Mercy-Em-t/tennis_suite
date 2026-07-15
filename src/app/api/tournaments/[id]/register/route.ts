@@ -1,11 +1,13 @@
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import { NextResponse } from 'next/server';
 
 import { verifyToken } from '@/lib/auth';
 
-
-
-export async function POST(request: Request) {
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const cookieHeader = request.headers.get('cookie') || '';
     const tokenMatch = cookieHeader.match(/auth_token=([^;]+)/);
@@ -18,13 +20,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { tournamentId, franchiseName } = await request.json();
+    const { franchiseName } = await request.json();
+    const { id: tournamentId } = await params;
 
     if (!tournamentId || !franchiseName) {
       return NextResponse.json({ error: 'Missing checkout context' }, { status: 400 });
     }
 
     // Wrap in a transaction to ensure atomic Ledger writing + Team creation
+    // Using Serializable isolation level to guarantee absolute consistency for financial ledgers
     await prisma.$transaction(async (tx) => {
       // 1. Finalize Team
       await tx.team.create({
@@ -60,11 +64,15 @@ export async function POST(request: Request) {
           status: 'PENDING'
         }
       });
+    }, {
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      maxWait: 5000, // default is 2000
+      timeout: 10000 // default is 5000
     });
 
     return NextResponse.json({ success: true, message: 'Checkout and ledgering complete' });
   } catch (error) {
-    console.error('[checkout/success/POST]', error);
+    console.error('[tournaments/[id]/register/POST]', error);
     return NextResponse.json({ error: 'Payment processing failed' }, { status: 500 });
   }
 }

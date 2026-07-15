@@ -1,32 +1,49 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { systemHealth, TelemetryData, HealthStatus } from '@/lib/monitor/SystemHealthService';
-import { emergencyIntervention } from '@/lib/monitor/EmergencyInterventionService';
+
+type HealthStatus = 'GREEN' | 'AMBER' | 'RED';
 
 export default function SystemMonitorDashboard() {
   const [overview, setOverview] = useState<Record<string, HealthStatus>>({});
   const [auditLog, setAuditLog] = useState<string[]>([]);
+  const [isError, setIsError] = useState(false);
 
-  // Mock polling the telemetry data
+  // Poll the backend REST API
   useEffect(() => {
-    const interval = setInterval(() => {
-      // In a real app, this fetches from the backend via REST or SSE
-      setOverview(systemHealth.getSystemOverview());
-      setAuditLog(emergencyIntervention.getAuditTrail());
-    }, 1000); // 1-second refresh rate for near-real-time (<100ms requirement ideally via SSE)
+    const fetchTelemetry = async () => {
+      try {
+        const res = await fetch('/api/monitor/telemetry');
+        if (!res.ok) throw new Error('API Error');
+        const data = await res.json();
+        setOverview(data.overview || {});
+        setAuditLog(data.auditLog || []);
+        setIsError(false);
+      } catch (err) {
+        setIsError(true);
+      }
+    };
+
+    fetchTelemetry(); // Initial fetch
+    const interval = setInterval(fetchTelemetry, 2000); // 2-second REST polling rate
 
     return () => clearInterval(interval);
   }, []);
 
-  const handleHotSwap = (clientId: string) => {
-    // In real app: POST /api/monitor/intervene { action: 'HOT_SWAP' }
-    emergencyIntervention.hotSwapStream('court_1', '192.168.1.100', 'Admin_TD_01');
+  const handleHotSwap = async (clientId: string) => {
+    await fetch('/api/monitor/intervene', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'HOT_SWAP', clientId })
+    });
   };
 
-  const handleReset = (clientId: string) => {
-    // In real app: POST /api/monitor/intervene { action: 'RESET_CONN' }
-    emergencyIntervention.forceConnectionReset(clientId, 'Admin_TD_01');
+  const handleReset = async (clientId: string) => {
+    await fetch('/api/monitor/intervene', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'RESET_CONN', clientId })
+    });
   };
 
   const getStatusColor = (status: HealthStatus) => {

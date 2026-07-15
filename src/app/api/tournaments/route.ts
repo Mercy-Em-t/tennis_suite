@@ -18,6 +18,20 @@ export async function POST(request: Request) {
       numCourts, surfaceType, logoUrl, sponsorUrl 
     } = data;
 
+    // Validate required fields
+    if (!name?.trim()) return NextResponse.json({ error: 'Tournament name is required' }, { status: 400 });
+    if (!startDate) return NextResponse.json({ error: 'Start date is required' }, { status: 400 });
+    if (!endDate) return NextResponse.json({ error: 'End date is required' }, { status: 400 });
+    if (!location?.trim()) return NextResponse.json({ error: 'Location is required' }, { status: 400 });
+    if (!formatType) return NextResponse.json({ error: 'Format type is required' }, { status: 400 });
+    if (!categories?.trim()) return NextResponse.json({ error: 'Categories are required' }, { status: 400 });
+    if (!numCourts || parseInt(numCourts) <= 0) return NextResponse.json({ error: 'Number of courts must be at least 1' }, { status: 400 });
+    if (!surfaceType) return NextResponse.json({ error: 'Surface type is required' }, { status: 400 });
+
+    if (new Date(endDate) < new Date(startDate)) {
+      return NextResponse.json({ error: 'End date cannot be before start date' }, { status: 400 });
+    }
+
     // Generate court data for the transaction
     const numCourtsInt = parseInt(numCourts) || 1;
     const courtsData = Array.from({ length: numCourtsInt }).map((_, i) => ({

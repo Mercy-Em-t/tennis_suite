@@ -40,8 +40,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       
       // If incidentType is CODE_VIOLATION and there is a targetTeamId, we might deduct trustScore of the players in that team
       if (incidentType === 'CODE_VIOLATION' && targetTeamId) {
-        const team = await tx.team.findUnique({
-          where: { id: targetTeamId },
+        const team = await tx.team.findFirst({
+          where: { id: targetTeamId, tournamentId: id },
           include: { players: true }
         });
         if (team) {

@@ -1,11 +1,15 @@
 import { prisma } from '@/lib/prisma';
 
-
 export const dynamic = 'force-dynamic';
 
-
-
 export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const tournamentId = searchParams.get('tournamentId');
+
+  if (!tournamentId) {
+    return new Response(JSON.stringify({ error: 'Tournament context is required' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+  }
+
   const encoder = new TextEncoder();
   let lastStateHash = '';
 
@@ -20,6 +24,7 @@ export async function GET(request: Request) {
         try {
           const matches = await prisma.match.findMany({
             where: {
+              tournamentId,
               OR: [
                 { status: 'IN_PROGRESS' },
                 { status: 'COMPLETED' }

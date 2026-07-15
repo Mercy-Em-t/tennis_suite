@@ -1,9 +1,16 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
-export default async function WatchHome() {
+export default async function WatchHome(props: { searchParams: Promise<{ tournamentId?: string }> }) {
+  const searchParams = await props.searchParams;
+  const tournamentId = searchParams.tournamentId;
+
+  const whereClause: any = {};
+  if (tournamentId) whereClause.tournamentId = tournamentId;
+
   // Fetch a match to score for the demo
   const match = await prisma.match.findFirst({
+    where: whereClause,
     orderBy: { createdAt: "desc" },
     include: { teamA: true, teamB: true }
   });

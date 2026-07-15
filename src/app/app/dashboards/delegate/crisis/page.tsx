@@ -2,6 +2,7 @@ import React from 'react';
 import { EmergencyBroadcast } from '@/components/director/EmergencyBroadcast';
 import { BroadcastQualityAlert } from '@/components/director/BroadcastQualityAlert';
 import { BracketReseeder } from '@/components/director/BracketReseeder';
+import { MatchOverrideTool } from '@/components/delegate/MatchOverrideTool';
 
 export default function CrisisControlPage() {
   return (
@@ -23,9 +24,10 @@ export default function CrisisControlPage() {
           <BroadcastQualityAlert />
         </div>
 
-        {/* Priority 2: Structural Integrity */}
-        <div>
+        {/* Priority 2: Structural Integrity & Disputes */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           <BracketReseeder />
+          <MatchOverrideTool />
         </div>
       </div>
     </div>

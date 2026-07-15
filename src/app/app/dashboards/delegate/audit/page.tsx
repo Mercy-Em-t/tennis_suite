@@ -8,8 +8,15 @@ const prisma = new PrismaClient();
 
 export const dynamic = 'force-dynamic';
 
-export default async function AuditLogPage() {
+export default async function AuditLogPage(props: { searchParams: Promise<{ tournamentId?: string }> }) {
+  const searchParams = await props.searchParams;
+  const tournamentId = searchParams.tournamentId;
+
+  const whereClause: any = {};
+  if (tournamentId) whereClause.tournamentId = tournamentId;
+
   const logs = await prisma.auditLog.findMany({
+    where: whereClause,
     orderBy: { createdAt: 'desc' },
     take: 100,
   });

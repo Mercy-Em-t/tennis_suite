@@ -4,8 +4,6 @@ import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/require-auth';
 import { logger } from '@/lib/logger';
 
-
-
 export async function GET(request: Request) {
   const authResult = await requireAuth(['REFEREE', 'ADMIN']);
   if (authResult instanceof NextResponse) return authResult;
@@ -13,12 +11,20 @@ export async function GET(request: Request) {
   try {
     const user = (authResult as any).user;
 
+    const { searchParams } = new URL(request.url);
+    const tournamentId = searchParams.get('tournamentId');
+
+    if (!tournamentId) {
+      return NextResponse.json({ success: false, error: 'Tournament context is required' }, { status: 400 });
+    }
+
     // Find all tournaments where this user is an APPROVED Referee
     const staffRecords = await prisma.staff.findMany({
       where: {
         userId: user.id,
         role: 'REFEREE',
-        status: 'APPROVED'
+        status: 'APPROVED',
+        tournamentId
       },
       select: { tournamentId: true }
     });

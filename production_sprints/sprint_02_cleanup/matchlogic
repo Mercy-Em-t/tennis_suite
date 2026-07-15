@@ -1,0 +1,92 @@
+LETS TAKE A LOOK AT OUR STATE MACHINES
+
+so we need to figure out how to connect the input sockets to the deterministic state engines
+
+1. clean up to follow how points move.
+
+in a singular game
+
+points begin at team a-team b scores at 0-0
+we will model this as what happens when whichever team scores.
+
+0-0
+from 0-0 either side can score such that a wins the first point we get 15-0
+else if b wins the first point 0-15
+
+we will record gameX where x represents the winner of the particular game x can be a or b
+logic. at these predefined game states there is usually 1 of 2 options. if it flows left the bteam gains the point, a righ flow shows right won the point.
+exited at a point where the game is won. 
+so gameX terminates it.
+fows downwards no backflow. it can only flow to the next sensible state ie 0-15 shouldnt be able to jump to
+40-0 during one game.
+game start:
+                        0-0
+                      /     \
+                    15-0    0-15
+                  /     \   /   \
+                30-0    15-15   0-30
+              /     \   /   \   /   \
+           40-0    30-15    15-30   0-40
+          /    \    /   \   /   \   /   \
+game to A       40-15   30-30   15-40   gameB
+               /    \   /   \   /   \
+            gameA    40-30  30-40   gameB
+                    /   \   /   \
+                 gameA   40-40  gameB
+                             |
+                         is there advantage?
+
+
+                       if there is  no advantage -sudden death winner takes the game
+                        40-40
+                        /   \
+                    gameA   gameB
+
+if there is advantage then we calculate as follows:
+logic is that at deauce you have to get 2 consecutive points to win. else it reverts back to 40-40 and the loop is exited by a win from either side
+
+
+                         40-40
+                        /   \
+                 Ad to A     Adv to B
+                   /   \     /    \
+                gameA   40-40     game B
+
+
+we said games make up a set.
+
+sets are counted using numericals 1,2,3,4 etc
+tennis rules apply to determine winner of the set
+
+sets increase 0-0,1-0,1,1, etc the value on either side always increased by only one digit
+so if it is a  set
+x games on whichever team indicate the winner
+
+ie fast 4 sets first to 4 so 4-0 games makes up a set
+if there is a difference of 2 the sets can be made by ensuring that the person with 4 sets has at least a 2 set margin to be the winner of as et. ie 4-3 is not a valid score for a set, but 4-2 and below is ( ie 4-1,4-0 are valid sets) 
+for a difference of 2 set we have 2 ways to acheive them.
+method 1: the set cant end at 4-3 but can end at 5-3. or if referess decides to do a tie break at 4-4 then the players will play a tie breaker of 7 and the first to 7 has to have a margin of at least 2 points to win the game and hence the set. ie allowed 7-(5 or less.)
+they can keep going until oen is 2 points ahead.
+
+for example 9-8 game continues and can end at 10-8. goal is to have them at least 2 points apart( but if they are close. the others can be bigger)
+
+same for sets of 6
+a set is made of 6-(4 sets and below) , 6-5(if we take the first to 6 games format,or if the tie break is played at 5-5), 6-5 can call for a 7-5 games win, 6-6 calls for a tie break so that he game ends at7-6 with a tiebreaker.
+
+
+then now a match is made up of sets.
+game coordinators can choose to have players play only one set.
+so winner of set is winner of match
+
+coordinators can choose to go to best of 3 sets, best of 5 sets, bestof 7 sets etc.
+in the best of sets, you have to win 2 of 3 sets, 3of 5 sets, 4 of 7 sets etc
+
+the catch is that in a best of 3 sets, if one team gets 2 sets, end of match no need to play the thrird set.
+similar for all the others. if you have more than (x-1)/2 +1 sets end of match
+
+
+so adjust the logic of matches to fit to this
+
+should be able to effectively teminate and round up games to build a set and sets to build a match
+clean up state variations for standard tiebreaks vs. match super tiebreaks, ensuring the serving status tracker flag flips precisely dynamically.
+

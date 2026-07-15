@@ -7,7 +7,11 @@ import { verifyToken } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
-    const { pin } = await request.json();
+    const { pin, tournamentId } = await request.json();
+
+    if (!tournamentId) {
+      return NextResponse.json({ success: false, error: 'Tournament context is required' }, { status: 400 });
+    }
 
     if (!pin || pin.length !== 6) {
       return NextResponse.json({ error: 'Invalid PIN format' }, { status: 400 });
@@ -24,7 +28,7 @@ export async function POST(request: Request) {
 
     // Find the match with this umpire code
     const match = await prisma.match.findFirst({
-      where: { umpireCode: pin }
+      where: { umpireCode: pin, tournamentId }
     });
 
     if (!match) {

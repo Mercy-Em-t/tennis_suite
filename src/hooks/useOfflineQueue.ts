@@ -8,21 +8,70 @@ interface QueuedAction {
   timestamp: number;
 }
 
-const QUEUE_KEY = 'referee_offline_queue';
+const DB_NAME = 'TennisSuiteDB';
+const STORE_NAME = 'offline_queue';
 
-function readQueue(): QueuedAction[] {
-  try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); } catch { return []; }
+function initDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    if (typeof window === 'undefined') return reject('No window');
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = (event) => {
+      const db = (event.target as IDBOpenDBRequest).result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
 }
 
-function writeQueue(q: QueuedAction[]) {
-  localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
+async function readQueue(): Promise<QueuedAction[]> {
+  try {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(request.error);
+    });
+  } catch {
+    return [];
+  }
+}
+
+async function clearQueue(): Promise<void> {
+  try {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.clear();
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  } catch {}
+}
+
+async function appendToQueue(action: QueuedAction): Promise<void> {
+  try {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.put(action);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  } catch {}
 }
 
 /**
  * useOfflineQueue
  *
  * Gate 3 integration: When the browser goes offline, point mutations are
- * pushed to a localStorage queue instead of hitting the API. The moment
+ * pushed to an IndexedDB queue instead of hitting the API. The moment
  * the connection is restored, the queue is drained sequentially into
  * /api/sync/offline, preserving strict temporal ordering.
  */
@@ -30,12 +79,17 @@ export function useOfflineQueue() {
   const [isOnline, setIsOnline] = useState<boolean>(
     () => typeof window !== 'undefined' ? navigator.onLine : true
   );
-  const [queue, setQueue] = useState<QueuedAction[]>(
-    () => typeof window !== 'undefined' ? readQueue() : []
-  );
+  const [queue, setQueue] = useState<QueuedAction[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncResult, setLastSyncResult] = useState<string | null>(null);
   const syncCalled = useRef(false);
+
+  // Load initial queue from IDB
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      readQueue().then(q => setQueue(q));
+    }
+  }, []);
 
   // Track online/offline events
   useEffect(() => {
@@ -57,17 +111,17 @@ export function useOfflineQueue() {
       offlineVersion: Date.now(),
       timestamp: Date.now(),
     };
-    setQueue(prev => {
-      const next = [...prev, action];
-      writeQueue(next);
-      return next;
-    });
+    
+    // Optimistically update UI queue, then persist to IDB asynchronously
+    setQueue(prev => [...prev, action]);
+    appendToQueue(action);
+    
     return action;
   }, []);
 
   // Declare syncQueue before the effect that references it
   const syncQueue = useCallback(async () => {
-    const pending = readQueue();
+    const pending = await readQueue();
     if (pending.length === 0 || isSyncing) return;
 
     setIsSyncing(true);
@@ -83,7 +137,7 @@ export function useOfflineQueue() {
       if (res.ok) {
         setLastSyncResult(`✓ Synced ${data.synced} actions`);
         setQueue([]);
-        writeQueue([]);
+        await clearQueue();
       } else {
         setLastSyncResult(`✗ Sync failed: ${data.error}`);
       }

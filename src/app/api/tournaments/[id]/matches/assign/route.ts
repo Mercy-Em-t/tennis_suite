@@ -19,8 +19,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     await prisma.$transaction(async (tx) => {
       // Find the match
-      const match = await tx.match.findUnique({ where: { id: matchId } });
-      if (!match) throw new Error('Match not found');
+      const match = await tx.match.findFirst({ where: { id: matchId, tournamentId: id } });
+      if (!match) throw new Error('Match not found or unauthorized');
 
       // Update match
       await tx.match.update({

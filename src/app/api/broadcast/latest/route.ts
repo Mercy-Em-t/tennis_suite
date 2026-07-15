@@ -1,11 +1,16 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server'
 
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const tournamentId = searchParams.get('tournamentId');
 
+  if (!tournamentId) {
+    return NextResponse.json({ success: false, error: 'Tournament context is required' }, { status: 400 });
+  }
 
-
-export async function GET() {
   const match = await prisma.match.findFirst({
+    where: { tournamentId },
     orderBy: { updatedAt: 'desc' },
     include: { teamA: true, teamB: true }
   })

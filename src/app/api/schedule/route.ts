@@ -1,13 +1,17 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
-
-
-
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const tournamentId = searchParams.get('tournamentId');
+
+    if (!tournamentId) {
+      return NextResponse.json({ success: false, error: 'Tournament context is required' }, { status: 400 });
+    }
+
     const matches = await prisma.match.findMany({
-      where: { status: { in: ['IN_PROGRESS', 'SCHEDULED'] } },
+      where: { tournamentId, status: { in: ['IN_PROGRESS', 'SCHEDULED'] } },
       include: { teamA: true, teamB: true }
     });
 

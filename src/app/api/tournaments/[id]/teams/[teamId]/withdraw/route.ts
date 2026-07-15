@@ -16,10 +16,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     await prisma.$transaction(async (tx) => {
       // 1. Mark Team as WITHDRAWN
-      await tx.team.update({
-        where: { id: teamId },
+      const result = await tx.team.updateMany({
+        where: { id: teamId, tournamentId: id },
         data: { status: 'WITHDRAWN' }
       });
+      if (result.count === 0) throw new Error("Team not found or unauthorized");
 
       // 2. Find all upcoming matches for this team
       const upcomingMatches = await tx.match.findMany({

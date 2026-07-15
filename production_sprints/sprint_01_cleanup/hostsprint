@@ -1,0 +1,19 @@
+good morning we have production sprint 01  in D:\TENNIS SUITE\production_sprints\sprint_01_cleanup. and like us to formulate a test and validation to run and ensure the host is able to effecctively use the platform to run their business.
+
+also we will have to move the sandboxes especially ui into the respective user path. so that we can be able to see them walk around do their thing then we can proceed with wiring up the ui components to their functoions.
+
+so required:
+can existing host log in?
+can new host be successfully signed up and commisioned to use the ssytem.
+
+once these 2 have access to the dashboards.
+we ask and check authentication before allowing them to work inside the system.
+
+so on the dashboard. can they see their profile settings page? 
+can they see their tournamnets? if they dont have one can they successfully create a new tournamnet.
+
+upon creation is the tournamnet instantiated?
+can they click on the tournamnet card to see the tournamnets hub.
+is the isolation effective and executed properly?
+
+any system issues so far. so this will be their first run as host. check and report on these and then when satisfactory we move to the next part of their usage

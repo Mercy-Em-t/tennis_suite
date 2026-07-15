@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import styles from '@/app/(dashboards)/layout.module.css';
-import { LogoutButton } from '@/components/LogoutButton';
+import { LogoutButton } from '@/components/ui/LogoutButton';
 import { ShieldAlert, Users, Landmark, Activity, Gavel, CalendarClock } from 'lucide-react';
 
 export function DirectorSidebar() {

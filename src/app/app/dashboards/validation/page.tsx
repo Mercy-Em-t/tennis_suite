@@ -75,14 +75,22 @@ export default function ValidationSandbox() {
     const start = performance.now();
     try {
       // Simulating the actual route call (will fail if match doesn't exist, but tests the network roundtrip logic)
+      const mockJwt = `header.${btoa(JSON.stringify({ role: 'ADMIN' }))}.signature`;
       const res = await fetch('/api/sync/offline', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${mockJwt}`
+        },
         body: JSON.stringify({ syncPayloads: cachedActions })
       });
       const data = await res.json();
       const end = performance.now();
-      logMsg('GATE 3', `SYNC COMPLETE: ${data.synced} actions reconciled in ${(end - start).toFixed(2)}ms.`);
+      if (res.ok) {
+        logMsg('GATE 3', `SYNC COMPLETE: ${data.synced} actions reconciled in ${(end - start).toFixed(2)}ms.`);
+      } else {
+        logMsg('GATE 3', `SYNC FAILED: API Error - ${data.error}`, 'error');
+      }
       setCachedActions([]);
       setOfflineMode(false);
     } catch (e: unknown) {

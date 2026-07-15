@@ -7,9 +7,9 @@ import { prisma } from '@/lib/prisma';
  * Calculates a player's Form Index based on recent match stats and win margins.
  * This is an advanced analytics feature (Pillar 13).
  */
-export async function calculateFormIndex(playerId: string) {
+export async function calculateFormIndex(playerId: string, tournamentId: string) {
   const stats = await prisma.playerStat.findMany({
-    where: { playerId },
+    where: { playerId, tournamentId },
     orderBy: { createdAt: 'desc' },
     take: 5 // Look at last 5 matches
   });
@@ -31,9 +31,10 @@ export async function calculateFormIndex(playerId: string) {
 /**
  * Generates a Head-to-Head matrix between two teams based on historical data.
  */
-export async function getHeadToHeadMatrix(teamAId: string, teamBId: string) {
+export async function getHeadToHeadMatrix(teamAId: string, teamBId: string, tournamentId: string) {
   const matches = await prisma.match.findMany({
     where: {
+      tournamentId,
       status: 'COMPLETED',
       OR: [
         { teamAId: teamAId, teamBId: teamBId },

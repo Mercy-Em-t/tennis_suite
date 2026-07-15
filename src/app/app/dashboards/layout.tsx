@@ -4,7 +4,7 @@ import { LayoutDashboard, Trophy, Radio, ShieldAlert, Settings, LogOut, Menu, X 
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth';
 import { GlobalSuspensionOverlay } from '@/components/ui/GlobalSuspensionOverlay';
-import { LogoutButton } from '@/components/LogoutButton';
+import { LogoutButton } from '@/components/ui/LogoutButton';
 
 export default async function DashboardsLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();

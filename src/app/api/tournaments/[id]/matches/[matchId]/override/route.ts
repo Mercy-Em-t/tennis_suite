@@ -18,8 +18,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (!replacementTeamId || !originalTeamId) return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
 
     await prisma.$transaction(async (tx) => {
-      const match = await tx.match.findUnique({ where: { id: matchId } });
-      if (!match) throw new Error("Match not found");
+      const match = await tx.match.findFirst({ where: { id: matchId, tournamentId: id } });
+      if (!match) throw new Error("Match not found or unauthorized");
 
       // Replace the team
       const updateData: any = {

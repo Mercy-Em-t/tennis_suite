@@ -10,8 +10,26 @@ export interface TelemetryData {
 }
 
 export class SystemHealthService {
-  // In-memory mock of the `health_monitor` table
   private telemetryStore: Map<string, TelemetryData> = new Map();
+
+  constructor() {
+    // Inject mock data for the simulation
+    this.recordHeartbeat('court_1', 'referee_c1', 'REFEREE', 45, 0); // Green
+    
+    // Amber: High latency
+    const c2 = new Date().getTime() - 2500;
+    this.telemetryStore.set('referee_c2', {
+      courtId: 'court_2', clientId: 'referee_c2', role: 'REFEREE',
+      latencyMs: 650, packetLossPercent: 2, lastHeartbeat: new Date(c2).toISOString()
+    });
+    
+    // Red: Critical loss
+    const b1 = new Date().getTime() - 6000;
+    this.telemetryStore.set('broadcaster_1', {
+      courtId: 'center_court', clientId: 'broadcaster_1', role: 'BROADCASTER',
+      latencyMs: 1200, packetLossPercent: 15, lastHeartbeat: new Date(b1).toISOString()
+    });
+  }
 
   /**
    * Ingests a heartbeat pulse from an active client.
@@ -40,11 +58,11 @@ export class SystemHealthService {
       const timeSincePulse = now - lastPulse;
 
       // Threshold definitions
-      if (timeSincePulse > 5000 || data.packetLossPercent > 10) {
-        // More than 5 seconds without a pulse, or high packet loss -> RED (Critical)
+      if (timeSincePulse > 3000 || data.packetLossPercent > 10) {
+        // More than 3 seconds without a pulse, or high packet loss -> RED (Critical)
         overview[clientId] = 'RED';
-      } else if (timeSincePulse > 2000 || data.latencyMs > 500) {
-        // More than 2 seconds, or high latency -> AMBER (Degraded)
+      } else if (timeSincePulse > 1500 || data.latencyMs > 500) {
+        // More than 1.5 seconds without a pulse, or >500ms latency -> AMBER (Degraded)
         overview[clientId] = 'AMBER';
       } else {
         // Optimal -> GREEN

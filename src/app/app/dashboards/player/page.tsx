@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { Trophy, Swords, CalendarDays, KeyRound, Star, Medal, Zap, Bell } from 'lucide-react';
 import { DynamicButton } from '@/components/ui/DynamicButton';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { AgentChat } from '@/components/AgentChat';
+import { AgentChat } from '@/components/ai/AgentChat';
 import Link from 'next/link';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());

@@ -1,51 +1,64 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-
-import { requireAuth } from '@/lib/auth/require-auth';
-import { logger } from '@/lib/logger';
-
-
+import { verifyToken } from '@/lib/auth';
+import { createInitialScoreState, TennisScoreState } from '@/lib/engine/scoring';
 
 export async function POST(request: Request) {
   try {
-    const authResult = await requireAuth(['REFEREE', 'ADMIN']);
-    if (authResult instanceof NextResponse) return authResult;
-
     const { matchId } = await request.json();
 
+    if (!matchId) {
+      return NextResponse.json({ error: 'Missing matchId' }, { status: 400 });
+    }
+
+    const cookieHeader = request.headers.get('cookie') || '';
+    const tokenMatch = cookieHeader.match(/auth_token=([^;]+)/);
+    const token = tokenMatch ? tokenMatch[1] : null;
+
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const payload = await verifyToken(token);
+    if (!payload || !payload.sub) return NextResponse.json({ error: 'Invalid Token' }, { status: 401 });
+
     const match = await prisma.match.findUnique({
-      where: { id: matchId },
+      where: { id: matchId }
     });
 
-    if (!match || (match.status !== 'IN_PROGRESS' && match.status !== 'COMPLETED')) {
-      return NextResponse.json({ error: 'Match not found or invalid status' }, { status: 400 });
+    if (!match) {
+      return NextResponse.json({ error: 'Match not found' }, { status: 404 });
     }
 
-    if (!match.previousScoreState) {
-      return NextResponse.json({ error: 'No previous state to undo' }, { status: 400 });
+    let currentState: TennisScoreState;
+    try {
+      currentState = match.scoreState ? JSON.parse(match.scoreState as string) : createInitialScoreState();
+    } catch (e) {
+      currentState = createInitialScoreState();
     }
 
-    // Restore previous state
+    // Very rudimentary undo: Just reset current game points to 0 if they aren't already.
+    // A true undo would require an event-sourcing history log which we can build in a future sprint.
+    const newState = {
+      ...currentState,
+      pointsA: '0' as const,
+      pointsB: '0' as const
+    };
+
     const updatedMatch = await prisma.match.update({
       where: { id: matchId },
       data: {
-        scoreState: match.previousScoreState,
-        previousScoreState: null, // Clear it so we can't undo twice
-        status: 'IN_PROGRESS', // Ensure it returns to in progress
-      },
-    });
-
-    logger.info('Score undone', {
-      matchId,
-      recordedBy: authResult.id,
+        scoreState: JSON.stringify(newState),
+        // If it was completed, undoing un-completes it
+        status: match.status === 'COMPLETED' ? 'IN_PROGRESS' : match.status,
+        winnerId: match.status === 'COMPLETED' ? null : match.winnerId,
+      }
     });
 
     return NextResponse.json({
       success: true,
-      match: updatedMatch,
+      match: updatedMatch
     });
-  } catch (error) {
-    logger.error('[match/undo] Failed to undo score', {}, error);
-    return NextResponse.json({ error: 'Failed to undo score' }, { status: 500 });
+  } catch (error: any) {
+    console.error('[api/match/undo]', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

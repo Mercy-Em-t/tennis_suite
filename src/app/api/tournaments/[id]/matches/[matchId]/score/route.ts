@@ -19,8 +19,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const payload = await require('@/lib/auth').verifyToken(token);
     if (!payload) return NextResponse.json({ error: 'Invalid Token' }, { status: 401 });
 
-    const matchToVerify = await prisma.match.findUnique({
-      where: { id: matchId }
+    const matchToVerify = await prisma.match.findFirst({
+      where: { id: matchId, tournamentId: id }
     });
 
     if (!matchToVerify) return NextResponse.json({ error: 'Match not found' }, { status: 404 });
@@ -96,8 +96,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       // 2. Progression Engine: Pool Lockdown
       if (status === 'COMPLETED' && updatedMatch.poolId) {
         // Fetch pool explicitly
-        const pool = await tx.pool.findUnique({
-          where: { id: updatedMatch.poolId },
+        const pool = await tx.pool.findFirst({
+          where: { id: updatedMatch.poolId, tournamentId: id },
           include: { poolTeams: true }
         });
 
@@ -110,8 +110,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           const allCompleted = poolMatches.every(m => m.status === 'COMPLETED');
           if (allCompleted && pool.status !== 'LOCKED') {
           // Lock the pool
-          await tx.pool.update({
-            where: { id: updatedMatch.poolId },
+          await tx.pool.updateMany({
+            where: { id: updatedMatch.poolId, tournamentId: id },
             data: { status: 'LOCKED' }
           });
 

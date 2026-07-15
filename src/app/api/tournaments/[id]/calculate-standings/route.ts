@@ -1,9 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
-
-
-
 export async function GET(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
     const params = await props.params;
@@ -54,11 +51,11 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
       const teamAStats = standingsMap.get(match.teamAId)!;
       const teamBStats = standingsMap.get(match.teamBId)!;
 
-      const score = JSON.parse(match.scoreState);
-      const setsA = score.setsA || 0;
-      const setsB = score.setsB || 0;
-      const gamesA = score.gamesA || 0;
-      const gamesB = score.gamesB || 0;
+      const score = typeof match.scoreState === 'string' ? JSON.parse(match.scoreState) : match.scoreState;
+      const setsA = score?.setsA || 0;
+      const setsB = score?.setsB || 0;
+      const gamesA = score?.gamesA || 0;
+      const gamesB = score?.gamesB || 0;
 
       // Determine Winner
       if (setsA > setsB) {
@@ -84,6 +81,30 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
     const leaderboard = Array.from(standingsMap.values()).sort((a, b) => {
       if (b.wins !== a.wins) return b.wins - a.wins;
       if (b.setDiff !== a.setDiff) return b.setDiff - a.setDiff;
+      
+      // Head-to-Head Tiebreaker
+      const h2hMatches = matches.filter(m => 
+        (m.teamAId === a.teamId && m.teamBId === b.teamId) ||
+        (m.teamAId === b.teamId && m.teamBId === a.teamId)
+      );
+      
+      if (h2hMatches.length > 0) {
+        let aWinsH2H = 0;
+        let bWinsH2H = 0;
+        for (const match of h2hMatches) {
+          const score = typeof match.scoreState === 'string' ? JSON.parse(match.scoreState) : match.scoreState;
+          const setsA = score?.setsA || 0;
+          const setsB = score?.setsB || 0;
+          if (match.teamAId === a.teamId) {
+             if (setsA > setsB) aWinsH2H++; else if (setsB > setsA) bWinsH2H++;
+          } else {
+             if (setsA > setsB) bWinsH2H++; else if (setsB > setsA) aWinsH2H++;
+          }
+        }
+        if (bWinsH2H !== aWinsH2H) return bWinsH2H - aWinsH2H;
+      }
+
+      // Game Differential Fallback
       return b.gameDiff - a.gameDiff;
     });
 
