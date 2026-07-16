@@ -13,7 +13,7 @@ export function LogoutButton() {
   };
 
   return (
-    <button className={styles.link} onClick={handleLogout} style={{ border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', width: '100%', padding: '0.75rem 1rem', color: '#94a3b8' }}>
+    <button className={styles.link} onClick={handleLogout} style={{ border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', width: '100%', padding: 0, color: 'inherit', fontSize: '1rem', fontWeight: 500 }}>
       Sign Out
     </button>
   );

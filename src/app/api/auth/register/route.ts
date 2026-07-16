@@ -9,7 +9,7 @@ import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
-    const { name, email, password, phone, category, franchiseName, tournamentId, skillLevel, playstyle, emergencyContact } = await request.json();
+    const { name, email, password, phone, categories, category, franchiseName, tournamentId, skillLevel, playstyle, emergencyContact } = await request.json();
 
     if (!name || !email || !password) {
       return NextResponse.json({ error: 'Name, email, and password are required.' }, { status: 400 });
@@ -51,7 +51,10 @@ export async function POST(request: Request) {
       }
 
       if (targetTournamentId) {
-        checkoutUrl = `/checkout?t=${targetTournamentId}&f=${encodeURIComponent(franchiseName)}`;
+        const categoryParam = Array.isArray(categories) && categories.length > 0 
+          ? `&c=${encodeURIComponent(JSON.stringify(categories))}` 
+          : '';
+        checkoutUrl = `/checkout?t=${targetTournamentId}&f=${encodeURIComponent(franchiseName)}${categoryParam}`;
       }
     }
 

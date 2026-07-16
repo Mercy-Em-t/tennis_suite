@@ -163,6 +163,21 @@ export default function BroadcasterControlPanel() {
               </div>
             </Card>
 
+            <Card style={{ padding: '16px', background: '#0d1117', border: `1px solid ${graphics.showAdsSidebar ? '#3fb950' : '#30363d'}` }}>
+              <div >
+                <div>
+                  <h3 >Ad Space Banner</h3>
+                  <p >Rotating advertisements.</p>
+                </div>
+                <Button 
+                  variant={graphics.showAdsSidebar ? 'danger' : 'success'}
+                  onClick={() => updateGraphics({ showAdsSidebar: !graphics.showAdsSidebar })}
+                >
+                  {graphics.showAdsSidebar ? 'CUT' : 'TAKE'}
+                </Button>
+              </div>
+            </Card>
+
             <Card style={{ padding: '16px', background: '#0d1117', border: `1px solid ${graphics.showPlayer1LowerThird ? '#3fb950' : '#30363d'}` }}>
               <div >
                 <div>

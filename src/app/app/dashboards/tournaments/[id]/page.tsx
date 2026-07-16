@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, use } from 'react';
+import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -15,8 +16,18 @@ type Tab = 'PRE' | 'DURING' | 'POST';
 
 export default function TournamentDashboard({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
+  const router = useRouter();
   const { data, error, isLoading, mutate } = useSWR(`/api/tournaments/${resolvedParams.id}`, fetcher, { refreshInterval: 5000 });
   const [activeTab, setActiveTab] = useState<Tab>('PRE');
+
+  React.useEffect(() => {
+    if (data?.tournament) {
+      const phase = data.tournament.lifecyclePhase;
+      if (phase === 'DURING_TOURNAMENT') setActiveTab('DURING');
+      else if (phase === 'POST_TOURNAMENT' || phase === 'ARCHIVED') setActiveTab('POST');
+      else setActiveTab('PRE');
+    }
+  }, [data?.tournament?.lifecyclePhase]);
 
   const updateTournament = async (updates: any) => {
     try {
@@ -74,10 +85,10 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
     <div style={S.page}>
       <Button 
         variant="secondary" 
-        onClick={() => window.location.href = '/dashboards/host'} 
+        onClick={() => router.push('/app/dashboards/host')} 
         style={{ marginBottom: '24px' }}
       >
-        ← Back to Control Center
+        ← Back to Dashboard
       </Button>
 
       <header style={S.header}>
@@ -94,7 +105,13 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
               {tournament.location || 'Location TBA'} | ID: <span style={{ fontFamily: 'monospace', color: '#58a6ff' }}>{tournament.id}</span>
             </p>
           </div>
-          <Button variant="secondary" disabled={tournament.isArchived}>Tournament Settings</Button>
+          <Button
+            variant="secondary"
+            disabled={tournament.isArchived}
+            onClick={() => !tournament.isArchived && router.push(`/app/dashboards/tournaments/${resolvedParams.id}/settings`)}
+          >
+            Tournament Settings
+          </Button>
         </div>
 
         <div style={S.statGrid}>

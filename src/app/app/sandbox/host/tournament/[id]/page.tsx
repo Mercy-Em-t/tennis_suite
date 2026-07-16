@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, use } from 'react';
+import { useRouter } from 'next/navigation';
 import { useSandboxTournaments } from '../../useSandboxState';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -13,6 +14,7 @@ type Tab = 'PRE' | 'DURING' | 'POST';
 
 export default function TournamentInstanceSandbox({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
+  const router = useRouter();
   const { tournaments, updateTournament, loaded } = useSandboxTournaments();
   const [activeTab, setActiveTab] = useState<Tab>('PRE');
 
@@ -40,7 +42,7 @@ export default function TournamentInstanceSandbox({ params }: { params: Promise<
 
   return (
     <div style={S.page}>
-      <Button variant="secondary" onClick={() => window.location.href = '/sandbox/host'} >
+      <Button variant="secondary" onClick={() => router.push('/app/sandbox/host')}>
         ← Back to Dashboard
       </Button>
       

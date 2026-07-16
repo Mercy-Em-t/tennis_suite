@@ -1,10 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-
 import { requireAuth } from '@/lib/auth/require-auth';
 import { logger } from '@/lib/logger';
-
-
+import { generateUniqueSlug } from '@/lib/slug';
 
 export async function POST(request: Request) {
   const authResult = await requireAuth(['HOST', 'ADMIN']);
@@ -39,14 +37,18 @@ export async function POST(request: Request) {
       courtType: surfaceType === 'Grass' ? 'TENNIS_GRASS' : surfaceType === 'Clay' ? 'TENNIS_CLAY' : 'TENNIS_HARD'
     }));
 
+    // Generate a unique slug from the name
+    const slug = await generateUniqueSlug(name);
+
     // Atomic transaction for provisioning Tournament & Courts
     const newTournament = await prisma.$transaction(async (tx) => {
       return await tx.tournament.create({
         data: {
+          slug,
           name: name || 'Untitled Tournament',
           formatType: formatType || 'Round-Robin',
-          maxTeams: 16, // Default for now, can be adjusted in tournament settings
-          isActive: false, 
+          maxTeams: 16,
+          isActive: false,
           hostId: authResult.id,
           startDate: startDate ? new Date(startDate) : null,
           endDate: endDate ? new Date(endDate) : null,
@@ -82,6 +84,7 @@ export async function GET(request: Request) {
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
+        slug: true,
         name: true,
         isActive: true,
         isArchived: true,

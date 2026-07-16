@@ -44,6 +44,7 @@ model User {
 
 model Tournament {
   id          String   @id @default(cuid())
+  slug        String?  @unique // URL-friendly identifier e.g. "summer-open-2026"
   name        String
   formatType  String   // e.g. 'Fast4', 'Standard'
   isActive    Boolean  @default(false)
@@ -52,6 +53,7 @@ model Tournament {
   globalMessage String? // Used for Emergency Broadcasts
   registrationPhase String @default("CLOSED") // CLOSED, EARLY, LATE
   currentStage String @default("POOL") // POOL, KNOCKOUTS, FINALS
+  lifecyclePhase String @default("PRE_TOURNAMENT") // PRE_TOURNAMENT, DURING_TOURNAMENT, POST_TOURNAMENT, ARCHIVED
   championId  String?  // Team ID of the winner
   maxTeams    Int
   poolGenerationCount Int @default(0)

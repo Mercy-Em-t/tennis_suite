@@ -29,10 +29,11 @@ export async function POST(
       // 1. Fetch target match
       const targetMatch = await tx.match.findUnique({
         where: { id: matchId },
-        include: { court: true }
+        include: { court: true, tournament: { select: { lifecyclePhase: true } } }
       });
 
       if (!targetMatch) throw new Error('Match not found');
+      if (targetMatch.tournament?.lifecyclePhase === 'ARCHIVED') throw new Error('Tournament is archived and read-only');
       if (targetMatch.status === 'COMPLETED') throw new Error('Match is already completed');
       if (!targetMatch.poolId) throw new Error('Knockout finalization not yet implemented in this route.');
 

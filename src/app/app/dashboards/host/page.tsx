@@ -171,9 +171,9 @@ export default function GlobalHostDashboard() {
                   size="sm"
                   onClick={() => {
                     if (isSandbox) {
-                      router.push(`/sandbox/host/tournament/${t.id}`);
+                      router.push(`/app/sandbox/host/tournament/${t.id}`);
                     } else {
-                      router.push(`/tournaments/${t.id}`);
+                      router.push(`/app/dashboards/tournaments/${t.slug ?? t.id}`);
                     }
                   }}
                 >

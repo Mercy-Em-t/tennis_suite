@@ -170,6 +170,21 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
           {tournament.isActive ? 'Tournament Already Launched' : 'Launch Tournament'}
         </Button>
       </div>
+      
+      {tournament.isActive && (
+        <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid rgba(255,255,255,0.1)', textAlign: 'right' }}>
+          <Button 
+            variant="primary"
+            onClick={async () => {
+              if (window.confirm('Are you ready to transition to the During-Tournament phase? Matches will go live.')) {
+                await updateTournament({ lifecyclePhase: 'DURING_TOURNAMENT' });
+              }
+            }}
+          >
+            Transition to Live Event (During-Tournament) →
+          </Button>
+        </div>
+      )}
     </Card>
   );
 

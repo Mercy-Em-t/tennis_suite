@@ -173,6 +173,31 @@ export default function PresentationScreenOutput() {
           SPONSORED BY <span style={{ fontSize: '1.5rem', fontStyle: 'italic', display: 'block' }}>ROLEX</span>
         </div>
 
+        {/* Ad Space Banner (Left/Right alternating or static) */}
+        <div style={{
+          position: 'absolute', top: '150px', right: '40px', width: '300px', height: '250px',
+          background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+          opacity: graphics.showAdsSidebar ? 1 : 0,
+          transform: graphics.showAdsSidebar ? 'translateX(0)' : 'translateX(150%)',
+          transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+          overflow: 'hidden'
+        }}>
+          <div style={{ position: 'absolute', top: '8px', right: '12px', fontSize: '0.7rem', color: '#8b949e', letterSpacing: '2px' }}>ADVERTISEMENT</div>
+          <div style={{ animation: 'adCycle 15s infinite' }}>
+            <img src="https://via.placeholder.com/260x180/1f2937/3fb950?text=WILSON+CLASH" alt="Ad 1" style={{ width: '260px', height: '180px', objectFit: 'cover', borderRadius: '8px' }} />
+          </div>
+          <style>{`
+            @keyframes adCycle {
+              0%, 30% { filter: hue-rotate(0deg); content: url('https://via.placeholder.com/260x180/1f2937/3fb950?text=NIKE+COURT'); }
+              33%, 63% { filter: hue-rotate(120deg); content: url('https://via.placeholder.com/260x180/1f2937/58a6ff?text=GATORADE'); }
+              66%, 96% { filter: hue-rotate(240deg); content: url('https://via.placeholder.com/260x180/1f2937/d2a8ff?text=WILSON+PRO'); }
+            }
+          `}</style>
+        </div>
+
       </div>
 
       {/* Global Alerts (Delegate Overrides) */}

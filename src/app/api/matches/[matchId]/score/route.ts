@@ -28,10 +28,15 @@ export async function POST(
       // 1. Fetch current match state
       const match = await tx.match.findUnique({
         where: { id: matchId },
+        include: { tournament: { select: { lifecyclePhase: true } } }
       });
 
       if (!match || match.status !== 'IN_PROGRESS') {
         throw new Error('Match not found or not active');
+      }
+
+      if (match.tournament?.lifecyclePhase === 'ARCHIVED') {
+        throw new Error('UNAUTHORIZED_ARCHIVED');
       }
 
       // RBAC Security Check
@@ -113,6 +118,9 @@ export async function POST(
     logger.error('[matches/[matchId]/score] Failed to record score', {}, error);
     if (error.message === 'UNAUTHORIZED') {
       return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 403 });
+    }
+    if (error.message === 'UNAUTHORIZED_ARCHIVED') {
+      return NextResponse.json({ error: 'Tournament is archived and read-only' }, { status: 403 });
     }
     return NextResponse.json({ error: error.message || 'Failed to record score' }, { status: 400 });
   }

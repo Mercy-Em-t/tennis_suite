@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import useSWR from 'swr';
 import { motion } from 'framer-motion';
 import { Trophy, Swords, CalendarDays, KeyRound, Star, Medal, Zap, Bell } from 'lucide-react';
@@ -34,6 +34,18 @@ function getXpLevel(xp: number) {
 
 export default function TeamDashboard() {
   const { data, error, isLoading } = useSWR('/api/player/dashboard', fetcher);
+  const [quickJoinTournament, setQuickJoinTournament] = useState<any>(null);
+  const [quickJoinForm, setQuickJoinForm] = useState({ teamName: '', category: '' });
+  const [myTournamentsTab, setMyTournamentsTab] = useState<'ACTIVE' | 'UPCOMING' | 'PAST'>('ACTIVE');
+  const [discoverFilters, setDiscoverFilters] = useState({ category: '', location: '', date: '' });
+  const [isSandbox, setIsSandbox] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsSandbox(localStorage.getItem('ENABLE_SANDBOX') === 'true');
+    const handleStorage = () => setIsSandbox(localStorage.getItem('ENABLE_SANDBOX') === 'true');
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
 
   if (isLoading) return <div style={{ padding: '40px', color: 'var(--text-muted)' }}>Loading Player Hub...</div>;
   if (error || !data?.success) return <div style={{ padding: '40px', color: '#f85149' }}>Failed to load profile. Are you logged in?</div>;
@@ -45,6 +57,29 @@ export default function TeamDashboard() {
 
   const { level, nextThreshold, progress } = getXpLevel(user.globalXp || 0);
 
+  const filteredMyTournaments = myTournaments.filter((t: any) => {
+    const isUpcoming = !t.isActive && t.registrationPhase !== 'CLOSED';
+    const isPast = !t.isActive && t.registrationPhase === 'CLOSED';
+    if (myTournamentsTab === 'ACTIVE') return t.isActive;
+    if (myTournamentsTab === 'UPCOMING') return isUpcoming;
+    if (myTournamentsTab === 'PAST') return isPast;
+    return true;
+  });
+
+  const filteredUpcoming = upcomingTournaments.filter((t: any) => {
+    if (discoverFilters.category && t.categories) {
+       if (!t.categories.toLowerCase().includes(discoverFilters.category.toLowerCase())) return false;
+    }
+    if (discoverFilters.location && t.location) {
+       if (!t.location.toLowerCase().includes(discoverFilters.location.toLowerCase())) return false;
+    }
+    if (discoverFilters.date && t.startDate) {
+       const d = new Date(t.startDate).toISOString().split('T')[0];
+       if (d !== discoverFilters.date) return false;
+    }
+    return true;
+  });
+
   return (
     <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px' }}>
       
@@ -54,15 +89,48 @@ export default function TeamDashboard() {
         animate={{ opacity: 1, y: 0 }}
         style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '24px' }}
       >
-        <div>
-          <h1 style={{ fontSize: '3rem', fontWeight: 800, margin: '0 0 8px 0', background: 'linear-gradient(90deg, #fff, var(--text-muted))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.02em' }}>
-            Player Hub
-          </h1>
-          <p style={{ fontSize: '1.2rem', color: 'var(--primary)', margin: 0, fontWeight: 500 }}>
-            Welcome back, {user.name}
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <Link href="/app/dashboards/player/profile" style={{ cursor: 'pointer', display: 'block', transition: 'transform 0.2s', ...({ ':hover': { transform: 'scale(1.05)' } } as any) }}>
+            {user.avatarUrl ? (
+              <img src={user.avatarUrl} alt={user.name} style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)' }} />
+            ) : (
+              <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', fontWeight: 800, color: '#000' }}>
+                {user.name.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </Link>
+          <div>
+            <h1 style={{ fontSize: '3rem', fontWeight: 800, margin: '0 0 8px 0', background: 'linear-gradient(90deg, #fff, var(--text-muted))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.02em' }}>
+              Player Hub
+            </h1>
+            <p style={{ fontSize: '1.2rem', color: 'var(--primary)', margin: 0, fontWeight: 500 }}>
+              Welcome back, {user.name}
+            </p>
+          </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ background: 'rgba(210,168,255,0.05)', border: '1px solid rgba(210,168,255,0.2)', padding: '6px 12px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '0.75rem', color: '#d2a8ff', fontWeight: 700, letterSpacing: '1px' }}>SANDBOX</span>
+            <button 
+              onClick={() => {
+                const next = !isSandbox;
+                setIsSandbox(next);
+                localStorage.setItem('ENABLE_SANDBOX', next ? 'true' : 'false');
+                window.dispatchEvent(new Event('storage'));
+              }}
+              style={{ 
+                width: '36px', height: '20px', borderRadius: '10px', background: isSandbox ? '#d2a8ff' : 'rgba(255,255,255,0.1)', 
+                position: 'relative', border: 'none', cursor: 'pointer', transition: 'background 0.3s', padding: 0
+              }}
+            >
+              <motion.div 
+                layout 
+                initial={false}
+                animate={{ x: isSandbox ? 18 : 2 }}
+                style={{ width: '16px', height: '16px', borderRadius: '50%', background: '#fff', position: 'absolute', top: '2px' }}
+              />
+            </button>
+          </div>
           <button style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f0f6fc', cursor: 'pointer', position: 'relative' }}>
             <Bell size={20} />
             <span style={{ position: 'absolute', top: '10px', right: '12px', width: '8px', height: '8px', background: '#f85149', borderRadius: '50%', border: '2px solid #0d1117' }}></span>
@@ -85,11 +153,46 @@ export default function TeamDashboard() {
                 View All →
               </Link>
             </div>
+
+            {myTournaments.length > 0 && (
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: 'rgba(255,255,255,0.02)', padding: '4px', borderRadius: '8px', width: 'fit-content' }}>
+                {['ACTIVE', 'UPCOMING', 'PAST'].map((tab) => (
+                  <button 
+                    key={tab}
+                    onClick={() => setMyTournamentsTab(tab as any)}
+                    style={{ 
+                      padding: '8px 16px', 
+                      borderRadius: '6px', 
+                      border: 'none', 
+                      background: myTournamentsTab === tab ? 'var(--primary)' : 'transparent',
+                      color: myTournamentsTab === tab ? '#000' : 'var(--text-muted)',
+                      fontWeight: myTournamentsTab === tab ? 700 : 500,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    {tab.charAt(0) + tab.slice(1).toLowerCase()}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {myTournaments.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>You haven't joined any tournaments yet.</p>
+              <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.1)', padding: '40px', textAlign: 'center' }}>
+                <Trophy size={48} color="var(--text-muted)" style={{ margin: '0 auto 16px auto', opacity: 0.5 }} />
+                <h3 style={{ margin: '0 0 8px 0', color: '#fff', fontSize: '1.25rem' }}>No Tournaments Yet</h3>
+                <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>You haven't joined any tournaments. Discover new events below to start your journey.</p>
+                <DynamicButton variant="primary" onClick={() => document.getElementById('discover-section')?.scrollIntoView({ behavior: 'smooth' })}>
+                  Discover and Join Tournaments
+                </DynamicButton>
+              </div>
+            ) : filteredMyTournaments.length === 0 ? (
+               <p style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No {myTournamentsTab.toLowerCase()} tournaments found.</p>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
-                {myTournaments.map((t: any, idx: number) => (
+                {filteredMyTournaments.map((t: any, idx: number) => {
+                  const isUpcoming = !t.isActive && t.registrationPhase !== 'CLOSED';
+                  return (
                   <Link href={`/team/tournaments/${t.tournamentId}`} key={t.tournamentId} style={{ textDecoration: 'none' }}>
                     <motion.div 
                       initial={{ opacity: 0, y: 20 }}
@@ -109,7 +212,9 @@ export default function TeamDashboard() {
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                         <h3 style={{ margin: 0, color: '#fff', fontSize: '1.25rem', fontWeight: 700 }}>{t.tournamentName}</h3>
-                        <StatusBadge status={t.status === 'ACTIVE' ? 'success' : t.status === 'success' ? 'success' : 'info'} >{t.status}</StatusBadge>
+                        <StatusBadge status={t.isActive ? 'success' : isUpcoming ? 'info' : undefined} >
+                          {t.isActive ? 'Ongoing' : isUpcoming ? (t.registrationPhase === 'OPEN' ? 'Reg Open' : 'Upcoming') : 'Past'}
+                        </StatusBadge>
                       </div>
                       <p style={{ color: 'var(--text-muted)', margin: '0 0 20px 0', fontSize: '0.9rem' }}>
                         Playing as: <span style={{ color: '#fff', fontWeight: 600 }}>{t.franchiseName}</span>
@@ -133,33 +238,70 @@ export default function TeamDashboard() {
                       </div>
                     </motion.div>
                   </Link>
-                ))}
+                )})}
               </div>
             )}
           </section>
 
-          <section>
+          <section id="discover-section">
             <h2 style={{ fontSize: '1.5rem', color: 'var(--text-main)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <CalendarDays size={24} color="var(--primary)" />
               Discover Tournaments
             </h2>
-            {upcomingTournaments.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No upcoming tournaments open for registration.</p>
+
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
+              <input 
+                type="text" 
+                placeholder="Filter by category..." 
+                value={discoverFilters.category}
+                onChange={e => setDiscoverFilters(prev => ({ ...prev, category: e.target.value }))}
+                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 16px', borderRadius: '8px', color: '#fff', outline: 'none', flex: 1, minWidth: '150px' }}
+              />
+              <input 
+                type="text" 
+                placeholder="Filter by location..." 
+                value={discoverFilters.location}
+                onChange={e => setDiscoverFilters(prev => ({ ...prev, location: e.target.value }))}
+                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 16px', borderRadius: '8px', color: '#fff', outline: 'none', flex: 1, minWidth: '150px' }}
+              />
+              <input 
+                type="date" 
+                value={discoverFilters.date}
+                onChange={e => setDiscoverFilters(prev => ({ ...prev, date: e.target.value }))}
+                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 16px', borderRadius: '8px', color: '#fff', outline: 'none', flex: 1, minWidth: '150px', colorScheme: 'dark' }}
+              />
+              {(discoverFilters.category || discoverFilters.location || discoverFilters.date) && (
+                <button 
+                  onClick={() => setDiscoverFilters({ category: '', location: '', date: '' })}
+                  style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'var(--text-muted)', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer' }}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+
+            {filteredUpcoming.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No tournaments match your filters.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {upcomingTournaments.map((t: any) => (
+                {filteredUpcoming.map((t: any) => (
                   <div key={t.id} onClick={() => window.location.href = `/tournaments/${t.id}/profile`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--card-border)', borderRadius: '12px', padding: '20px', cursor: 'pointer', transition: 'all 0.2s ease' }} onMouseOver={(e) => (e.currentTarget.style.borderColor = 'var(--primary)')} onMouseOut={(e) => (e.currentTarget.style.borderColor = 'var(--card-border)')}>
                     <div>
                       <h3 style={{ margin: '0 0 8px 0', color: '#fff', fontSize: '1.1rem' }}>{t.name}</h3>
                       <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                         {t.formatType} • {t.location || 'Online'}
+                        {t.startDate && ` • ${new Date(t.startDate).toLocaleDateString()}`}
                       </p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                       <StatusBadge status="info">{t.registrationPhase}</StatusBadge>
-                      <Link href={`/tournaments/${t.id}/register`} style={{ textDecoration: 'none' }} onClick={(e) => e.stopPropagation()}>
-                        <DynamicButton variant="primary">Join</DynamicButton>
-                      </Link>
+                      <DynamicButton variant="primary" onClick={(e) => {
+                        e.stopPropagation();
+                        setQuickJoinTournament(t);
+                        setQuickJoinForm({ teamName: `${user.name} Team`, category: '' });
+                      }}>
+                        Join
+                      </DynamicButton>
                     </div>
                   </div>
                 ))}
@@ -270,6 +412,58 @@ export default function TeamDashboard() {
         </div>
       </div>
       <AgentChat playerId={user?.id || ''} tournamentId={myTournaments?.[0]?.tournamentId || ''} />
+
+      {quickJoinTournament && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)' }}>
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ background: '#161b22', border: '1px solid #30363d', borderRadius: '12px', padding: '32px', width: '100%', maxWidth: '400px' }}>
+            <h2 style={{ fontSize: '1.5rem', color: '#fff', marginBottom: '8px', marginTop: 0 }}>Join Tournament</h2>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>Registering for {quickJoinTournament.name}</p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600 }}>Team / Franchise Name</label>
+                <input 
+                  type="text" 
+                  value={quickJoinForm.teamName} 
+                  onChange={e => setQuickJoinForm({ ...quickJoinForm, teamName: e.target.value })}
+                  style={{ background: '#0d1117', border: '1px solid #30363d', color: '#fff', padding: '12px', borderRadius: '6px', outline: 'none' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600 }}>Select Category</label>
+                <select 
+                  value={quickJoinForm.category}
+                  onChange={e => setQuickJoinForm({ ...quickJoinForm, category: e.target.value })}
+                  style={{ background: '#0d1117', border: '1px solid #30363d', color: '#fff', padding: '12px', borderRadius: '6px', outline: 'none', appearance: 'none' }}
+                >
+                  <option value="" disabled>Choose a category...</option>
+                  {(quickJoinTournament.categories 
+                    ? quickJoinTournament.categories.split(',').map((c: string) => c.trim()).filter(Boolean)
+                    : ["Men's Singles", "Women's Singles", "Men's Doubles", "Women's Doubles", "Mixed Doubles"]
+                  ).map((cat: string) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <DynamicButton variant="secondary" onClick={() => setQuickJoinTournament(null)}>Cancel</DynamicButton>
+              <DynamicButton 
+                variant="primary" 
+                disabled={!quickJoinForm.teamName || !quickJoinForm.category}
+                onClick={() => {
+                  const categoriesJson = JSON.stringify([quickJoinForm.category]);
+                  window.location.href = `/checkout?t=${quickJoinTournament.id}&f=${encodeURIComponent(quickJoinForm.teamName)}&c=${encodeURIComponent(categoriesJson)}`;
+                }}
+              >
+                Continue to Checkout
+              </DynamicButton>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

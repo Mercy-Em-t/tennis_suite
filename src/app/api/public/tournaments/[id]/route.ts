@@ -1,15 +1,18 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
-
-
-
 export async function GET(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
     const params = await props.params;
+    const slugOrId = params.id;
 
-    const tournament = await prisma.tournament.findUnique({
-      where: { id: params.id },
+    const tournament = await prisma.tournament.findFirst({
+      where: {
+        OR: [
+          { slug: slugOrId },
+          { id: slugOrId },
+        ],
+      },
       include: {
         matches: {
           include: {

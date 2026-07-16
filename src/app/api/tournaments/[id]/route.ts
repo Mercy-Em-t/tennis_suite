@@ -1,9 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-
 import { verifyToken } from '@/lib/auth';
-
-
+import { generateUniqueSlug } from '@/lib/slug';
 
 export async function GET(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
@@ -13,14 +11,21 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
     const token = tokenMatch ? tokenMatch[1] : null;
 
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    
+
     const payload = await verifyToken(token);
     if (!payload || !payload.roles.some(r => ['HOST', 'ADMIN', 'MARSHALL'].includes(r))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const tournament = await prisma.tournament.findUnique({
-      where: { id: params.id },
+    // Accept either a slug (e.g. "summer-open-2026") or a raw cuid
+    const slugOrId = params.id;
+    const tournament = await prisma.tournament.findFirst({
+      where: {
+        OR: [
+          { slug: slugOrId },
+          { id: slugOrId },
+        ],
+      },
       include: {
         matches: {
           include: {
@@ -46,13 +51,13 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
       return NextResponse.json({ error: 'Tournament not found' }, { status: 404 });
     }
 
-    // Calculate Completion Ratio and Average Time
+    // Calculate completion ratio and average match duration
     const totalMatches = tournament.matches.length;
     const completedMatches = tournament.matches.filter(m => m.status === 'COMPLETED');
     const completedCount = completedMatches.length;
     const completionPercentage = totalMatches === 0 ? 0 : Math.round((completedCount / totalMatches) * 100);
 
-    const avgDuration = completedCount > 0 
+    const avgDuration = completedCount > 0
       ? Math.round(completedMatches.reduce((acc, m) => acc + m.durationSec, 0) / completedCount)
       : 0;
 
@@ -80,7 +85,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     const token = tokenMatch ? tokenMatch[1] : null;
 
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    
+
     const payload = await verifyToken(token);
     if (!payload || !payload.roles.some(r => ['HOST', 'ADMIN'].includes(r))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -88,9 +93,30 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
 
     const body = await request.json();
 
+    // Resolve tournament by slug or cuid
+    const existing = await prisma.tournament.findFirst({
+      where: { OR: [{ slug: params.id }, { id: params.id }] },
+      select: { id: true, name: true, slug: true, lifecyclePhase: true },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Tournament not found' }, { status: 404 });
+    }
+
+    // Freeze mutations if archived (unless an ADMIN is explicitly unlocking it)
+    if (existing.lifecyclePhase === 'ARCHIVED' && body.lifecyclePhase !== 'POST_TOURNAMENT') {
+      return NextResponse.json({ error: 'This tournament is archived and read-only.' }, { status: 403 });
+    }
+
+    // If the name is changing, regenerate the slug
+    let slugUpdate: { slug?: string } = {};
+    if (body.name && body.name !== existing.name) {
+      slugUpdate.slug = await generateUniqueSlug(body.name, existing.id);
+    }
+
     const updated = await prisma.tournament.update({
-      where: { id: params.id },
-      data: body
+      where: { id: existing.id },
+      data: { ...body, ...slugUpdate }
     });
 
     return NextResponse.json({ success: true, tournament: updated });

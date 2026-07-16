@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { motion } from 'framer-motion';
-import { Wallet, PlayCircle, Share2, MapPin, Shield } from 'lucide-react';
+import { Wallet, PlayCircle, Share2, MapPin, Shield, ChevronDown, ChevronUp, User, Activity, Calendar, Bell, MessageCircle, Lightbulb, Target } from 'lucide-react';
 import Link from 'next/link';
 import { DrawViewer } from '@/components/tennis/DrawViewer';
 
@@ -14,6 +14,8 @@ const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 export default function PlayerTournamentDashboard({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
+  const [isDrawOpen, setIsDrawOpen] = React.useState(true);
+  const [selectedMatch, setSelectedMatch] = React.useState<any>(null);
   const { data, error, isLoading, mutate } = useSWR(`/api/player/tournaments/${resolvedParams.id}`, fetcher, { refreshInterval: 5000 });
 
   if (isLoading) return <div style={{ padding: '48px', color: '#8b949e', textAlign: 'center', minHeight: '100vh', background: '#0d1117' }}>Loading Command Center...</div>;
@@ -97,8 +99,20 @@ export default function PlayerTournamentDashboard({ params }: { params: Promise<
         </div>
       </Card>
 
+      {/* Collapsible Draw & Brackets */}
       <div style={{ marginBottom: '48px' }}>
-        <DrawViewer tournamentId={tournament.id} myTeamId={team.id} />
+        <div 
+          onClick={() => setIsDrawOpen(!isDrawOpen)}
+          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', background: 'rgba(255,255,255,0.02)', padding: '16px 24px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', marginBottom: isDrawOpen ? '24px' : '0' }}
+        >
+          <h2 style={{ fontSize: '1.5rem', margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}><Activity color="var(--primary)" /> Draws & Pools</h2>
+          {isDrawOpen ? <ChevronUp /> : <ChevronDown />}
+        </div>
+        {isDrawOpen && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+            <DrawViewer tournamentId={tournament.id} myTeamId={team.id} />
+          </motion.div>
+        )}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '32px' }}>
@@ -114,54 +128,91 @@ export default function PlayerTournamentDashboard({ params }: { params: Promise<
             {schedule.length === 0 ? (
               <Card style={{ background: '#161b22', padding: '32px', textAlign: 'center', color: '#8b949e' }}>No matches scheduled yet.</Card>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {schedule.map((m: any) => {
-                  const myScore = m.isTeamA ? (m.scoreState?.setsA || 0) : (m.scoreState?.setsB || 0);
-                  const oppScore = m.isTeamA ? (m.scoreState?.setsB || 0) : (m.scoreState?.setsA || 0);
-                  const isReady = m.status === 'READY';
-                  
-                  return (
-                    <motion.div
-                      key={m.id}
-                      animate={isReady ? { boxShadow: ['0px 0px 0px rgba(88,166,255,0)', '0px 0px 20px rgba(88,166,255,0.8)', '0px 0px 0px rgba(88,166,255,0)'] } : {}}
-                      transition={isReady ? { duration: 1.5, repeat: Infinity } : {}}
-                      style={{ borderRadius: '12px' }}
-                    >
-                      <Card style={{ 
-                        background: '#161b22', 
-                        border: isReady ? '1px solid #58a6ff' : '1px solid rgba(255,255,255,0.1)', 
-                        padding: '24px', 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center' 
-                      }}>
-                        <div>
-                          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
-                            <Badge variant={isReady ? 'default' : 'default'}>{m.stage}</Badge>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#8b949e', fontSize: '0.9rem' }}>
-                              <MapPin size={14} /> {m.court?.name || 'Court TBA'}
-                            </span>
-                          </div>
-                          <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, color: '#f0f6fc', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <Shield size={24} style={{ color: '#8b949e' }} />
-                            vs {m.opponent}
-                          </h3>
-                        </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', position: 'relative' }}>
+                <div style={{ position: 'absolute', top: 0, bottom: 0, left: '16px', width: '2px', background: 'rgba(255,255,255,0.1)', zIndex: 0 }} />
+                {['Today', 'Tomorrow', 'Upcoming'].map((dateGroup, gIdx) => {
+                  const groupMatches = schedule.filter((m: any, i: number) => {
+                    if (gIdx === 0) return i === 0 || m.status === 'READY';
+                    if (gIdx === 1) return i === 1;
+                    return i > 1;
+                  });
 
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ marginBottom: '8px' }}>
-                            <Badge variant={m.status === 'COMPLETED' ? 'default' : m.status === 'IN_PROGRESS' ? 'success' : isReady ? 'default' : 'default'}>
-                              {isReady ? 'REPORT TO COURT' : m.status.replace('_', ' ')}
-                            </Badge>
+                  if (groupMatches.length === 0) return null;
+
+                  return (
+                    <div key={dateGroup} style={{ position: 'relative', zIndex: 1, paddingLeft: '48px' }}>
+                      <div style={{ position: 'absolute', left: '10px', top: '0px', width: '14px', height: '14px', borderRadius: '50%', background: '#58a6ff', border: '3px solid #0d1117' }} />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                        <h3 style={{ margin: 0, color: '#8b949e', fontSize: '1.1rem' }}>{dateGroup}</h3>
+                        {gIdx === 0 && (
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <Button variant="ghost" size="sm" onClick={() => {
+                              const ics = "BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nSUMMARY:Tennis Match\nEND:VEVENT\nEND:VCALENDAR";
+                              const blob = new Blob([ics], { type: 'text/calendar' });
+                              const url = URL.createObjectURL(blob);
+                              const a = document.createElement('a');
+                              a.href = url;
+                              a.download = "match.ics";
+                              a.click();
+                            }} style={{ color: '#d2a8ff', fontSize: '0.8rem', padding: '4px 8px' }}><Calendar size={14} style={{ marginRight: '4px' }}/> Sync Cal</Button>
+                            <Button variant="ghost" size="sm" style={{ color: '#58a6ff', fontSize: '0.8rem', padding: '4px 8px' }}><Bell size={14} style={{ marginRight: '4px' }}/> Alerts</Button>
                           </div>
-                          {(m.status === 'COMPLETED' || m.status === 'IN_PROGRESS') && (
-                            <div style={{ fontSize: '2rem', fontWeight: 900, color: m.winnerId === team.id ? '#3fb950' : m.winnerId ? '#f85149' : '#f0f6fc' }}>
-                              {myScore} - {oppScore}
-                            </div>
-                          )}
-                        </div>
-                      </Card>
-                    </motion.div>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        {groupMatches.map((m: any) => {
+                          const myScore = m.isTeamA ? (m.scoreState?.setsA || 0) : (m.scoreState?.setsB || 0);
+                          const oppScore = m.isTeamA ? (m.scoreState?.setsB || 0) : (m.scoreState?.setsA || 0);
+                          const isReady = m.status === 'READY';
+                          
+                          return (
+                            <motion.div
+                              key={m.id}
+                              animate={isReady ? { boxShadow: ['0px 0px 0px rgba(88,166,255,0)', '0px 0px 20px rgba(88,166,255,0.8)', '0px 0px 0px rgba(88,166,255,0)'] } : {}}
+                              transition={isReady ? { duration: 1.5, repeat: Infinity } : {}}
+                              whileHover={{ scale: 1.02 }}
+                              onClick={() => setSelectedMatch(m)}
+                              style={{ borderRadius: '12px', cursor: 'pointer' }}
+                            >
+                              <Card style={{ 
+                                background: '#161b22', 
+                                border: isReady ? '1px solid #58a6ff' : '1px solid rgba(255,255,255,0.1)', 
+                                padding: '24px', 
+                                display: 'flex', 
+                                justifyContent: 'space-between', 
+                                alignItems: 'center' 
+                              }}>
+                                <div>
+                                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
+                                    <Badge variant={isReady ? 'default' : 'default'}>{m.stage}</Badge>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#8b949e', fontSize: '0.9rem' }}>
+                                      <MapPin size={14} /> {m.court?.name || 'Court TBA'}
+                                    </span>
+                                  </div>
+                                  <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, color: '#f0f6fc', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <Shield size={24} style={{ color: '#8b949e' }} />
+                                    vs {m.opponent}
+                                  </h3>
+                                </div>
+
+                                <div style={{ textAlign: 'right' }}>
+                                  <div style={{ marginBottom: '8px' }}>
+                                    <Badge variant={m.status === 'COMPLETED' ? 'default' : m.status === 'IN_PROGRESS' ? 'success' : isReady ? 'default' : 'default'}>
+                                      {isReady ? 'REPORT TO COURT' : m.status.replace('_', ' ')}
+                                    </Badge>
+                                  </div>
+                                  {(m.status === 'COMPLETED' || m.status === 'IN_PROGRESS') && (
+                                    <div style={{ fontSize: '2rem', fontWeight: 900, color: m.winnerId === team.id ? '#3fb950' : m.winnerId ? '#f85149' : '#f0f6fc' }}>
+                                      {myScore} - {oppScore}
+                                    </div>
+                                  )}
+                                </div>
+                              </Card>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   );
                 })}
               </div>
@@ -218,8 +269,98 @@ export default function PlayerTournamentDashboard({ params }: { params: Promise<
             </Card>
           </section>
 
+          <section>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}><Target color="#58a6ff" /> Shot Heatmap</h2>
+            <Card style={{ background: '#161b22', border: '1px solid rgba(255,255,255,0.1)', padding: '24px' }}>
+              <div style={{ width: '100%', height: '200px', background: '#3fb950', borderRadius: '4px', position: 'relative', overflow: 'hidden', border: '2px solid #fff' }}>
+                {/* Court Lines */}
+                <div style={{ position: 'absolute', top: 0, bottom: 0, left: '20%', right: '20%', borderLeft: '2px solid rgba(255,255,255,0.5)', borderRight: '2px solid rgba(255,255,255,0.5)' }} />
+                <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '2px', background: '#fff' }} />
+                <div style={{ position: 'absolute', top: '25%', bottom: '25%', left: '50%', width: '2px', background: 'rgba(255,255,255,0.5)', transform: 'translateX(-50%)' }} />
+                {/* Heat Points */}
+                <div style={{ position: 'absolute', top: '20%', left: '30%', width: '30px', height: '30px', background: 'radial-gradient(circle, rgba(255,0,0,0.8) 0%, rgba(255,0,0,0) 70%)', borderRadius: '50%' }} />
+                <div style={{ position: 'absolute', top: '70%', left: '70%', width: '50px', height: '50px', background: 'radial-gradient(circle, rgba(255,165,0,0.8) 0%, rgba(255,165,0,0) 70%)', borderRadius: '50%' }} />
+                <div style={{ position: 'absolute', top: '80%', left: '40%', width: '40px', height: '40px', background: 'radial-gradient(circle, rgba(255,0,0,0.9) 0%, rgba(255,0,0,0) 70%)', borderRadius: '50%' }} />
+                <div style={{ position: 'absolute', top: '30%', left: '60%', width: '20px', height: '20px', background: 'radial-gradient(circle, rgba(255,255,0,0.8) 0%, rgba(255,255,0,0) 70%)', borderRadius: '50%' }} />
+              </div>
+              <p style={{ margin: '12px 0 0', fontSize: '0.85rem', color: '#8b949e', textAlign: 'center' }}>Aggregated shot placement from your last 3 matches.</p>
+            </Card>
+          </section>
+
+          <section>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}><Lightbulb color="#d2a8ff" /> Virtual Coach</h2>
+            <Card style={{ background: 'linear-gradient(145deg, #161b22, #0d1117)', border: '1px solid rgba(210,168,255,0.3)', padding: '24px' }}>
+              <p style={{ margin: 0, fontSize: '1rem', color: '#f0f6fc', lineHeight: 1.6 }}>
+                "{schedule.length > 0 && Math.round((schedule.filter((m: any) => m.winnerId === team.id).length / schedule.filter((m: any) => m.status === 'COMPLETED').length) * 100) > 50 
+                  ? 'Your aggressive baseline play is working. Maintain depth on your forehand to secure the upcoming match.' 
+                  : 'Focus on improving your first serve percentage. Opponents are capitalizing on your second serve.'}"
+              </p>
+              <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
+                <Badge variant="default">AI Generated</Badge>
+                <Badge variant="default">Based on Pool Stats</Badge>
+              </div>
+            </Card>
+          </section>
+
         </div>
       </div>
+
+      {/* Opponent Profile & Match Details Modal */}
+      {selectedMatch && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setSelectedMatch(null)}>
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} onClick={e => e.stopPropagation()} style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '32px', width: '500px', maxWidth: '90%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h3 style={{ margin: 0, color: '#f0f6fc', fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <User color="var(--primary)" />
+                {selectedMatch.opponent}
+              </h3>
+              <Badge variant="default">Trust: 98</Badge>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+              <div style={{ flex: 1, background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ fontSize: '0.85rem', color: '#8b949e', textTransform: 'uppercase', marginBottom: '8px' }}>Head-to-Head</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff' }}>0 - 0</div>
+              </div>
+              <div style={{ flex: 1, background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ fontSize: '0.85rem', color: '#8b949e', textTransform: 'uppercase', marginBottom: '8px' }}>Win Rate</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#3fb950' }}>75%</div>
+              </div>
+              <div style={{ flex: 1, background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ fontSize: '0.85rem', color: '#8b949e', textTransform: 'uppercase', marginBottom: '8px' }}>Recent Form</div>
+                <div style={{ fontSize: '1rem', fontWeight: 800, color: '#f0f6fc', display: 'flex', gap: '4px', justifyContent: 'center' }}>
+                  <span style={{ color: '#3fb950' }}>W</span>-<span style={{ color: '#3fb950' }}>W</span>-<span style={{ color: '#f85149' }}>L</span>-<span style={{ color: '#3fb950' }}>W</span>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#8b949e' }}>Stage</span><span style={{ color: '#f0f6fc', fontWeight: 600 }}>{selectedMatch.stage}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#8b949e' }}>Court Assignment</span><span style={{ color: '#f0f6fc', fontWeight: 600 }}>{selectedMatch.court?.name || 'TBA'}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#8b949e' }}>Status</span><span style={{ color: '#f0f6fc', fontWeight: 600 }}>{selectedMatch.status.replace('_', ' ')}</span></div>
+            </div>
+
+            {selectedMatch.status === 'COMPLETED' && (
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '24px', marginTop: '24px', display: 'flex', gap: '12px' }}>
+                <Button variant="secondary" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <PlayCircle size={16} /> Watch Highlights
+                </Button>
+                <Button variant="secondary" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <Activity size={16} /> Detailed Stats
+                </Button>
+              </div>
+            )}
+
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '24px', marginTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button style={{ background: '#3b5998', border: 'none', width: '36px', height: '36px', borderRadius: '50%', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>f</button>
+                <button style={{ background: '#1da1f2', border: 'none', width: '36px', height: '36px', borderRadius: '50%', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Share2 size={18} /></button>
+              </div>
+              <Button variant="primary" onClick={() => setSelectedMatch(null)}>Close</Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

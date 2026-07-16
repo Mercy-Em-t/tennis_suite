@@ -49,7 +49,8 @@ export async function GET(request: Request) {
         formatType: true,
         startDate: true,
         registrationPhase: true,
-        location: true
+        location: true,
+        categories: true
       },
       orderBy: {
         createdAt: 'desc'
@@ -83,6 +84,9 @@ export async function GET(request: Request) {
         tournamentId: t.tournament.id,
         tournamentName: t.tournament.name,
         status: t.tournament.isActive ? 'ACTIVE' : 'COMPLETED',
+        isActive: t.tournament.isActive,
+        startDate: t.tournament.startDate,
+        registrationPhase: t.tournament.registrationPhase,
         matchesPlayed,
         nextMatchText
       };
@@ -91,7 +95,9 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       user: {
+        id: user.id,
         name: user.name,
+        avatarUrl: user.avatarUrl,
         globalXp: user.globalXp,
         badges: JSON.parse(user.badges || '[]')
       },

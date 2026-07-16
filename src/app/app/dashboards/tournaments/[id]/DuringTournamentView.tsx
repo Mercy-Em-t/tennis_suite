@@ -129,13 +129,13 @@ export default function DuringTournamentView({ tournament, stats, updateTourname
             <Button 
               variant="danger" 
               onClick={async () => {
-                const conf = window.confirm("Are you sure you want to force complete this tournament? This will end the live event radar.");
+                const conf = window.confirm("Are you sure you want to complete this tournament? This will end the live event radar and move the tournament to Post-Tournament reporting.");
                 if (conf) {
-                  await updateTournament({ isActive: false });
+                  await updateTournament({ isActive: false, lifecyclePhase: 'POST_TOURNAMENT' });
                 }
               }}
             >
-              Force Complete Event
+              Conclude Tournament (Move to Post-Event) →
             </Button>
           </div>
         </Card>

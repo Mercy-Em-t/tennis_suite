@@ -26,6 +26,7 @@ export interface BroadcasterGraphicsState {
   showPlayer2LowerThird: boolean;
   showTournamentLogo: boolean;
   showSponsorOverlay: boolean;
+  showAdsSidebar: boolean;
   fullScreenAlert: string | null;
 }
 
@@ -79,6 +80,7 @@ const defaultState: BroadcasterGraphicsState = {
   showPlayer2LowerThird: false,
   showTournamentLogo: true,
   showSponsorOverlay: false,
+  showAdsSidebar: true,
   fullScreenAlert: null,
 };
 

@@ -27,15 +27,56 @@ export default function PostTournamentView({ tournament, stats, updateTournament
     card: { background: '#161b22', border: '1px solid rgba(255,255,255,0.08)', padding: '24px', marginBottom: '24px' } as React.CSSProperties,
     h3: { margin: '0 0 16px', color: '#fff', fontSize: '1.2rem', fontWeight: 700 } as React.CSSProperties,
     listItem: { background: '#0d1117', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' } as React.CSSProperties,
+    reportRow: { display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px dashed rgba(255,255,255,0.1)' } as React.CSSProperties,
+    reportLabel: { color: '#8b949e', fontSize: '0.9rem' } as React.CSSProperties,
+    reportValue: { color: '#fff', fontWeight: 600, fontSize: '0.9rem' } as React.CSSProperties,
   };
+
+  const championTeam = tournament.teams?.find((t: any) => t.id === tournament.championId);
 
   return (
     <div style={S.grid}>
       <div>
         <Card style={S.card}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <h3 style={{ margin: 0, color: '#fff', fontSize: '1.4rem', fontWeight: 800 }}>Comprehensive Tournament Report</h3>
+            {tournament.lifecyclePhase === 'ARCHIVED' && <Badge variant="default">ARCHIVED</Badge>}
+          </div>
+
+          <div style={{ background: '#0d1117', padding: '24px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '24px' }}>
+            <div style={S.reportRow}>
+              <span style={S.reportLabel}>Tournament Name</span>
+              <span style={S.reportValue}>{tournament.name}</span>
+            </div>
+            <div style={S.reportRow}>
+              <span style={S.reportLabel}>Location / Venue</span>
+              <span style={S.reportValue}>{tournament.location || 'Not Specified'}</span>
+            </div>
+            <div style={S.reportRow}>
+              <span style={S.reportLabel}>Registered Franchises</span>
+              <span style={S.reportValue}>{tournament.teams?.length || 0}</span>
+            </div>
+            <div style={S.reportRow}>
+              <span style={S.reportLabel}>Total Matches Played</span>
+              <span style={S.reportValue}>{stats?.completedMatches || 0} / {stats?.totalMatches || 0}</span>
+            </div>
+            <div style={S.reportRow}>
+              <span style={S.reportLabel}>Total Pools Generated</span>
+              <span style={S.reportValue}>{tournament.pools?.length || 0}</span>
+            </div>
+            <div style={S.reportRow}>
+              <span style={S.reportLabel}>Average Match Duration</span>
+              <span style={S.reportValue}>{Math.floor((stats?.avgDurationSec || 0) / 60)}m {(stats?.avgDurationSec || 0) % 60}s</span>
+            </div>
+            <div style={{ ...S.reportRow, borderBottom: 'none' }}>
+              <span style={S.reportLabel}>Tournament Champion</span>
+              <span style={{ ...S.reportValue, color: '#e3b341', fontSize: '1.1rem' }}>
+                {championTeam ? `🏆 ${championTeam.franchiseName}` : 'TBD'}
+              </span>
+            </div>
+          </div>
+
           <h3 style={S.h3}>Post-Tournament Reviews & Workspace</h3>
-          <p style={{ color: '#8b949e', marginBottom: '24px', lineHeight: 1.6 }}>Review completed brackets, view standings, and explore the financial ledgers.</p>
-          
           <div style={S.listItem}>
             <div>
               <strong style={{ color: '#fff', display: 'block', fontSize: '0.95rem' }}>Standings & Brackets</strong>
@@ -67,8 +108,8 @@ export default function PostTournamentView({ tournament, stats, updateTournament
           <h3 style={S.h3}>Surveys & Feedback</h3>
           <p style={{ color: '#8b949e', marginBottom: '16px', lineHeight: 1.6 }}>Gather feedback from players and spectators about the tournament operations.</p>
           <div style={{ display: 'flex', gap: '12px' }}>
-            <Button variant="secondary" disabled={tournament.isArchived}>Generate Survey Link</Button>
-            <Button variant="secondary" disabled={tournament.isArchived}>View Feedback Dashboard</Button>
+            <Button variant="secondary" disabled={tournament.lifecyclePhase === 'ARCHIVED'}>Generate Survey Link</Button>
+            <Button variant="secondary" disabled={tournament.lifecyclePhase === 'ARCHIVED'}>View Feedback Dashboard</Button>
           </div>
         </Card>
       </div>
@@ -88,7 +129,7 @@ export default function PostTournamentView({ tournament, stats, updateTournament
           <p style={{ color: '#8b949e', marginBottom: '16px', lineHeight: 1.5, fontSize: '0.85rem' }}>
             Archiving a tournament makes it <strong>read-only</strong>. No further adjustments can be made.
           </p>
-          {tournament.isArchived ? (
+          {tournament.lifecyclePhase === 'ARCHIVED' ? (
             <div style={{ padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px', color: '#8b949e', textAlign: 'center', fontSize: '0.85rem', fontWeight: 'bold', border: '1px solid rgba(255,255,255,0.1)' }}>
               🔒 TOURNAMENT ARCHIVED
             </div>
@@ -96,9 +137,9 @@ export default function PostTournamentView({ tournament, stats, updateTournament
             <Button 
               variant="danger" 
               onClick={async () => {
-                const conf = window.confirm("Are you sure you want to ARCHIVE and lock this tournament? This action cannot be undone.");
+                const conf = window.confirm("Are you sure you want to ARCHIVE and lock this tournament? This action cannot be undone and blocks all future mutations.");
                 if (conf) {
-                  await updateTournament({ isArchived: true });
+                  await updateTournament({ isArchived: true, lifecyclePhase: 'ARCHIVED' });
                 }
               }}
             >

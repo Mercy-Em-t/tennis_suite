@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit, Inter } from "next/font/google";
+import { Suspense } from 'react';
+import ForbiddenAlert from '@/components/ui/ForbiddenAlert';
 import "./globals.css";
 
 const outfit = Outfit({
@@ -26,7 +28,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${outfit.variable} ${inter.variable}`}>
-      <body>{children}</body>
+      <body>
+        <Suspense fallback={null}>
+          <ForbiddenAlert />
+        </Suspense>
+        {children}
+      </body>
     </html>
   );
 }
