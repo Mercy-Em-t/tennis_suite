@@ -31,5 +31,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "unused", "production_sprints"]
+  "exclude": ["node_modules", "unused", "production_sprints", "docs"]
 }
