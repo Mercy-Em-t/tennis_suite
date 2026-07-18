@@ -13,7 +13,8 @@ export async function POST(request: Request) {
     const { 
       name, startDate, endDate, location, 
       formatType, matchDuration, scoringRules, categories,
-      numCourts, surfaceType, logoUrl, sponsorUrl 
+      numCourts, surfaceType, logoUrl, sponsorUrl,
+      contactPhone, registrationFee, registrationStart, registrationEnd, allowMultiCategory
     } = data;
 
     // Validate required fields
@@ -25,6 +26,7 @@ export async function POST(request: Request) {
     if (!categories?.trim()) return NextResponse.json({ error: 'Categories are required' }, { status: 400 });
     if (!numCourts || parseInt(numCourts) <= 0) return NextResponse.json({ error: 'Number of courts must be at least 1' }, { status: 400 });
     if (!surfaceType) return NextResponse.json({ error: 'Surface type is required' }, { status: 400 });
+    if (!contactPhone?.trim()) return NextResponse.json({ error: 'Contact phone is required' }, { status: 400 });
 
     if (new Date(endDate) < new Date(startDate)) {
       return NextResponse.json({ error: 'End date cannot be before start date' }, { status: 400 });
@@ -46,17 +48,22 @@ export async function POST(request: Request) {
         data: {
           slug,
           name: name || 'Untitled Tournament',
-          formatType: formatType || 'Round-Robin',
+          formatType: formatType || 'Round Robin',
           maxTeams: 16,
           isActive: false,
           hostId: authResult.id,
           startDate: startDate ? new Date(startDate) : null,
           endDate: endDate ? new Date(endDate) : null,
+          registrationStart: registrationStart ? new Date(registrationStart) : null,
+          registrationEnd: registrationEnd ? new Date(registrationEnd) : null,
           location,
           matchDuration: parseInt(matchDuration) || null,
+          registrationFee: parseInt(registrationFee) || null,
           scoringRules,
           categories,
+          allowMultiCategory: Boolean(allowMultiCategory),
           surfaceType,
+          contactPhone,
           logoUrl,
           sponsorUrl,
           courts: {

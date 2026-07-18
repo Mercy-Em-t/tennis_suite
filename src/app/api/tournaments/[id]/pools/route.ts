@@ -1,18 +1,17 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
-import { requireAuth } from '@/lib/auth/require-auth';
+import { requireTournamentAccess } from '@/lib/auth/require-auth';
 import { logger } from '@/lib/logger';
 
 
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const authResult = await requireAuth(['HOST', 'ADMIN']);
+  const { id } = await params;
+  const authResult = await requireTournamentAccess(id, ['REFEREE']);
   if (authResult instanceof NextResponse) return authResult;
 
   try {
-    const { id } = await params;
-    
     const tournament = await prisma.tournament.findUnique({
       where: { id },
       include: {
@@ -43,20 +42,19 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const authResult = await requireAuth(['HOST', 'ADMIN']);
+  const { id } = await params;
+  const authResult = await requireTournamentAccess(id, ['REFEREE']);
   if (authResult instanceof NextResponse) return authResult;
 
   try {
-    const { id } = await params;
-    
     const tournament = await prisma.tournament.findUnique({
       where: { id },
       include: { teams: true }
     });
 
     if (!tournament) return NextResponse.json({ error: 'Tournament not found' }, { status: 404 });
-    if (tournament.poolGenerationCount >= 3) {
-      return NextResponse.json({ error: 'Auto-generation limit reached (Max 3).' }, { status: 400 });
+    if (tournament.poolGenerationCount >= 5) {
+      return NextResponse.json({ error: 'Auto-generation limit reached (Max 5).' }, { status: 400 });
     }
 
     const { category, numPools } = await request.json();
@@ -78,16 +76,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'No teams in this category' }, { status: 400 });
     }
 
-    // Hybrid Serpentine Seed (1, 2, 3, 4, 4, 3, 2, 1)
-    // Sort by points/ranking if available, otherwise fallback to random
+    // Hybrid Serpentine Seed
     let sortedTeams = [...categoryTeams];
-    const hasPoints = categoryTeams.some(t => typeof (t as any).points === 'number');
     
-    if (hasPoints) {
-      sortedTeams.sort((a: any, b: any) => (b.points || 0) - (a.points || 0));
-    } else {
-      sortedTeams.sort(() => 0.5 - Math.random());
-    }
+    // Sort by skillLevel / globalXp to implement Seeding Protocol
+    sortedTeams.sort((a: any, b: any) => {
+      // Assuming team has globalXp or skillLevel (we might need to fetch user data if it's not present)
+      // Since Team doesn't have points in schema, we will sort by createdAt for now to simulate seeding if no points exist
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    });
 
     const poolsMap: Record<number, any[]> = {};
     for (let i = 0; i < numPools; i++) poolsMap[i] = [];
@@ -108,16 +105,22 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       }
     }
 
+    // Determine next version ID
+    const existingPools = await prisma.pool.findMany({
+      where: { tournamentId: id, category }
+    });
+    let nextVersionId = 'v1.0';
+    if (existingPools.length > 0) {
+      const maxV = Math.max(...existingPools.map(p => parseFloat(p.versionId.replace('v', '')) || 0));
+      nextVersionId = `v${(maxV + 1).toFixed(1)}`;
+    }
+
+    // Identify role to determine default status
+    const isReferee = authResult.role === 'REFEREE' || authResult.staffRole === 'REFEREE';
+    const initialStatus = isReferee ? 'REFEREE_DRAFT' : 'ACTIVE';
+
     // Persist to DB atomically
     await prisma.$transaction(async (tx) => {
-      // Clean existing pools for this category first
-      await tx.poolTeam.deleteMany({
-        where: { pool: { tournamentId: id, category } }
-      });
-      await tx.pool.deleteMany({
-        where: { tournamentId: id, category }
-      });
-
       // Create new pools
       for (let i = 0; i < numPools; i++) {
         const poolName = `Pool ${String.fromCharCode(65 + i)}`; // Pool A, Pool B...
@@ -126,7 +129,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             name: poolName,
             tournamentId: id,
             category,
-            versionId: 'v1.0'
+            versionId: nextVersionId,
+            status: initialStatus,
+            isPublished: false
           }
         });
 
@@ -149,7 +154,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       });
     });
 
-    logger.info('Pools generated', { tournamentId: id, category, count: tournament.poolGenerationCount + 1 });
+    logger.info('Pools generated', { tournamentId: id, category, count: tournament.poolGenerationCount + 1, status: initialStatus });
     return NextResponse.json({ success: true, message: 'Pools generated successfully' });
   } catch (error: any) {
     logger.error('[pools/POST] Failed', {}, error);

@@ -17,11 +17,13 @@ export async function POST(request: Request) {
 
   try {
     if (!sig) throw new Error('No signature provided');
-    event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
+    const currentSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_dummy';
+    event = stripe.webhooks.constructEvent(body, sig as string, currentSecret);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Webhook signature error';
     console.error(`Webhook Error: ${message}`);
-    if (process.env.NODE_ENV === 'development' || endpointSecret === 'whsec_dummy') {
+    const currentSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_dummy';
+    if (process.env.NODE_ENV === 'development' || currentSecret === 'whsec_dummy') {
       console.warn("Bypassing Stripe signature verification in dev with dummy secret.");
       event = JSON.parse(body);
     } else {

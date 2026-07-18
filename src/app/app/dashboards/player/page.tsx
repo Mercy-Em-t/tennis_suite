@@ -345,13 +345,19 @@ export default function TeamDashboard() {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                       <StatusBadge status="info">{t.registrationPhase}</StatusBadge>
-                      <DynamicButton variant="primary" onClick={(e) => {
-                        e.stopPropagation();
-                        setQuickJoinTournament(t);
-                        setQuickJoinForm({ teamName: `${user.name} Team`, categories: [] });
-                      }}>
-                        Join
-                      </DynamicButton>
+                      {finalMyTournaments.some((mt: any) => mt.tournamentId === t.id) ? (
+                        <DynamicButton variant="secondary" onClick={(e) => e.stopPropagation()} style={{ opacity: 0.6, cursor: 'not-allowed' }}>
+                          Already Signed Up
+                        </DynamicButton>
+                      ) : (
+                        <DynamicButton variant="primary" onClick={(e) => {
+                          e.stopPropagation();
+                          setQuickJoinTournament(t);
+                          setQuickJoinForm({ teamName: `${user.name} Team`, categories: [] });
+                        }}>
+                          Join
+                        </DynamicButton>
+                      )}
                     </div>
                   </div>
                 ))}

@@ -65,7 +65,7 @@ export default function TournamentHistoryPage() {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px' }}>
           {filteredHistory.map((t: any, idx: number) => (
-            <Link href={`/team/tournaments/${t.tournamentId}`} key={t.teamId} style={{ textDecoration: 'none' }}>
+            <Link href={`/app/dashboards/player/tournaments/${t.tournamentId}`} key={t.teamId} style={{ textDecoration: 'none' }}>
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

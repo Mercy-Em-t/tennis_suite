@@ -53,7 +53,7 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     });
 
     // Send "Email" to host
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://tennis-suite.com';
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://sports.tmsavannah.com';
     const registerLink = `${origin}/tournaments/${tournament.slug || tournament.id}/register`;
     const staffLink = `${origin}/tournaments/${tournament.slug || tournament.id}/staff/apply`;
 

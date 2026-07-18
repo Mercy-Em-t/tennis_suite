@@ -126,8 +126,8 @@ export async function middleware(req: NextRequest) {
         if (requestedDashboard === 'marshall' || requestedDashboard === 'player') isAllowed = true;
       } else if (role === 'director' || role === 'delegate') {
         if (requestedDashboard === 'director' || requestedDashboard === 'player' || requestedDashboard === 'delegate') isAllowed = true;
-      } else if (role === 'broadcast' || role === 'network') {
-        if (requestedDashboard === 'broadcast' || requestedDashboard === 'network' || requestedDashboard === 'player') isAllowed = true;
+      } else if (role === 'broadcast' || role === 'broadcaster' || role === 'network') {
+        if (requestedDashboard === 'broadcast' || requestedDashboard === 'broadcaster' || requestedDashboard === 'network' || requestedDashboard === 'player') isAllowed = true;
       } else if (role === 'monitor') {
         if (requestedDashboard === 'monitor' || requestedDashboard === 'player') isAllowed = true;
       }

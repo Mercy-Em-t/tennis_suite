@@ -9,6 +9,7 @@ vi.mock('@/lib/prisma', () => ({
     $transaction: vi.fn(),
     tournament: {
       create: vi.fn(),
+      findUnique: vi.fn().mockResolvedValue(null),
     },
   },
 }));
@@ -60,7 +61,8 @@ describe('/api/tournaments route validation', () => {
       formatType: 'Round-Robin',
       categories: "Men's Singles",
       numCourts: '2',
-      surfaceType: 'Hard'
+      surfaceType: 'Hard',
+      contactPhone: '1234567890'
     };
 
     const req = createRequest(invalidBody);
@@ -94,7 +96,8 @@ describe('/api/tournaments route validation', () => {
       formatType: 'Round-Robin',
       categories: "Men's Singles",
       numCourts: '2',
-      surfaceType: 'Hard'
+      surfaceType: 'Hard',
+      contactPhone: '1234567890'
     };
 
     const req = createRequest(validBody);

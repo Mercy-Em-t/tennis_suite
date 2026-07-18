@@ -35,7 +35,7 @@ export async function GET(request: Request) {
   try {
     // Determine our own base URL to hit the webhook
     const protocol = request.headers.get('x-forwarded-proto') || 'http';
-    const host = request.headers.get('host') || 'localhost:3000';
+    const host = request.headers.get('host') || 'sports.tmsavannah.com';
     const webhookUrl = `${protocol}://${host}/api/webhooks/stripe`;
 
     // Fire the webhook locally

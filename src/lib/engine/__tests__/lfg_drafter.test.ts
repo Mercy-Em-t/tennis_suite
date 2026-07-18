@@ -16,6 +16,7 @@ vi.mock('@prisma/client', () => {
         ]),
         updateMany
       };
+      $extends() { return this; }
     }
   };
 });

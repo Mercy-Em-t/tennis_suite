@@ -38,7 +38,7 @@ export default function MatchDispatcher({ params }: { params: Promise<{ id: stri
     const res = await fetch(`/api/tournaments/${resolvedParams.id}/matches/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ stage, category: 'Open' }) // Using 'Open' as default for demo
+      body: JSON.stringify({ stage, category: selectedCategory })
     });
     const d = await res.json();
     if (!d.success) alert(`Error: ${d.error}`);
@@ -113,7 +113,7 @@ export default function MatchDispatcher({ params }: { params: Promise<{ id: stri
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           <Button onClick={() => handleGenerate('POOL')} variant={tournament.currentStage === 'POOL' ? 'primary' : 'secondary'} disabled={generating}>
-            Generate Pool Matches
+            {localMatches.some(m => m.stage === 'POOL') ? 'Sync Missing Pool Matches' : 'Generate Pool Matches'}
           </Button>
           <Button onClick={() => handleGenerate('KNOCKOUTS')} variant={tournament.currentStage === 'KNOCKOUTS' ? 'primary' : 'secondary'} disabled={generating}>
             Generate Knockout Brackets

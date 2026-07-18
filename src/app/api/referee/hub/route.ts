@@ -9,14 +9,10 @@ export async function GET(request: Request) {
   if (authResult instanceof NextResponse) return authResult;
 
   try {
-    const user = (authResult as any).user;
+    const user = authResult as { id: string, role: string };
 
     const { searchParams } = new URL(request.url);
     const tournamentId = searchParams.get('tournamentId');
-
-    if (!tournamentId) {
-      return NextResponse.json({ success: false, error: 'Tournament context is required' }, { status: 400 });
-    }
 
     // Find all tournaments where this user is an APPROVED Referee
     const staffRecords = await prisma.staff.findMany({
@@ -24,7 +20,7 @@ export async function GET(request: Request) {
         userId: user.id,
         role: 'REFEREE',
         status: 'APPROVED',
-        tournamentId
+        ...(tournamentId ? { tournamentId } : {})
       },
       select: { tournamentId: true }
     });
@@ -35,6 +31,11 @@ export async function GET(request: Request) {
     const tournaments = await prisma.tournament.findMany({
       where: { id: { in: tournamentIds } },
       include: {
+        matches: {
+          where: { courtId: null, status: { in: ['PENDING', 'SCHEDULED'] } },
+          include: { teamA: true, teamB: true },
+          orderBy: { createdAt: 'asc' }
+        },
         courts: {
           include: {
             matches: {

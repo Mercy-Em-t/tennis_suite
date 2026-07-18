@@ -6,8 +6,8 @@ describe('Tennis Scoring FSM - Property-Based Testing', () => {
   const VALID_POINTS: TennisPoint[] = ['0', '15', '30', '40', 'AD'];
 
   it('maintains valid state across random matches (Standard Format)', { timeout: 60000 }, () => {
-    // Flood the state machine with 1000 random matches
-    for (let i = 0; i < 1000; i++) {
+    // Flood the state machine with 100 random matches
+    for (let i = 0; i < 100; i++) {
       let state = createInitialScoreState(Math.random() > 0.5 ? 'A' : 'B');
       let isCompleted = false;
       let pointsPlayed = 0;

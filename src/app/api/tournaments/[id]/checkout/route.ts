@@ -34,7 +34,7 @@ export async function POST(
     // Rainmaker Financial Logic
     const grossAmount = 5000; // $50.00
     
-    const origin = request.headers.get('origin') || 'http://localhost:3000';
+    const origin = request.headers.get('origin') || 'https://sports.tmsavannah.com';
 
     // If we don't have a real Stripe Key configured, we will simulate the checkout session return URL
     // so the "Rainmaker" pulse test can still be executed by the developer manually hitting the webhook.

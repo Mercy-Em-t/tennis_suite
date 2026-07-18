@@ -27,13 +27,13 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
         throw new Error(`Court is currently occupied (Status: ${court.status}).`);
       }
 
-      // Validation: Check if Match is SCHEDULED
+      // Validation: Check if Match is SCHEDULED or PENDING
       const targetMatch = await tx.match.findUnique({
         where: { id: matchId }
       });
 
-      if (!targetMatch || targetMatch.status !== 'SCHEDULED') {
-        throw new Error('Target match must be in SCHEDULED state.');
+      if (!targetMatch || !['SCHEDULED', 'PENDING'].includes(targetMatch.status)) {
+        throw new Error('Target match must be in PENDING or SCHEDULED state to be dispatched.');
       }
 
       // Validation: Check for player double-booking (scheduling collision)
@@ -88,7 +88,7 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     });
 
     // Fire Phase 4.3 Automated Alert for Referee PWA
-    const origin = request.headers.get('origin') || 'http://localhost:3000';
+    const origin = request.headers.get('origin') || 'https://sports.tmsavannah.com';
     fetch(`${origin}/api/notifications/push`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

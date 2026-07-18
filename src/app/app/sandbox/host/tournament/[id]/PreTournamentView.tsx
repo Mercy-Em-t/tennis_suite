@@ -248,7 +248,7 @@ export default function PreTournamentView({ tournament, updateTournament }: Prop
                 <div>
                   <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 600, marginBottom: '8px' }}>Magic Link</h4>
                   <p style={{ color: '#8b949e', fontSize: '0.85rem', marginBottom: '12px' }}>Copy and share public register landing page.</p>
-                  <input readOnly style={{ ...S.input, marginBottom: '12px' }} value={`https://tennis-suite.com/register?t=${tournament.id}`} />
+                  <input readOnly style={{ ...S.input, marginBottom: '12px' }} value={`https://sports.tmsavannah.com/register?t=${tournament.id}`} />
                   <Button variant="secondary" onClick={() => alert('Link copied!')}>Copy Link</Button>
                 </div>
                 <div>

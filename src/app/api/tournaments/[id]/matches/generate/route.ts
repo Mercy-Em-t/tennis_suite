@@ -19,7 +19,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       where: { id },
       include: {
         pools: {
-          where: { category },
+          where: category === 'All' ? undefined : { category },
           include: { poolTeams: true }
         }
       }
@@ -35,27 +35,39 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       });
 
       if (stage === 'POOL') {
-        // Clear any existing PENDING pool matches for this category to prevent duplicates on re-run
-        // Note: We only delete PENDING matches. If matches are already scheduled/in-progress, we don't touch them.
-        await tx.match.deleteMany({
-          where: { tournamentId: id, stage: 'POOL', status: 'PENDING' }
-        });
-
-        // Generate Round Robin for each pool
+        // We no longer blindly delete PENDING matches, to preserve manually queued/ordered items.
+        // Instead, we only generate MISSING matches for COMMITTED pools.
+        
         for (const pool of tournament.pools) {
+          if (pool.status !== 'COMMITTED') continue; // Only process locked pools
+
+          // Fetch existing matches for this pool
+          const existingMatches = await tx.match.findMany({
+            where: { tournamentId: id, stage: 'POOL', poolId: pool.id }
+          });
+
+          // Build a set of existing matchups to prevent duplicates (Team A vs Team B)
+          const existingPairs = new Set(existingMatches.map(m => {
+            return [m.teamAId, m.teamBId].sort().join('-');
+          }));
+
           const teams = pool.poolTeams.map(pt => pt.teamId);
           for (let i = 0; i < teams.length; i++) {
             for (let j = i + 1; j < teams.length; j++) {
-              await tx.match.create({
-                data: {
-                  tournamentId: id,
-                  stage: 'POOL',
-                  poolId: pool.id,
-                  status: 'PENDING',
-                  teamAId: teams[i],
-                  teamBId: teams[j]
-                }
-              });
+              const pairKey = [teams[i], teams[j]].sort().join('-');
+              
+              if (!existingPairs.has(pairKey)) {
+                await tx.match.create({
+                  data: {
+                    tournamentId: id,
+                    stage: 'POOL',
+                    poolId: pool.id,
+                    status: 'PENDING',
+                    teamAId: teams[i],
+                    teamBId: teams[j]
+                  }
+                });
+              }
             }
           }
         }

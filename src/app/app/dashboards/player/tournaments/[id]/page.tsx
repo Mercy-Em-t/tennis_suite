@@ -12,14 +12,56 @@ import { DrawViewer } from '@/components/tennis/DrawViewer';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
+const mockDataMap: Record<string, any> = {
+  'mock-sandbox-pools': {
+    success: true,
+    tournament: { id: 'mock-sandbox-pools', name: 'Sandbox Rivals (Pools Stage)', status: 'ACTIVE', formatType: 'Pool Play', scoringRules: 'Standard', location: 'Sandbox Arena', prizeMoney: '10,000 XP' },
+    team: { franchiseName: 'Sandbox Team', isCheckedIn: true },
+    schedule: [
+      { id: 'm1', status: 'COMPLETED', stage: 'POOL', teamA: { franchiseName: 'Sandbox Team' }, teamB: { franchiseName: 'Alpha Squad' }, winnerId: 'Sandbox Team', score: { sets: [{ a: 6, b: 4 }] } },
+      { id: 'm2', status: 'READY', stage: 'POOL', teamA: { franchiseName: 'Sandbox Team' }, teamB: { franchiseName: 'Beta Force' } }
+    ],
+    pool: { name: 'Pool A', standings: [{ teamName: 'Sandbox Team', wins: 1, losses: 0, points: 3 }, { teamName: 'Alpha Squad', wins: 0, losses: 1, points: 0 }, { teamName: 'Beta Force', wins: 0, losses: 0, points: 0 }] }
+  },
+  'mock-sandbox-knockouts': {
+    success: true,
+    tournament: { id: 'mock-sandbox-knockouts', name: 'Sandbox Rivals (Knockouts Stage)', status: 'ACTIVE', formatType: 'Knockout', scoringRules: 'Standard', location: 'Sandbox Arena', prizeMoney: '10,000 XP' },
+    team: { franchiseName: 'Sandbox Team', isCheckedIn: true },
+    schedule: [
+      { id: 'm3', status: 'COMPLETED', stage: 'QUARTER-FINAL', teamA: { franchiseName: 'Sandbox Team' }, teamB: { franchiseName: 'Gamma Unit' }, winnerId: 'Sandbox Team', score: { sets: [{ a: 6, b: 2 }] } },
+      { id: 'm4', status: 'SCHEDULED', stage: 'SEMI-FINAL', teamA: { franchiseName: 'Sandbox Team' }, teamB: { franchiseName: 'Delta Core' } }
+    ],
+    pool: null
+  },
+  'mock-sandbox-complete': {
+    success: true,
+    tournament: { id: 'mock-sandbox-complete', name: 'Sandbox Rivals (Completed)', status: 'COMPLETED', formatType: 'Knockout', scoringRules: 'Standard', location: 'Sandbox Arena', prizeMoney: '10,000 XP' },
+    team: { franchiseName: 'Sandbox Team', isCheckedIn: true },
+    schedule: [
+      { id: 'm5', status: 'COMPLETED', stage: 'FINAL', teamA: { franchiseName: 'Sandbox Team' }, teamB: { franchiseName: 'Omega Boss' }, winnerId: 'Sandbox Team', score: { sets: [{ a: 6, b: 4 }, { a: 7, b: 5 }] } }
+    ],
+    pool: null
+  }
+};
+
 export default function PlayerTournamentDashboard({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const [isDrawOpen, setIsDrawOpen] = React.useState(true);
   const [selectedMatch, setSelectedMatch] = React.useState<any>(null);
-  const { data, error, isLoading, mutate } = useSWR(`/api/player/tournaments/${resolvedParams.id}`, fetcher, { refreshInterval: 5000 });
+  
+  const isMock = resolvedParams.id.startsWith('mock-sandbox-');
+  const mockData = isMock ? mockDataMap[resolvedParams.id] : null;
 
-  if (isLoading) return <div style={{ padding: '48px', color: '#8b949e', textAlign: 'center', minHeight: '100vh', background: '#0d1117' }}>Loading Command Center...</div>;
-  if (error || !data?.success) return <div style={{ padding: '48px', color: '#f85149', textAlign: 'center', minHeight: '100vh', background: '#0d1117' }}>Access Denied.</div>;
+  const { data: swrData, error, isLoading, mutate } = useSWR(
+    isMock ? null : `/api/player/tournaments/${resolvedParams.id}`, 
+    fetcher, 
+    { refreshInterval: isMock ? 0 : 5000 }
+  );
+
+  const data = isMock ? mockData : swrData;
+
+  if (!isMock && isLoading) return <div style={{ padding: '48px', color: '#8b949e', textAlign: 'center', minHeight: '100vh', background: '#0d1117' }}>Loading Command Center...</div>;
+  if (!isMock && (error || !data?.success)) return <div style={{ padding: '48px', color: '#f85149', textAlign: 'center', minHeight: '100vh', background: '#0d1117' }}>Access Denied.</div>;
 
   const { tournament, team, schedule, pool } = data;
 
