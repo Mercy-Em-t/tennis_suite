@@ -2,6 +2,8 @@ import React from 'react';
 import Link from 'next/link';
 import styles from './landing.module.css';
 
+import { prisma } from '@/lib/prisma';
+
 // Client Components
 import { MarketingNavbar } from '@/components/marketing/MarketingNavbar';
 import { FadeInUp, FadeInScale, AnimatedCounter } from '@/components/marketing/AnimatedSections';
@@ -38,7 +40,16 @@ const STEPS = [
   },
 ];
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const activeTournaments = await prisma.tournament.findMany({
+    where: {
+      isActive: true,
+      lifecyclePhase: { not: 'ARCHIVED' }
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 6
+  });
+
   return (
     <div className={styles.page}>
       
@@ -91,36 +102,44 @@ export default function LandingPage() {
         <p style={{ color: 'var(--text-muted)', marginBottom: '32px' }}>Browse and join currently public tournaments hosted on the Tennis Suite platform.</p>
         
         <div className={styles.tournamentsGrid}>
-          {/* Hardcoded Card 1: The original 'Purely Doubles' tournament */}
-          <GlassCard style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <StatusBadge status="success">
-                Registration Open — Summer Circuit 2026
-              </StatusBadge>
-            </div>
-            
-            <h3 className={styles.tcTitle}>
-              The Purely Doubles<br />
-              <span className={styles.headlineAccent}>Elite Circuit</span>
-            </h3>
-            
-            <p className={styles.tcDesc}>
-              Professional tournament management for doubles players. Live telemetry, cinematic broadcasts, and an AI-powered walled garden for every role.
-            </p>
-            
-            <div className={styles.tcCtaGroup} style={{ marginTop: 'auto', paddingTop: '16px', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              <Link href="/tournaments/purely-doubles/register">
-                <DynamicButton variant="primary" style={{ flex: 1, height: '44px', fontSize: '0.9rem' }}>
-                  Register for Tournament
-                </DynamicButton>
-              </Link>
-              <Link href="/live/purely-doubles">
-                <DynamicButton variant="secondary" icon="📡" style={{ flex: 1, height: '44px', fontSize: '0.9rem' }}>
-                  Watch Live Broadcast
-                </DynamicButton>
-              </Link>
-            </div>
-          </GlassCard>
+          {activeTournaments.length === 0 ? (
+            <p style={{ color: 'var(--text-muted)' }}>No active tournaments at the moment. Check back soon!</p>
+          ) : (
+            activeTournaments.map(t => (
+              <GlassCard key={t.id} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <StatusBadge status={t.registrationPhase === 'CLOSED' ? 'info' : 'success'}>
+                    {t.registrationPhase === 'CLOSED' ? 'Registration Closed' : 'Registration Open'}
+                  </StatusBadge>
+                </div>
+                
+                <h3 className={styles.tcTitle}>
+                  {t.name.split(' ').slice(0, -1).join(' ')}<br />
+                  <span className={styles.headlineAccent}>{t.name.split(' ').slice(-1)}</span>
+                </h3>
+                
+                <p className={styles.tcDesc}>
+                  {t.location || 'Location TBD'} • {t.formatType || 'Open Format'}<br />
+                  {t.prizeMoney ? `Prize Pool: ${t.prizeMoney}` : 'No Prize Pool'}
+                </p>
+                
+                <div className={styles.tcCtaGroup} style={{ marginTop: 'auto', paddingTop: '16px', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  {t.registrationPhase !== 'CLOSED' && (
+                    <Link href={`/tournaments/${t.slug}/register`}>
+                      <DynamicButton variant="primary" style={{ flex: 1, height: '44px', fontSize: '0.9rem' }}>
+                        Register for Tournament
+                      </DynamicButton>
+                    </Link>
+                  )}
+                  <Link href={`/live/${t.slug}`}>
+                    <DynamicButton variant="secondary" icon="📡" style={{ flex: 1, height: '44px', fontSize: '0.9rem' }}>
+                      Watch Live Broadcast
+                    </DynamicButton>
+                  </Link>
+                </div>
+              </GlassCard>
+            ))
+          )}
         </div>
       </section>
 

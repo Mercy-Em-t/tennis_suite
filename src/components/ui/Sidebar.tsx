@@ -191,7 +191,7 @@ export function Sidebar({ role, navItems, user }: SidebarProps) {
 
         <div style={{ padding: '24px 16px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {user && (
-            <Link href={role === 'PLAYER' ? '/app/dashboards/player/profile' : '#'} style={{ textDecoration: 'none' }}>
+            <Link href={role === 'PLAYER' ? '/app/dashboards/player/profile' : role === 'HOST' ? '/app/dashboards/host/profile' : '#'} style={{ textDecoration: 'none' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', marginBottom: '8px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', transition: 'background 0.2s', cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}>
                 {user.avatarUrl ? (
                   <img src={user.avatarUrl} alt={user.name} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />

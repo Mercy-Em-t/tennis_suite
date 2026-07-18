@@ -40,7 +40,11 @@ export default function TournamentRegistrationPage({ params }: { params: Promise
         delete newPartners[cat];
         return { ...prev, categories: newCats, partners: newPartners };
       } else {
-        if (prev.categories.length >= 2) return prev; // Max 2 categories
+        if (!tournament?.allowMultiCategory) {
+          // If multi-category not allowed, replace the selection
+          return { ...prev, categories: [cat], partners: {} };
+        }
+        if (prev.categories.length >= 3) return prev; // Max 3 categories if allowed
         return { ...prev, categories: [...prev.categories, cat] };
       }
     });
@@ -170,20 +174,27 @@ export default function TournamentRegistrationPage({ params }: { params: Promise
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Categories (Max 2)</label>
+                      <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Categories {tournament.allowMultiCategory ? '(Max 3)' : '(Choose 1)'}</label>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid var(--card-border)' }}>
-                        {availableCategories.map((cat: string) => (
-                          <label key={cat} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: form.categories.length >= 2 && !form.categories.includes(cat) ? 'not-allowed' : 'pointer', opacity: form.categories.length >= 2 && !form.categories.includes(cat) ? 0.5 : 1 }}>
-                            <input 
-                              type="checkbox" 
-                              checked={form.categories.includes(cat)}
-                              onChange={() => toggleCategory(cat)}
-                              disabled={form.categories.length >= 2 && !form.categories.includes(cat)}
-                              style={{ width: '16px', height: '16px', accentColor: 'var(--primary)' }}
-                            />
-                            <span style={{ color: 'var(--text-main)', fontSize: '0.9rem' }}>{cat}</span>
-                          </label>
-                        ))}
+                        {availableCategories.map((cat: string) => {
+                          const disabled = tournament.allowMultiCategory 
+                            ? form.categories.length >= 3 && !form.categories.includes(cat)
+                            : false;
+                          
+                          return (
+                            <label key={cat} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1 }}>
+                              <input 
+                                type={tournament.allowMultiCategory ? "checkbox" : "radio"} 
+                                name="tournament-category"
+                                checked={form.categories.includes(cat)}
+                                onChange={() => toggleCategory(cat)}
+                                disabled={disabled}
+                                style={{ width: '16px', height: '16px', accentColor: 'var(--primary)' }}
+                              />
+                              <span style={{ color: 'var(--text-main)', fontSize: '0.9rem' }}>{cat}</span>
+                            </label>
+                          );
+                        })}
                       </div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -239,7 +250,7 @@ export default function TournamentRegistrationPage({ params }: { params: Promise
               <GlassCard>
                 <h4 style={{ color: 'var(--text-main)', fontWeight: 700, marginBottom: '12px' }}>Registration Rules</h4>
                 <ul style={{ color: 'var(--text-muted)', fontSize: '0.9rem', paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <li>Players may register for a maximum of 2 categories.</li>
+                  <li>Players may register for {tournament.allowMultiCategory ? 'up to 3 categories' : 'only 1 category'} in this tournament.</li>
                   <li>For doubles, only one player needs to submit the initial registration.</li>
                   <li>All entry fees are collected securely upon confirmation.</li>
                 </ul>

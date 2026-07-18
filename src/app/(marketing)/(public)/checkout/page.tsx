@@ -12,6 +12,7 @@ function CheckoutForm() {
   const franchiseName = searchParams.get('f');
   const categoriesParam = searchParams.get('c');
   const categories = categoriesParam ? JSON.parse(decodeURIComponent(categoriesParam)) : [];
+  const src = searchParams.get('src');
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -70,8 +71,8 @@ function CheckoutForm() {
             </p>
           </div>
 
-          <Button onClick={() => window.location.href = '/'} style={{ width: '100%', background: '#21262d', color: '#c9d1d9', border: '1px solid #30363d' }}>
-            Back to Home
+          <Button onClick={() => window.location.href = src === 'app' ? '/app/dashboards/player' : '/'} style={{ width: '100%', background: '#21262d', color: '#c9d1d9', border: '1px solid #30363d' }}>
+            {src === 'app' ? 'Back to Dashboard' : 'Back to Home'}
           </Button>
         </motion.div>
       </Card>

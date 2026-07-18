@@ -27,6 +27,7 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
         ],
       },
       include: {
+        host: { select: { email: true } },
         matches: {
           include: {
             teamA: true,

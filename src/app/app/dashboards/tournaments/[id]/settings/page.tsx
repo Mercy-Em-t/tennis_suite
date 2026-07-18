@@ -71,6 +71,8 @@ export default function TournamentSettings({ params }: { params: Promise<{ id: s
   const router = useRouter();
   const { data, error, isLoading, mutate } = useSWR(`/api/tournaments/${resolvedParams.id}`, fetcher);
   const [form, setForm] = useState<Record<string, string>>({});
+  const [contactEmailType, setContactEmailType] = useState<'default' | 'custom'>('default');
+  const [uploadingFlyer, setUploadingFlyer] = useState(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -78,17 +80,24 @@ export default function TournamentSettings({ params }: { params: Promise<{ id: s
   useEffect(() => {
     if (data?.tournament) {
       const t = data.tournament;
+      
+      const isDefaultEmail = !t.contactEmail || t.contactEmail === t.host?.email;
+      setContactEmailType(isDefaultEmail ? 'default' : 'custom');
+
       setForm({
         name: t.name ?? '',
         location: t.location ?? '',
         startDate: t.startDate ? t.startDate.split('T')[0] : '',
         endDate: t.endDate ? t.endDate.split('T')[0] : '',
+        registrationStart: t.registrationStart ? t.registrationStart.split('T')[0] : '',
+        registrationEnd: t.registrationEnd ? t.registrationEnd.split('T')[0] : '',
         formatType: t.formatType ?? '',
         scoringRules: t.scoringRules ?? '',
         matchDuration: t.matchDuration ? String(t.matchDuration) : '',
         surfaceType: t.surfaceType ?? '',
         maxTeams: t.maxTeams ? String(t.maxTeams) : '',
         categories: t.categories ?? '',
+        allowMultiCategory: t.allowMultiCategory ? 'true' : 'false',
         registrationPhase: t.registrationPhase ?? 'CLOSED',
         logoUrl: t.logoUrl ?? '',
         sponsorUrl: t.sponsorUrl ?? '',
@@ -109,13 +118,37 @@ export default function TournamentSettings({ params }: { params: Promise<{ id: s
     setSaveStatus('saving');
     setErrorMsg('');
     try {
+      const parseDate = (d: string | undefined) => {
+        if (!d) return null;
+        const dt = new Date(d);
+        return isNaN(dt.getTime()) ? null : dt.toISOString();
+      };
+
+      let finalRegistrationPhase = form.registrationPhase;
+      if (form.registrationStart && form.registrationEnd) {
+        const now = new Date();
+        const start = new Date(form.registrationStart);
+        const end = new Date(form.registrationEnd);
+        // Add 1 day to end to make it inclusive to end of day
+        end.setHours(23, 59, 59, 999);
+        
+        if (now < start) finalRegistrationPhase = 'CLOSED';
+        else if (now >= start && now <= end) finalRegistrationPhase = 'EARLY';
+        else if (now > end) finalRegistrationPhase = 'CLOSED';
+      }
+
       const payload = {
         ...form,
+        allowMultiCategory: form.allowMultiCategory === 'true',
         isActive: form.isActive === 'true',
         maxTeams: form.maxTeams ? parseInt(form.maxTeams) : undefined,
         matchDuration: form.matchDuration ? parseInt(form.matchDuration) : undefined,
-        startDate: form.startDate ? new Date(form.startDate).toISOString() : undefined,
-        endDate: form.endDate ? new Date(form.endDate).toISOString() : undefined,
+        startDate: parseDate(form.startDate),
+        endDate: parseDate(form.endDate),
+        registrationStart: parseDate(form.registrationStart),
+        registrationEnd: parseDate(form.registrationEnd),
+        registrationPhase: finalRegistrationPhase,
+        contactEmail: contactEmailType === 'default' ? data?.tournament?.host?.email : form.contactEmail,
       };
       const res = await fetch(`/api/tournaments/${resolvedParams.id}`, {
         method: 'PATCH',
@@ -213,7 +246,17 @@ export default function TournamentSettings({ params }: { params: Promise<{ id: s
           <input style={inputStyle} type="date" value={form.endDate ?? ''} onChange={set('endDate')} />
         </Field>
         <Field label="Contact Email">
-          <input style={inputStyle} type="email" value={form.contactEmail ?? ''} onChange={set('contactEmail')} placeholder="organiser@tennis.com" />
+          <select 
+            style={{ ...selectStyle, marginBottom: '8px' }} 
+            value={contactEmailType} 
+            onChange={(e) => setContactEmailType(e.target.value as 'default' | 'custom')}
+          >
+            <option value="default">Default Host Email ({t.host?.email})</option>
+            <option value="custom">Custom Email...</option>
+          </select>
+          {contactEmailType === 'custom' && (
+            <input style={inputStyle} type="email" value={form.contactEmail ?? ''} onChange={set('contactEmail')} placeholder="organiser@tennis.com" />
+          )}
         </Field>
         <Field label="Contact Phone">
           <input style={inputStyle} value={form.contactPhone ?? ''} onChange={set('contactPhone')} placeholder="+254 700 000 000" />
@@ -254,21 +297,52 @@ export default function TournamentSettings({ params }: { params: Promise<{ id: s
         <Field label="Max Teams">
           <input style={inputStyle} type="number" value={form.maxTeams ?? ''} onChange={set('maxTeams')} placeholder="32" min={2} max={512} />
         </Field>
-        <Field label="Registration Phase">
+        <Field label="Registration Start Date" hint="When registration opens">
+          <input style={inputStyle} type="date" value={form.registrationStart ?? ''} onChange={set('registrationStart')} />
+        </Field>
+        <Field label="Registration End Date" hint="When registration closes">
+          <input style={inputStyle} type="date" value={form.registrationEnd ?? ''} onChange={set('registrationEnd')} />
+        </Field>
+        <Field label="Registration Phase" hint="Auto-syncs based on dates when saving">
           <select style={selectStyle} value={form.registrationPhase ?? 'CLOSED'} onChange={set('registrationPhase')}>
             <option value="CLOSED">Closed</option>
-            <option value="EARLY">Early Bird</option>
+            <option value="EARLY">Open (Early/Normal)</option>
             <option value="LATE">Late Registration</option>
           </select>
         </Field>
         <Field label="Categories" hint="Comma-separated e.g. Men's Singles, Women's Doubles">
           <input style={inputStyle} value={form.categories ?? ''} onChange={set('categories')} placeholder="Men's Singles, Women's Singles, Mixed Doubles" />
         </Field>
+        <Field label="Allow Multi-Category Registration" hint="Can players register for multiple categories simultaneously?">
+          <select style={selectStyle} value={form.allowMultiCategory ?? 'false'} onChange={set('allowMultiCategory')}>
+            <option value="false">No (Single Category Only)</option>
+            <option value="true">Yes (Multiple Categories Allowed)</option>
+          </select>
+        </Field>
       </Section>
 
       <Section title="Branding" color="#bc8cff">
-        <Field label="Logo URL" hint="Public URL for tournament logo">
-          <input style={inputStyle} value={form.logoUrl ?? ''} onChange={set('logoUrl')} placeholder="https://..." />
+        <Field label="Tournament Flyer / Logo URL" hint="Upload flyer image or paste public URL">
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input style={inputStyle} value={form.logoUrl ?? ''} onChange={set('logoUrl')} placeholder="https://..." />
+            <label style={{
+              background: '#21262d', border: '1px solid rgba(255,255,255,0.1)', color: '#c9d1d9',
+              borderRadius: '6px', padding: '10px 14px', cursor: uploadingFlyer ? 'wait' : 'pointer', fontSize: '0.9rem',
+              display: 'flex', alignItems: 'center', minWidth: '80px', justifyContent: 'center'
+            }}>
+              {uploadingFlyer ? '...' : 'Upload'}
+              <input type="file" accept="image/*" style={{ display: 'none' }} disabled={uploadingFlyer} onChange={(e) => {
+                if (e.target.files?.[0]) {
+                  setUploadingFlyer(true);
+                  // Mock storage upload
+                  setTimeout(() => {
+                    setForm(p => ({ ...p, logoUrl: `https://mockstorage.tennis-suite.com/flyers/${e.target.files![0].name}` }));
+                    setUploadingFlyer(false);
+                  }, 1200);
+                }
+              }} />
+            </label>
+          </div>
         </Field>
         <Field label="Sponsor URL" hint="Link to primary sponsor page">
           <input style={inputStyle} value={form.sponsorUrl ?? ''} onChange={set('sponsorUrl')} placeholder="https://..." />

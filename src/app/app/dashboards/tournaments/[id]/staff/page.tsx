@@ -67,7 +67,9 @@ export default function StaffManagementWorkspace({ params }: { params: Promise<{
 
   // Magic Link Generation
   // In a real app, you'd use the full origin. We'll show a relative or mocked absolute URL for MVP.
-  const magicLink = `https://tennissuite.app/tournaments/${resolvedParams.id}/staff/apply`;
+  const magicLink = typeof window !== 'undefined' 
+    ? `${window.location.origin}/tournaments/${tournament?.slug || resolvedParams.id}/staff/apply`
+    : `https://tennissuite.app/tournaments/${tournament?.slug || resolvedParams.id}/staff/apply`;
 
   return (
     <div style={{ padding: '48px', color: '#f0f6fc', background: '#0d1117', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>

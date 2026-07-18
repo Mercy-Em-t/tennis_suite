@@ -67,10 +67,13 @@ model Tournament {
   // Tournament Factory Fields
   startDate   DateTime?
   endDate     DateTime?
+  registrationStart DateTime?
+  registrationEnd   DateTime?
   location    String?
   matchDuration Int?
   scoringRules String?
   categories  String?
+  allowMultiCategory Boolean @default(false)
   surfaceType String?
   logoUrl     String?
   sponsorUrl  String?

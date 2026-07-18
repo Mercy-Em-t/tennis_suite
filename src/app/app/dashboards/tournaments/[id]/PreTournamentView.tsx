@@ -40,6 +40,7 @@ function groupByCategory(teams: any[]) {
 export default function PreTournamentView({ tournament, stats, updateTournament, mutate }: Props) {
   const [activeStage, setActiveStage] = useState(1);
   const [uploading, setUploading] = useState(false);
+  const [isLaunching, setIsLaunching] = useState(false);
   const [copied, setCopied] = useState(false);
 
   // Deriving current progress based on flags
@@ -161,13 +162,45 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
         </Button>
         <Button 
           variant={tournament.isActive ? 'secondary' : 'success'}
-          disabled={tournament.isActive}
+          disabled={tournament.isActive || isLaunching || tournament.isArchived}
           onClick={async () => {
-            await updateTournament({ isActive: true });
-            setActiveStage(2);
+            const missing = [];
+            if (!tournament.startDate) missing.push('Start Date');
+            if (!tournament.endDate) missing.push('End Date');
+            if (!tournament.location) missing.push('Location');
+            if (!tournament.contactEmail) missing.push('Contact Email');
+
+            if (missing.length > 0) {
+              alert(`Cannot launch. Please configure the following mandatory settings first:\n- ${missing.join('\n- ')}`);
+              return;
+            }
+
+            setIsLaunching(true);
+            try {
+              const res = await fetch(`/api/tournaments/${tournament.id}/launch`, { method: 'POST' });
+              const data = await res.json();
+              if (data.success) {
+                // Short artificial delay to let the spinner show for a moment
+                await new Promise(r => setTimeout(r, 600));
+                alert('Tournament Launched successfully! A notification email has been dispatched to the Host.');
+                mutate();
+                setActiveStage(2);
+              } else {
+                alert(`Failed to launch: ${data.error}`);
+              }
+            } catch (err) {
+              alert('Network error while launching.');
+            } finally {
+              setIsLaunching(false);
+            }
           }}
         >
-          {tournament.isActive ? 'Tournament Already Launched' : 'Launch Tournament'}
+          {tournament.isActive ? 'Tournament Already Launched' : isLaunching ? (
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '16px', height: '16px', border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              Launching...
+            </span>
+          ) : 'Launch Tournament'}
         </Button>
       </div>
       
@@ -220,15 +253,39 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
             </div>
           </div>
 
+          {/* Registration Logic Banner */}
+          {phase === 'EARLY' && tournament.registrationEnd && new Date() > new Date(tournament.registrationEnd) && (
+            <div style={{ background: 'rgba(210,153,34,0.1)', border: '1px solid rgba(210,153,34,0.4)', borderRadius: '8px', padding: '16px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <strong style={{ color: '#d29922', display: 'block', marginBottom: '4px' }}>Early Registration Deadline Passed</strong>
+                <span style={{ color: '#8b949e', fontSize: '0.9rem' }}>The designated early registration period has ended. Please advance the phase.</span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <Button variant='secondary' onClick={() => updateTournament({ registrationPhase: 'LATE' })}>Switch to Late</Button>
+                <Button variant='danger' onClick={() => updateTournament({ registrationPhase: 'CLOSED' })}>Close Now</Button>
+              </div>
+            </div>
+          )}
+
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '24px' }}>
             <div>
               <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>{(tournament.teams || []).length} Teams Registered</h3>
               <span style={{ color: '#8b949e', fontSize: '0.85rem' }}>Across {Object.keys(cats).length} active divisions</span>
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
-              {phase === 'CLOSED' && <Button variant='success' onClick={() => updateTournament({ registrationPhase: 'EARLY' })}>Open Early Registration</Button>}
+              {phase === 'CLOSED' && (
+                <Button 
+                  variant='success' 
+                  onClick={() => {
+                    const hasPassedEarly = tournament.registrationEnd && new Date() > new Date(tournament.registrationEnd);
+                    updateTournament({ registrationPhase: hasPassedEarly ? 'LATE' : 'EARLY' });
+                  }}
+                >
+                  {tournament.registrationEnd && new Date() > new Date(tournament.registrationEnd) ? 'Re-open Late Registration' : 'Open Early Registration'}
+                </Button>
+              )}
               {phase === 'EARLY' && <Button variant='secondary' onClick={() => updateTournament({ registrationPhase: 'LATE' })}>Switch to Late Onsite Reg</Button>}
-              {phase === 'LATE' && <Button variant='secondary' onClick={() => updateTournament({ registrationPhase: 'CLOSED' })}>Close Registration</Button>}
+              {phase === 'LATE' && <Button variant='danger' onClick={() => updateTournament({ registrationPhase: 'CLOSED' })}>Close Registration</Button>}
             </div>
           </div>
         </Card>

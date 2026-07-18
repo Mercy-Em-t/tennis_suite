@@ -35,7 +35,7 @@ function getXpLevel(xp: number) {
 export default function TeamDashboard() {
   const { data, error, isLoading } = useSWR('/api/player/dashboard', fetcher);
   const [quickJoinTournament, setQuickJoinTournament] = useState<any>(null);
-  const [quickJoinForm, setQuickJoinForm] = useState({ teamName: '', category: '' });
+  const [quickJoinForm, setQuickJoinForm] = useState({ teamName: '', categories: [] as string[] });
   const [myTournamentsTab, setMyTournamentsTab] = useState<'ACTIVE' | 'UPCOMING' | 'PAST'>('ACTIVE');
   const [discoverFilters, setDiscoverFilters] = useState({ category: '', location: '', date: '' });
   const [isSandbox, setIsSandbox] = React.useState(false);
@@ -59,15 +59,35 @@ export default function TeamDashboard() {
 
   let finalMyTournaments = [...myTournaments];
   if (isSandbox) {
-    finalMyTournaments.unshift({
-      tournamentId: 'mock-sandbox-123',
-      tournamentName: 'Sandbox Grand Slam 2026',
-      isActive: true,
-      registrationPhase: 'CLOSED',
-      franchiseName: `${user.name} Team`,
-      matchesPlayed: 4,
-      nextMatchText: 'REPORT TO COURT'
-    });
+    finalMyTournaments.unshift(
+      {
+        tournamentId: 'mock-sandbox-pools',
+        tournamentName: 'Sandbox Rivals (Pools Stage)',
+        isActive: true,
+        registrationPhase: 'CLOSED',
+        franchiseName: `${user.name} Team`,
+        matchesPlayed: 0,
+        nextMatchText: 'REPORT TO COURT'
+      },
+      {
+        tournamentId: 'mock-sandbox-knockouts',
+        tournamentName: 'Sandbox Rivals (Knockouts Stage)',
+        isActive: true,
+        registrationPhase: 'CLOSED',
+        franchiseName: `${user.name} Team`,
+        matchesPlayed: 3,
+        nextMatchText: 'SEMI FINALS'
+      },
+      {
+        tournamentId: 'mock-sandbox-complete',
+        tournamentName: 'Sandbox Rivals (Completed)',
+        isActive: false,
+        registrationPhase: 'CLOSED',
+        franchiseName: `${user.name} Team`,
+        matchesPlayed: 6,
+        nextMatchText: 'CHAMPION'
+      }
+    );
   }
 
   const filteredMyTournaments = finalMyTournaments.filter((t: any) => {
@@ -214,7 +234,7 @@ export default function TeamDashboard() {
                 {filteredMyTournaments.map((t: any, idx: number) => {
                   const isUpcoming = !t.isActive && t.registrationPhase !== 'CLOSED';
                   return (
-                  <Link href={`/team/tournaments/${t.tournamentId}`} key={t.tournamentId} style={{ textDecoration: 'none' }}>
+                  <Link href={`/app/dashboards/player/tournaments/${t.tournamentId}`} key={t.tournamentId} style={{ textDecoration: 'none' }}>
                     <motion.div 
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -328,7 +348,7 @@ export default function TeamDashboard() {
                       <DynamicButton variant="primary" onClick={(e) => {
                         e.stopPropagation();
                         setQuickJoinTournament(t);
-                        setQuickJoinForm({ teamName: `${user.name} Team`, category: '' });
+                        setQuickJoinForm({ teamName: `${user.name} Team`, categories: [] });
                       }}>
                         Join
                       </DynamicButton>
@@ -461,20 +481,47 @@ export default function TeamDashboard() {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <label style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600 }}>Select Category</label>
-                <select 
-                  value={quickJoinForm.category}
-                  onChange={e => setQuickJoinForm({ ...quickJoinForm, category: e.target.value })}
-                  style={{ background: '#0d1117', border: '1px solid #30363d', color: '#fff', padding: '12px', borderRadius: '6px', outline: 'none', appearance: 'none' }}
-                >
-                  <option value="" disabled>Choose a category...</option>
+                <label style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600 }}>
+                  Select Categories {quickJoinTournament.allowMultiCategory ? '(Max 3)' : '(Choose 1)'}
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid #30363d' }}>
                   {(quickJoinTournament.categories 
                     ? quickJoinTournament.categories.split(',').map((c: string) => c.trim()).filter(Boolean)
                     : ["Men's Singles", "Women's Singles", "Men's Doubles", "Women's Doubles", "Mixed Doubles"]
-                  ).map((cat: string) => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
+                  ).map((cat: string) => {
+                    const disabled = quickJoinTournament.allowMultiCategory 
+                      ? quickJoinForm.categories.length >= 3 && !quickJoinForm.categories.includes(cat)
+                      : false;
+                    
+                    return (
+                      <label key={cat} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1 }}>
+                        <input 
+                          type={quickJoinTournament.allowMultiCategory ? "checkbox" : "radio"} 
+                          name="quick-join-category"
+                          checked={quickJoinForm.categories.includes(cat)}
+                          onChange={() => {
+                            if (!quickJoinTournament.allowMultiCategory) {
+                              setQuickJoinForm({ ...quickJoinForm, categories: [cat] });
+                            } else {
+                              const isSelected = quickJoinForm.categories.includes(cat);
+                              let newCats = [];
+                              if (isSelected) {
+                                newCats = quickJoinForm.categories.filter(c => c !== cat);
+                              } else {
+                                if (quickJoinForm.categories.length >= 3) return;
+                                newCats = [...quickJoinForm.categories, cat];
+                              }
+                              setQuickJoinForm({ ...quickJoinForm, categories: newCats });
+                            }
+                          }}
+                          disabled={disabled}
+                          style={{ width: '16px', height: '16px', accentColor: 'var(--primary)' }}
+                        />
+                        <span style={{ color: '#fff', fontSize: '0.9rem' }}>{cat}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
@@ -482,10 +529,10 @@ export default function TeamDashboard() {
               <DynamicButton variant="secondary" onClick={() => setQuickJoinTournament(null)}>Cancel</DynamicButton>
               <DynamicButton 
                 variant="primary" 
-                disabled={!quickJoinForm.teamName || !quickJoinForm.category}
+                disabled={!quickJoinForm.teamName || quickJoinForm.categories.length === 0}
                 onClick={() => {
-                  const categoriesJson = JSON.stringify([quickJoinForm.category]);
-                  window.location.href = `/checkout?t=${quickJoinTournament.id}&f=${encodeURIComponent(quickJoinForm.teamName)}&c=${encodeURIComponent(categoriesJson)}`;
+                  const categoriesJson = JSON.stringify(quickJoinForm.categories);
+                  window.location.href = `/checkout?t=${quickJoinTournament.id}&f=${encodeURIComponent(quickJoinForm.teamName)}&c=${encodeURIComponent(categoriesJson)}&src=app`;
                 }}
               >
                 Continue to Checkout

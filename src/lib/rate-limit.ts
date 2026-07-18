@@ -13,10 +13,38 @@ const redis = isRedisConfigured
   ? new Redis({ url: redisUrl, token: redisToken })
   : (null as unknown as Redis); // We won't use it if not configured
 
-// Dummy limiter for local dev
-const dummyLimiter: any = {
-  limit: async () => ({ success: true, limit: 100, remaining: 99, reset: 0 })
-};
+class MemoryLimiter {
+  private store: Map<string, { count: number; resetAt: number }> = new Map();
+  private maxRequests: number;
+  private windowMs: number;
+
+  constructor(maxRequests: number, windowStr: string) {
+    this.maxRequests = maxRequests;
+    const value = parseInt(windowStr.split(' ')[0]);
+    const unit = windowStr.split(' ')[1];
+    let ms = value * 1000;
+    if (unit === 'm') ms *= 60;
+    else if (unit === 'h') ms *= 3600;
+    this.windowMs = ms;
+  }
+
+  async limit(identifier: string) {
+    const now = Date.now();
+    let record = this.store.get(identifier);
+
+    if (!record || now > record.resetAt) {
+      record = { count: 0, resetAt: now + this.windowMs };
+    }
+
+    record.count++;
+    this.store.set(identifier, record);
+
+    const success = record.count <= this.maxRequests;
+    const remaining = Math.max(0, this.maxRequests - record.count);
+
+    return { success, limit: this.maxRequests, remaining, reset: record.resetAt };
+  }
+}
 
 /**
  * Checkout limiter — 10 requests per user/IP per 60-second sliding window.
@@ -27,7 +55,7 @@ export const checkoutLimiter = isRedisConfigured ? new Ratelimit({
   limiter: Ratelimit.slidingWindow(10, '60 s'),
   analytics: true,
   prefix: 'ratelimit:checkout',
-}) : dummyLimiter;
+}) : new MemoryLimiter(10, '60 s');
 
 /**
  * AI limiter — 20 requests per user/IP per 60-second sliding window.
@@ -38,7 +66,7 @@ export const aiLimiter = isRedisConfigured ? new Ratelimit({
   limiter: Ratelimit.slidingWindow(20, '60 s'),
   analytics: true,
   prefix: 'ratelimit:ai',
-}) : dummyLimiter;
+}) : new MemoryLimiter(20, '60 s');
 
 /**
  * General API limiter — 60 requests per user/IP per 60-second sliding window.
@@ -49,7 +77,7 @@ export const apiLimiter = isRedisConfigured ? new Ratelimit({
   limiter: Ratelimit.slidingWindow(60, '60 s'),
   analytics: true,
   prefix: 'ratelimit:api',
-}) : dummyLimiter;
+}) : new MemoryLimiter(60, '60 s');
 
 /**
  * Login limiter — 5 requests per user/IP per 5-minute sliding window.
@@ -60,7 +88,7 @@ export const loginLimiter = isRedisConfigured ? new Ratelimit({
   limiter: Ratelimit.slidingWindow(5, '5 m'),
   analytics: true,
   prefix: 'ratelimit:login',
-}) : dummyLimiter;
+}) : new MemoryLimiter(5, '5 m');
 
 /**
  * Extracts the best available IP identifier from a Request.

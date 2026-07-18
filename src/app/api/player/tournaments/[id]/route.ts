@@ -17,6 +17,55 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
     const payload = await verifyToken(token);
     if (!payload || !payload.sub) return NextResponse.json({ error: 'Invalid Token' }, { status: 401 });
 
+    if (params.id.startsWith('mock-sandbox-')) {
+      const mockType = params.id.replace('mock-sandbox-', '');
+      const scheduleMap: Record<string, any[]> = {
+        'pools': [
+          { id: '1', status: 'SCHEDULED', court: { name: 'Court 1' }, startTime: new Date().toISOString(), opponent: 'TBD Team' },
+          { id: '2', status: 'SCHEDULED', court: null, startTime: null, opponent: 'Rival 2' }
+        ],
+        'knockouts': [
+          { id: '3', status: 'COMPLETED', court: { name: 'Court 3' }, scoreA: 2, scoreB: 1, isTeamA: true, opponent: 'Rival 1', durationSec: 3600, createdAt: new Date(Date.now() - 86400000).toISOString() },
+          { id: '4', status: 'SCHEDULED', court: { name: 'Center Court' }, startTime: new Date().toISOString(), opponent: 'TBD (Semi Final)' }
+        ],
+        'complete': [
+          { id: '5', status: 'COMPLETED', court: { name: 'Court 1' }, scoreA: 2, scoreB: 0, isTeamA: true, opponent: 'Rival 1', durationSec: 3200, createdAt: new Date(Date.now() - 172800000).toISOString() },
+          { id: '6', status: 'COMPLETED', court: { name: 'Center Court' }, scoreA: 2, scoreB: 1, isTeamA: true, opponent: 'Final Boss', durationSec: 4100, createdAt: new Date(Date.now() - 86400000).toISOString() }
+        ]
+      };
+      
+      const names: Record<string, string> = {
+        'pools': 'Sandbox Rivals (Pools Stage)',
+        'knockouts': 'Sandbox Rivals (Knockouts Stage)',
+        'complete': 'Sandbox Rivals (Completed)'
+      };
+
+      return NextResponse.json({
+        success: true,
+        tournament: {
+          id: params.id,
+          name: names[mockType] || 'Sandbox Tournament',
+          status: mockType === 'complete' ? 'COMPLETED' : 'ACTIVE',
+          formatType: 'Pools & Knockouts',
+          location: 'Sandbox Arena',
+          logoUrl: '',
+          sponsorUrl: '',
+          contactEmail: 'sandbox@tennissuite.com',
+          contactPhone: '',
+          prizeMoney: '$1000',
+          stationInfo: 'Head to the main desk to check in.',
+          scoringRules: 'Best of 3 Sets',
+        },
+        team: {
+          id: 'sandbox-team',
+          franchiseName: 'Sandbox Team',
+          isCheckedIn: mockType !== 'pools'
+        },
+        pool: mockType === 'pools' ? { name: 'Pool A', poolTeams: [] } : null,
+        schedule: scheduleMap[mockType] || []
+      });
+    }
+
     // Ensure user is actually in this tournament
     const team = await prisma.team.findFirst({
       where: {
