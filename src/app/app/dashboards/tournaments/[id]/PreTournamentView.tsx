@@ -48,7 +48,7 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
     tournament.pools?.length > 0 ? 3 :
     tournament.registrationPhase === 'CLOSED' ? 3 : 2;
 
-  const magicLink = typeof window !== 'undefined' ? `${window.location.origin}/tournaments/${tournament.id}/register` : '';
+  const magicLink = typeof window !== 'undefined' ? `${window.location.origin}/tournaments/${tournament.slug || tournament.id}/register` : '';
   const qr = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(magicLink)}&bgcolor=0d1117&color=58a6ff`;
 
   const referees = tournament.staff?.filter((s: any) => s.role === 'REFEREE') || [];
@@ -156,7 +156,7 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
-        <Button variant="secondary" onClick={() => window.location.href = `/tournaments/${tournament.id}/staff`}>
+        <Button variant="secondary" onClick={() => window.location.href = `/app/dashboards/tournaments/${tournament.id}/staff`}>
           Manage Staff Directory
         </Button>
         <Button 
@@ -287,7 +287,7 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
       </p>
 
       <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>
-        <Button variant="primary" onClick={() => window.location.href = `/tournaments/${tournament.id}/pools`}>
+        <Button variant="primary" onClick={() => window.location.href = `/app/dashboards/tournaments/${tournament.id}/pools`}>
           Enter Pools & Seeding Workspace →
         </Button>
       </div>
@@ -307,7 +307,7 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
       </p>
 
       <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>
-        <Button variant="primary" onClick={() => window.location.href = `/tournaments/${tournament.id}/dispatcher`}>
+        <Button variant="primary" onClick={() => window.location.href = `/app/dashboards/tournaments/${tournament.id}/dispatcher`}>
           Enter Match Dispatcher Grid →
         </Button>
       </div>

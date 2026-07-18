@@ -93,10 +93,10 @@ export default function TournamentRegistrationPage({ params }: { params: Promise
     );
   }
 
-  // Parse categories from tournament string
+  // Parse categories strictly from tournament configuration
   const availableCategories = tournament.categories 
     ? tournament.categories.split(',').map((c: string) => c.trim()).filter(Boolean)
-    : ["Men's Singles", "Women's Singles", "Men's Doubles", "Women's Doubles", "Mixed Doubles"];
+    : ["Open"]; // Fallback to "Open" if host configured no categories at all
 
   return (
     <div className={styles.page}>

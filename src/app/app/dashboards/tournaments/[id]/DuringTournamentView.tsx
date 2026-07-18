@@ -61,7 +61,7 @@ export default function DuringTournamentView({ tournament, stats, updateTourname
           {liveMatches.length === 0 ? (
             <div style={{ padding: '24px', textAlign: 'center', background: '#0d1117', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.1)' }}>
               <p style={{ color: '#8b949e', margin: '0 0 16px' }}>No matches are currently active or pending queue.</p>
-              <Button variant="primary" onClick={() => window.location.href = `/tournaments/${tournament.id}/dispatcher`}>
+              <Button variant="primary" onClick={() => window.location.href = `/app/dashboards/tournaments/${tournament.id}/dispatcher`}>
                 Open Match Dispatcher
               </Button>
             </div>
@@ -121,7 +121,7 @@ export default function DuringTournamentView({ tournament, stats, updateTourname
 
             <Button 
               variant="secondary" 
-              onClick={() => window.location.href = `/tournaments/${tournament.id}/operations`}
+              onClick={() => window.location.href = `/app/dashboards/tournaments/${tournament.id}/operations`}
             >
               Court Telemetry & Ops
             </Button>

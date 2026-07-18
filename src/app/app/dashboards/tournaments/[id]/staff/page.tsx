@@ -22,7 +22,8 @@ export default function StaffManagementWorkspace({ params }: { params: Promise<{
   const [submitting, setSubmitting] = useState(false);
 
   if (isLoading) return <div style={{ padding: '24px', color: '#8b949e' }}>Loading Staff Workspace...</div>;
-  if (error || !data?.success) return <div style={{ padding: '24px', color: '#f85149' }}>Failed to load tournament data.</div>;
+  if (error) return <div style={{ padding: '24px', color: '#f85149' }}>SWR Error: {error.message || String(error)}</div>;
+  if (!data?.success) return <div style={{ padding: '24px', color: '#f85149' }}>Failed to load tournament data. API Data: {JSON.stringify(data)} Params ID: {resolvedParams?.id}</div>;
 
   const tournament = data.tournament;
   // Ensure staff array exists (we'll update the tournament GET API if needed, assuming it's returned here)
@@ -76,7 +77,7 @@ export default function StaffManagementWorkspace({ params }: { params: Promise<{
           <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: 0, color: '#58a6ff' }}>Role Delegation</h1>
           <p style={{ color: '#8b949e', margin: 0 }}>Manage Referees, Marshalls, and Admins.</p>
         </div>
-        <Button variant="secondary" onClick={() => router.push(`/tournaments/${resolvedParams.id}`)}>Back to Dashboard</Button>
+        <Button variant="secondary" onClick={() => router.push(`/app/dashboards/tournaments/${resolvedParams.id}`)}>Back to Dashboard</Button>
       </header>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px' }}>

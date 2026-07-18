@@ -57,7 +57,20 @@ export default function TeamDashboard() {
 
   const { level, nextThreshold, progress } = getXpLevel(user.globalXp || 0);
 
-  const filteredMyTournaments = myTournaments.filter((t: any) => {
+  let finalMyTournaments = [...myTournaments];
+  if (isSandbox) {
+    finalMyTournaments.unshift({
+      tournamentId: 'mock-sandbox-123',
+      tournamentName: 'Sandbox Grand Slam 2026',
+      isActive: true,
+      registrationPhase: 'CLOSED',
+      franchiseName: `${user.name} Team`,
+      matchesPlayed: 4,
+      nextMatchText: 'REPORT TO COURT'
+    });
+  }
+
+  const filteredMyTournaments = finalMyTournaments.filter((t: any) => {
     const isUpcoming = !t.isActive && t.registrationPhase !== 'CLOSED';
     const isPast = !t.isActive && t.registrationPhase === 'CLOSED';
     if (myTournamentsTab === 'ACTIVE') return t.isActive;
@@ -74,8 +87,16 @@ export default function TeamDashboard() {
        if (!t.location.toLowerCase().includes(discoverFilters.location.toLowerCase())) return false;
     }
     if (discoverFilters.date && t.startDate) {
-       const d = new Date(t.startDate).toISOString().split('T')[0];
-       if (d !== discoverFilters.date) return false;
+       const tournamentDate = new Date(t.startDate);
+       const now = new Date();
+       if (discoverFilters.date === 'today') {
+         if (tournamentDate.toDateString() !== now.toDateString()) return false;
+       } else if (discoverFilters.date === 'this_week') {
+         const diffTime = tournamentDate.getTime() - now.getTime();
+         if (diffTime < 0 || diffTime > 7 * 24 * 60 * 60 * 1000) return false;
+       } else if (discoverFilters.date === 'this_month') {
+         if (tournamentDate.getMonth() !== now.getMonth() || tournamentDate.getFullYear() !== now.getFullYear()) return false;
+       }
     }
     return true;
   });
@@ -149,7 +170,7 @@ export default function TeamDashboard() {
                 <Swords size={24} color="var(--primary)" />
                 My Tournaments
               </h2>
-              <Link href="/team/tournaments/history" style={{ color: 'var(--primary)', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 600 }}>
+              <Link href="/app/dashboards/player/tournaments/history" style={{ color: 'var(--primary)', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 600 }}>
                 View All →
               </Link>
             </div>
@@ -177,7 +198,7 @@ export default function TeamDashboard() {
               </div>
             )}
 
-            {myTournaments.length === 0 ? (
+            {finalMyTournaments.length === 0 ? (
               <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.1)', padding: '40px', textAlign: 'center' }}>
                 <Trophy size={48} color="var(--text-muted)" style={{ margin: '0 auto 16px auto', opacity: 0.5 }} />
                 <h3 style={{ margin: '0 0 8px 0', color: '#fff', fontSize: '1.25rem' }}>No Tournaments Yet</h3>
@@ -244,10 +265,15 @@ export default function TeamDashboard() {
           </section>
 
           <section id="discover-section">
-            <h2 style={{ fontSize: '1.5rem', color: 'var(--text-main)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CalendarDays size={24} color="var(--primary)" />
-              Discover Tournaments
-            </h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ fontSize: '1.5rem', color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <CalendarDays size={24} color="var(--primary)" />
+                Discover Tournaments
+              </h2>
+              <Link href="/tournaments" style={{ color: 'var(--primary)', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 600 }}>
+                View All →
+              </Link>
+            </div>
 
             <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
               <input 
@@ -264,12 +290,16 @@ export default function TeamDashboard() {
                 onChange={e => setDiscoverFilters(prev => ({ ...prev, location: e.target.value }))}
                 style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 16px', borderRadius: '8px', color: '#fff', outline: 'none', flex: 1, minWidth: '150px' }}
               />
-              <input 
-                type="date" 
+              <select 
                 value={discoverFilters.date}
                 onChange={e => setDiscoverFilters(prev => ({ ...prev, date: e.target.value }))}
-                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 16px', borderRadius: '8px', color: '#fff', outline: 'none', flex: 1, minWidth: '150px', colorScheme: 'dark' }}
-              />
+                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 16px', borderRadius: '8px', color: '#fff', outline: 'none', flex: 1, minWidth: '150px', appearance: 'none' }}
+              >
+                <option value="">All Dates</option>
+                <option value="today">Today</option>
+                <option value="this_week">This Week</option>
+                <option value="this_month">This Month</option>
+              </select>
               {(discoverFilters.category || discoverFilters.location || discoverFilters.date) && (
                 <button 
                   onClick={() => setDiscoverFilters({ category: '', location: '', date: '' })}

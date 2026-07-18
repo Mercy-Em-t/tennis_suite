@@ -112,7 +112,7 @@ export default function CourtOperationsDashboard({ params }: { params: Promise<{
     <div style={{ padding: '48px', color: '#f0f6fc', background: '#0d1117', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '24px', marginBottom: '32px' }}>
         <div>
-          <Link href={`/tournaments/${tournamentId}`} style={{ color: '#58a6ff', textDecoration: 'none', fontSize: '0.875rem', display: 'inline-block', marginBottom: '12px' }}>&larr; Back to Command Center</Link>
+          <Link href={`/app/dashboards/tournaments/${tournamentId}`} style={{ color: '#58a6ff', textDecoration: 'none', fontSize: '0.875rem', display: 'inline-block', marginBottom: '12px' }}>&larr; Back to Command Center</Link>
           <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
             <Activity color="#a371f7" /> Court Telemetry & Operations
           </h1>

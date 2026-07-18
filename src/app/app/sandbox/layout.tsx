@@ -128,7 +128,7 @@ export default function SandboxLayout({ children }: { children: React.ReactNode 
 
           {/* Logo + Sandbox badge */}
           <div style={{ padding: '24px 20px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-            <Link href="/sandbox" style={{ textDecoration: 'none' }}>
+            <Link href="/app/sandbox" style={{ textDecoration: 'none' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <FlaskConical size={18} color={accentColor} />
                 <h1 style={{
@@ -225,7 +225,7 @@ export default function SandboxLayout({ children }: { children: React.ReactNode 
 
           {/* Bottom Actions */}
           <div style={{ padding: '12px 12px 20px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <Link href="/sandbox" style={{ textDecoration: 'none' }}>
+            <Link href="/app/sandbox" style={{ textDecoration: 'none' }}>
               <div style={{
                 display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px',
                 borderRadius: '7px', color: '#8b949e', fontSize: '0.875rem',

@@ -13,135 +13,135 @@ interface SandboxRoute {
 
 const sandboxRoutes: SandboxRoute[] = [
   {
-    path: '/sandbox/host',
+    path: '/app/sandbox/host',
     name: 'Host Control Dashboard',
     description: 'Entry point for tournament hosts. Mock clubs, court statuses, and register new tournaments.',
     category: 'Host Admin',
     badge: 'Live'
   },
   {
-    path: '/sandbox/host/tournament/T-1001',
+    path: '/app/sandbox/host/tournament/T-1001',
     name: 'Tournament Command Center',
     description: 'Structured 3-tab hub (Pre-Tournament pipeline, live scoring telemetry radar, post-tournament archives).',
     category: 'Host Admin',
     badge: 'Live'
   },
   {
-    path: '/sandbox/host/tournament/T-1001/pools',
+    path: '/app/sandbox/host/tournament/T-1001/pools',
     name: 'Pools & Seeding Workspace',
     description: 'Simulate serpentine pool partitioning algorithm and manually seed franchises.',
     category: 'Host Admin'
   },
   {
-    path: '/sandbox/host/tournament/T-1001/dispatcher',
+    path: '/app/sandbox/host/tournament/T-1001/dispatcher',
     name: 'Match Dispatcher Grid',
     description: 'Generate round-robin matches and queue them onto physical active courts.',
     category: 'Host Admin'
   },
   {
-    path: '/sandbox/host/tournament/T-1001/invite?role=REFEREE',
+    path: '/app/sandbox/host/tournament/T-1001/invite?role=REFEREE',
     name: 'Staff Invite Page (Referee)',
     description: 'Onboarding link for referees to register their credentials for a tournament.',
     category: 'Host Admin'
   },
   {
-    path: '/sandbox/host/tournament/T-1001/invite?role=MARSHALL',
+    path: '/app/sandbox/host/tournament/T-1001/invite?role=MARSHALL',
     name: 'Staff Invite Page (Marshall)',
     description: 'Onboarding link for marshalls to register their credentials for a tournament.',
     category: 'Host Admin'
   },
   {
-    path: '/sandbox/tournament',
+    path: '/app/sandbox/tournament',
     name: 'Tournament Public Hub',
     description: 'Guest-facing dashboard showing live brackets, completed matches, and active courts.',
     category: 'Match Play'
   },
   {
-    path: '/sandbox/draws',
+    path: '/app/sandbox/draws',
     name: 'Brackets & Draws Sandbox',
     description: 'Generate knockout seeds and configure serpentine distributions.',
     category: 'Match Play'
   },
   {
-    path: '/sandbox/team',
+    path: '/app/sandbox/team',
     name: 'Team Registration Hub',
     description: 'Onboarding and registration checklist flow for teams and coaches.',
     category: 'Match Play'
   },
   {
-    path: '/sandbox/registration',
+    path: '/app/sandbox/registration',
     name: 'Franchise Registration Pipeline',
     description: 'Checklist for team registration approvals and fee collections.',
     category: 'Match Play'
   },
   {
-    path: '/sandbox/operations',
+    path: '/app/sandbox/operations',
     name: 'Court Telemetry Operations',
     description: 'Physical court latency, umpire terminal health logs, and connectivity checkers.',
     category: 'System Ops'
   },
   {
-    path: '/sandbox/network',
+    path: '/app/sandbox/network',
     name: 'WebSocket Network Monitor',
     description: 'WebSocket latency windows and event emitter payload monitors.',
     category: 'System Ops'
   },
   {
-    path: '/sandbox/compliance',
+    path: '/app/sandbox/compliance',
     name: 'Audits & Ledger Compliance',
     description: 'Marshall interventions log and treasury double-booking collision overrides.',
     category: 'System Ops'
   },
   {
-    path: '/sandbox/monitor/dashboard',
+    path: '/app/sandbox/monitor/dashboard',
     name: 'System Monitor Dashboard',
     description: 'CPU load averages, database query benchmarks, and system logs.',
     category: 'System Ops'
   },
   {
-    path: '/sandbox/monitor/court',
+    path: '/app/sandbox/monitor/court',
     name: 'Court Monitor',
     description: 'Per-court health, latency, and umpire terminal connectivity views.',
     category: 'System Ops'
   },
   {
-    path: '/sandbox/automaton',
+    path: '/app/sandbox/automaton',
     name: 'Automaton AI Draw Scheduler',
     description: 'Algorithmic scheduler test board for AI-driven draw generation.',
     category: 'Demos'
   },
   {
-    path: '/sandbox/broadcaster',
+    path: '/app/sandbox/broadcaster',
     name: 'Live Broadcaster Overlay',
     description: 'Simulated live broadcast overlays and streaming status indicators.',
     category: 'Demos'
   },
   {
-    path: '/sandbox/delegate',
+    path: '/app/sandbox/delegate',
     name: 'Delegate Dashboard',
     description: 'Mock interface for regional representatives and national delegates.',
     category: 'Demos'
   },
   {
-    path: '/sandbox/director',
+    path: '/app/sandbox/director',
     name: 'Tournament Director Panel',
     description: 'Global configurations for court scheduling limits and referee licenses.',
     category: 'Demos'
   },
   {
-    path: '/sandbox/marshall',
+    path: '/app/sandbox/marshall',
     name: 'Marshall Score Console',
     description: 'Interface for marshalls to resolve score conflicts and input tiebreaker outcomes.',
     category: 'Demos'
   },
   {
-    path: '/sandbox/play6ump/player',
+    path: '/app/sandbox/play6ump/player',
     name: 'Play6Ump — Player View',
     description: 'Player-facing live match experience with score updates and umpire pings.',
     category: 'Demos'
   },
   {
-    path: '/sandbox/play6ump/referee',
+    path: '/app/sandbox/play6ump/referee',
     name: 'Play6Ump — Referee View',
     description: 'Referee console for controlling set progression and submitting final scores.',
     category: 'Demos'

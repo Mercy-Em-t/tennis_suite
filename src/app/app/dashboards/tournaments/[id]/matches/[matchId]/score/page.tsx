@@ -54,7 +54,7 @@ export default function MatchScoringMVP({ params }: { params: Promise<{ id: stri
 
     if (d.success) {
       alert("Match completed successfully!");
-      router.push(`/tournaments/${resolvedParams.id}/dispatcher`);
+      router.push(`/app/dashboards/tournaments/${resolvedParams.id}/dispatcher`);
     } else {
       alert(`Error: ${d.error}`);
     }

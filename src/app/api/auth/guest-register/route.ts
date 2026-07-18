@@ -8,7 +8,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key_change_me_in_p
 
 export async function POST(request: Request) {
   try {
-    const { name, email, phone, categories, franchiseName, tournamentId } = await request.json();
+    const body = await request.json();
+    const { name, email, phone, categories, tournamentId } = body;
+    const franchiseName = body.franchiseName || body.teamName;
 
     if (!name || !email) {
       return NextResponse.json({ error: 'Name and email are required.' }, { status: 400 });

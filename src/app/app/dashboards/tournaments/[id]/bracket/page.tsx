@@ -48,7 +48,7 @@ export default function BracketDashboard({ params }: { params: Promise<{ id: str
   if (categories.length === 0) {
     return (
       <div style={{ padding: '48px', color: '#f0f6fc', background: '#0d1117', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
-        <Link href={`/tournaments/${tournamentId}`} style={{ color: '#58a6ff', textDecoration: 'none', fontSize: '0.875rem' }}>&larr; Back to Command Center</Link>
+        <Link href={`/app/dashboards/tournaments/${tournamentId}`} style={{ color: '#58a6ff', textDecoration: 'none', fontSize: '0.875rem' }}>&larr; Back to Command Center</Link>
         <div style={{ marginTop: '48px', textAlign: 'center', color: '#8b949e' }}>No Pools or Brackets generated yet.</div>
       </div>
     );
@@ -116,7 +116,7 @@ export default function BracketDashboard({ params }: { params: Promise<{ id: str
     <div style={{ padding: '48px', color: '#f0f6fc', background: '#0d1117', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '24px', marginBottom: '32px' }}>
         <div>
-          <Link href={`/tournaments/${tournamentId}`} style={{ color: '#58a6ff', textDecoration: 'none', fontSize: '0.875rem', display: 'inline-block', marginBottom: '12px' }}>&larr; Back to Command Center</Link>
+          <Link href={`/app/dashboards/tournaments/${tournamentId}`} style={{ color: '#58a6ff', textDecoration: 'none', fontSize: '0.875rem', display: 'inline-block', marginBottom: '12px' }}>&larr; Back to Command Center</Link>
           <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
             <Trophy color="#e3b341" /> Results & Brackets
           </h1>

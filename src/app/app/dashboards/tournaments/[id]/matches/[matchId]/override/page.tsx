@@ -88,7 +88,7 @@ export default function MatchOverrideWorkspace({ params }: { params: Promise<{ i
 
     if (d.success) {
       alert("Substitution applied successfully.");
-      router.push(`/tournaments/${resolvedParams.id}/dispatcher`);
+      router.push(`/app/dashboards/tournaments/${resolvedParams.id}/dispatcher`);
     } else {
       alert(`Error: ${d.error}`);
     }

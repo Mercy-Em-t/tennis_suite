@@ -66,7 +66,7 @@ export async function middleware(req: NextRequest) {
     pathname === '/login' ||
     pathname === '/register' ||
     pathname === '/' ||
-    pathname.match(/^\/tournaments\/[^/]+$/) ||
+    pathname.startsWith('/tournaments') ||
     pathname.includes('/marketing')
   ) {
     return NextResponse.next();
@@ -112,7 +112,9 @@ export async function middleware(req: NextRequest) {
     if (requestedDashboard) {
       let isAllowed = false;
 
-      if (role === 'admin') {
+      if (requestedDashboard === 'tournaments') {
+        isAllowed = true;
+      } else if (role === 'admin') {
         isAllowed = true;
       } else if (role === 'host') {
         if (requestedDashboard === 'host' || requestedDashboard === 'player') isAllowed = true;

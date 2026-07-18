@@ -67,7 +67,7 @@ export default async function PublicTournamentProfile({ params }: { params: Prom
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '200px' }}>
               {isRegistrationOpen ? (
                 <>
-                  <Link href={`/tournaments/${resolvedParams.id}/register`} style={{ textDecoration: 'none' }}>
+                  <Link href={`/tournaments/${tournament.slug || resolvedParams.id}/register`} style={{ textDecoration: 'none' }}>
                     <DynamicButton variant="primary" style={{ width: '100%', height: '56px', fontSize: '1.1rem' }}>
                       Register Now
                     </DynamicButton>

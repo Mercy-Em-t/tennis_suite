@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
+import { initiateStkPush } from '@/lib/mpesa';
 
 export async function POST(request: Request) {
   try {
@@ -46,15 +47,35 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'M-Pesa requires a phone number.' }, { status: 400 });
       }
 
-      // Simulate STK Push delay (Daraja API simulation)
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      
-      // Simulate generating a Daraja transaction ID
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      transactionId = 'RG';
-      for (let i = 0; i < 8; i++) {
-        transactionId += chars.charAt(Math.floor(Math.random() * chars.length));
+      // Hardcoded checkout amount for MVP (usually fetched from DB)
+      const amount = 157.50; 
+      // Need a public URL for callback, defaulting to the host or a dummy local URL for testing
+      const hostUrl = request.headers.get('origin') || 'https://tennissuite.app';
+      const callbackUrl = `${hostUrl}/api/checkout/mpesa/callback`;
+
+      try {
+        await initiateStkPush(phoneNumber, amount, franchiseName, callbackUrl);
+      } catch (err: any) {
+        return NextResponse.json({ error: err.message || 'STK Push Failed. Check your phone number.' }, { status: 400 });
       }
+
+      // 3. Create Team Record as PENDING_PAYMENT
+      const team = await prisma.team.create({
+        data: {
+          franchiseName,
+          tournamentId,
+          categories: JSON.stringify(categories || []),
+          paymentStatus: 'PENDING_PAYMENT',
+          players: { connect: { id: user!.id } }
+        }
+      });
+
+      return NextResponse.json({
+        success: true,
+        paymentProvider: 'MPESA',
+        message: 'STK Push initiated. Please check your phone to enter your PIN.',
+        transactionId: team.id
+      });
     } else if (paymentMethod === 'STRIPE') {
       // Mock Stripe ID
       transactionId = 'pi_mock_' + Math.random().toString(36).substr(2, 9);

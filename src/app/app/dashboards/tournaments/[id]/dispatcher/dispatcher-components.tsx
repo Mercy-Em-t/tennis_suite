@@ -41,12 +41,12 @@ export function SortableMatch({ match }: { match: any }) {
 
   const handleDoubleClick = () => {
     if (match.status === 'REQUIRES_INTERVENTION') return;
-    window.location.href = `/tournaments/${match.tournamentId}/matches/${match.id}/score`;
+    window.location.href = `/app/dashboards/tournaments/${match.tournamentId}/matches/${match.id}/score`;
   };
 
   const handleManageWithdrawal = (e: React.MouseEvent) => {
     e.stopPropagation();
-    window.location.href = `/tournaments/${match.tournamentId}/matches/${match.id}/override`;
+    window.location.href = `/app/dashboards/tournaments/${match.tournamentId}/matches/${match.id}/override`;
   };
 
   const getTeamName = (teamId: string | null, placeholder: string | null, match: any) => {

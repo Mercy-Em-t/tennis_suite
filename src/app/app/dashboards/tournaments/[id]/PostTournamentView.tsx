@@ -84,7 +84,7 @@ export default function PostTournamentView({ tournament, stats, updateTournament
             </div>
             <Button 
               variant="secondary" 
-              onClick={() => window.location.href = `/tournaments/${tournament.id}/bracket`}
+              onClick={() => window.location.href = `/app/dashboards/tournaments/${tournament.id}/bracket`}
             >
               Open Brackets
             </Button>
@@ -97,7 +97,7 @@ export default function PostTournamentView({ tournament, stats, updateTournament
             </div>
             <Button 
               variant="secondary" 
-              onClick={() => window.location.href = `/tournaments/${tournament.id}/financials`}
+              onClick={() => window.location.href = `/app/dashboards/tournaments/${tournament.id}/financials`}
             >
               Open Treasury
             </Button>

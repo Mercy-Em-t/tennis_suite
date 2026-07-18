@@ -18,7 +18,7 @@ export default function PlayerSpecificTournamentSandbox({ params }: { params: { 
       
       {/* ── Navigation & Header ── */}
       <div>
-        <Link href="/sandbox/team" >
+        <Link href="/app/sandbox/team" >
           <ArrowLeft size={16} /> Back to Hub
         </Link>
         <motion.header 

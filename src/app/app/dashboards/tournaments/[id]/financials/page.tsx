@@ -56,7 +56,7 @@ export default function FinancialsDashboard({ params }: { params: Promise<{ id: 
           <p className="text-slate-400 m-0">{tournament?.name} | Context ID: <span className="font-mono text-blue-400">{tournament?.id}</span></p>
         </div>
         <div className="flex gap-3">
-          <Button variant="secondary" onClick={() => window.location.href = `/tournaments/${resolvedParams.id}`}>← Back to Dashboard</Button>
+          <Button variant="secondary" onClick={() => window.location.href = `/app/dashboards/tournaments/${resolvedParams.id}`}>← Back to Dashboard</Button>
           <Button variant="primary" onClick={runComplianceScan} disabled={scanActive}>
             {scanActive ? 'Scanning Ledger...' : 'Run Compliance Scan'}
           </Button>

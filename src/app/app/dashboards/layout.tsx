@@ -9,9 +9,18 @@ export default async function DashboardsLayout({ children }: { children: React.R
   const token = cookieStore.get('auth_token')?.value;
   let role = 'PLAYER';
   
+  let user = null;
+  
   if (token) {
     const payload = await verifyToken(token);
     role = payload?.roles?.[0] || 'PLAYER';
+    if (payload?.sub) {
+      const { prisma } = await import('@/lib/prisma');
+      user = await prisma.user.findUnique({
+        where: { id: payload.sub },
+        select: { id: true, name: true, avatarUrl: true, email: true }
+      });
+    }
   }
 
   // Define navigation based on actual route structure and role
@@ -63,7 +72,7 @@ export default async function DashboardsLayout({ children }: { children: React.R
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--background-base)' }}>
       <GlobalSuspensionOverlay />
       
-      <Sidebar role={upperRole} navItems={navItems} />
+      <Sidebar role={upperRole} navItems={navItems} user={user} />
 
       {/* Main Content Area */}
       <main style={{ flex: 1, position: 'relative', overflowY: 'auto' }}>
