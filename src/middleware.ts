@@ -130,12 +130,20 @@ export async function middleware(req: NextRequest) {
         if (requestedDashboard === 'broadcast' || requestedDashboard === 'broadcaster' || requestedDashboard === 'network' || requestedDashboard === 'player') isAllowed = true;
       } else if (role === 'monitor') {
         if (requestedDashboard === 'monitor' || requestedDashboard === 'player') isAllowed = true;
+      } else if (role === 'manager') {
+        if (requestedDashboard === 'manager') isAllowed = true;
       }
 
       if (!isAllowed) {
         await logUnauthorizedAccess(req, role, payload.sub);
         // Special redirect for referee due to Gate 2 policy
-        const fallbackPath = role === 'referee' ? '/referee' : `/app/dashboards/${role}`;
+        let fallbackPath = `/app/dashboards/${role}`;
+        if (role === 'referee') {
+          fallbackPath = '/referee';
+        } else if (role === 'broadcast' || role === 'network') {
+          fallbackPath = '/app/dashboards/broadcaster';
+        }
+        
         const fallbackUrl = new URL(fallbackPath, req.url);
         fallbackUrl.searchParams.set('error', 'forbidden');
         return NextResponse.redirect(fallbackUrl, { status: 303 });

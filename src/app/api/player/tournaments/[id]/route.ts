@@ -55,11 +55,17 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
           prizeMoney: '$1000',
           stationInfo: 'Head to the main desk to check in.',
           scoringRules: 'Best of 3 Sets',
+          startDate: new Date(Date.now() + 86400000).toISOString(),
+          registrationPhase: 'OPEN',
+          isActive: mockType !== 'pools',
+          categories: "Men's Singles, Women's Singles",
+          allowMultiCategory: true,
         },
         team: {
           id: 'sandbox-team',
           franchiseName: 'Sandbox Team',
-          isCheckedIn: mockType !== 'pools'
+          isCheckedIn: mockType !== 'pools',
+          categories: JSON.stringify(["Men's Singles"]),
         },
         pool: mockType === 'pools' ? { name: 'Pool A', poolTeams: [] } : null,
         schedule: scheduleMap[mockType] || []
@@ -108,11 +114,17 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
         prizeMoney: team.tournament.prizeMoney,
         stationInfo: team.tournament.stationInfo,
         scoringRules: team.tournament.scoringRules,
+        startDate: team.tournament.startDate,
+        registrationPhase: team.tournament.registrationPhase,
+        isActive: team.tournament.isActive,
+        categories: team.tournament.categories,
+        allowMultiCategory: team.tournament.allowMultiCategory,
       },
       team: {
         id: team.id,
         franchiseName: team.franchiseName,
-        isCheckedIn: team.isCheckedIn
+        isCheckedIn: team.isCheckedIn,
+        categories: team.categories,
       },
       pool: team.poolTeams[0]?.pool || null,
       schedule

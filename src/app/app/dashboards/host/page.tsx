@@ -44,6 +44,9 @@ export default function GlobalHostDashboard() {
               style={{ cursor: 'pointer' }}
             />
           </div>
+          <a className={styles.validationLink} href="/app/dashboards/host/lifecycle">
+            3D Lifecycle Map ↗
+          </a>
           <a className={styles.validationLink} href="/validation">
             Validation Sandbox ↗
           </a>

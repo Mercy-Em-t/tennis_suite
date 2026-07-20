@@ -1,0 +1,30 @@
+{
+  "stages": {
+    "PRE_TOURNAMENT": {
+      "actions": {
+        "Register Team": { "allowedRoles": ["PLAYER", "HOST", "PUBLIC"] },
+        "Edit Settings": { "allowedRoles": ["HOST", "DIRECTOR"] },
+        "Publish Pools": { "allowedRoles": ["HOST", "DIRECTOR"] }
+      }
+    },
+    "DURING_TOURNAMENT": {
+      "actions": {
+        "Start Match": { "allowedRoles": ["REFEREE", "MARSHALL", "UMPIRE", "HOST"] },
+        "Record Score": { "allowedRoles": ["REFEREE", "UMPIRE", "PLAYER", "HOST"] },
+        "Suspend Tournament": { "allowedRoles": ["DIRECTOR", "ADMIN", "HOST"] }
+      }
+    },
+    "POST_TOURNAMENT": {
+      "actions": {
+        "Trigger Stripe Payouts": { "allowedRoles": ["DIRECTOR", "HOST"] },
+        "Publish Final Results": { "allowedRoles": ["HOST", "DIRECTOR"] }
+      }
+    },
+    "ARCHIVED": {
+      "actions": {
+        "View Stats": { "allowedRoles": ["PLAYER", "HOST", "REFEREE", "PUBLIC", "BROADCAST"] },
+        "Export Data": { "allowedRoles": ["HOST", "DIRECTOR", "NETWORK"] }
+      }
+    }
+  }
+}

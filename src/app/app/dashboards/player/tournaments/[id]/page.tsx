@@ -1,12 +1,12 @@
 'use client';
 
-import React, { use } from 'react';
+import React, { use, useState, useEffect } from 'react';
 import useSWR from 'swr';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { motion } from 'framer-motion';
-import { Wallet, PlayCircle, Share2, MapPin, Shield, ChevronDown, ChevronUp, User, Activity, Calendar, Bell, MessageCircle, Lightbulb, Target } from 'lucide-react';
+import { Wallet, PlayCircle, Share2, MapPin, Shield, ChevronDown, ChevronUp, User, Activity, Calendar, Bell, MessageCircle, Lightbulb, Target, Plus, Check } from 'lucide-react';
 import Link from 'next/link';
 import { DrawViewer } from '@/components/tennis/DrawViewer';
 
@@ -15,54 +15,35 @@ const fetcher = (url: string) => fetch(url).then(r => r.json());
 const mockDataMap: Record<string, any> = {
   'mock-sandbox-pools': {
     success: true,
-    tournament: { id: 'mock-sandbox-pools', name: 'Sandbox Rivals (Pools Stage)', status: 'ACTIVE', formatType: 'Pool Play', scoringRules: 'Standard', location: 'Sandbox Arena', prizeMoney: '10,000 XP' },
-    team: { franchiseName: 'Sandbox Team', isCheckedIn: true },
-    schedule: [
-      { id: 'm1', status: 'COMPLETED', stage: 'POOL', teamA: { franchiseName: 'Sandbox Team' }, teamB: { franchiseName: 'Alpha Squad' }, winnerId: 'Sandbox Team', score: { sets: [{ a: 6, b: 4 }] } },
-      { id: 'm2', status: 'READY', stage: 'POOL', teamA: { franchiseName: 'Sandbox Team' }, teamB: { franchiseName: 'Beta Force' } }
-    ],
-    pool: { name: 'Pool A', standings: [{ teamName: 'Sandbox Team', wins: 1, losses: 0, points: 3 }, { teamName: 'Alpha Squad', wins: 0, losses: 1, points: 0 }, { teamName: 'Beta Force', wins: 0, losses: 0, points: 0 }] }
+    tournament: { id: 'mock-sandbox-pools', name: 'Sandbox Rivals (Pools Stage)', status: 'ACTIVE', formatType: 'Pool Play', scoringRules: 'Standard', location: 'Sandbox Arena', prizeMoney: '10,000 XP', startDate: new Date(Date.now() + 86400000).toISOString(), registrationPhase: 'OPEN', isActive: false, categories: "Men's Singles, Women's Singles", allowMultiCategory: true },
+    team: { franchiseName: 'Sandbox Team', isCheckedIn: false, categories: JSON.stringify(["Men's Singles"]) },
+    schedule: [],
+    pool: { name: 'Pool A', standings: [{ teamName: 'Sandbox Team', wins: 0, losses: 0, points: 0 }] }
   },
   'mock-sandbox-knockouts': {
     success: true,
-    tournament: { id: 'mock-sandbox-knockouts', name: 'Sandbox Rivals (Knockouts Stage)', status: 'ACTIVE', formatType: 'Knockout', scoringRules: 'Standard', location: 'Sandbox Arena', prizeMoney: '10,000 XP' },
+    tournament: { id: 'mock-sandbox-knockouts', name: 'Sandbox Rivals (Knockouts Stage)', status: 'ACTIVE', formatType: 'Knockout', scoringRules: 'Standard', location: 'Sandbox Arena', prizeMoney: '10,000 XP', isActive: true },
     team: { franchiseName: 'Sandbox Team', isCheckedIn: true },
     schedule: [
-      { id: 'm3', status: 'COMPLETED', stage: 'QUARTER-FINAL', teamA: { franchiseName: 'Sandbox Team' }, teamB: { franchiseName: 'Gamma Unit' }, winnerId: 'Sandbox Team', score: { sets: [{ a: 6, b: 2 }] } },
-      { id: 'm4', status: 'SCHEDULED', stage: 'SEMI-FINAL', teamA: { franchiseName: 'Sandbox Team' }, teamB: { franchiseName: 'Delta Core' } }
+      { id: 'm3', status: 'COMPLETED', stage: 'QUARTER-FINAL', teamA: { franchiseName: 'Sandbox Team' }, teamB: { franchiseName: 'Gamma Unit' }, winnerId: 'Sandbox Team', score: { sets: [{ a: 6, b: 2 }] }, isTeamA: true, opponent: 'Gamma Unit' },
+      { id: 'm4', status: 'SCHEDULED', stage: 'SEMI-FINAL', teamA: { franchiseName: 'Sandbox Team' }, teamB: { franchiseName: 'Delta Core' }, isTeamA: true, opponent: 'Delta Core' }
     ],
     pool: null
   },
   'mock-sandbox-complete': {
     success: true,
-    tournament: { id: 'mock-sandbox-complete', name: 'Sandbox Rivals (Completed)', status: 'COMPLETED', formatType: 'Knockout', scoringRules: 'Standard', location: 'Sandbox Arena', prizeMoney: '10,000 XP' },
+    tournament: { id: 'mock-sandbox-complete', name: 'Sandbox Rivals (Completed)', status: 'COMPLETED', formatType: 'Knockout', scoringRules: 'Standard', location: 'Sandbox Arena', prizeMoney: '10,000 XP', isActive: true },
     team: { franchiseName: 'Sandbox Team', isCheckedIn: true },
     schedule: [
-      { id: 'm5', status: 'COMPLETED', stage: 'FINAL', teamA: { franchiseName: 'Sandbox Team' }, teamB: { franchiseName: 'Omega Boss' }, winnerId: 'Sandbox Team', score: { sets: [{ a: 6, b: 4 }, { a: 7, b: 5 }] } }
+      { id: 'm5', status: 'COMPLETED', stage: 'FINAL', teamA: { franchiseName: 'Sandbox Team' }, teamB: { franchiseName: 'Omega Boss' }, winnerId: 'Sandbox Team', score: { sets: [{ a: 6, b: 4 }, { a: 7, b: 5 }] }, isTeamA: true, opponent: 'Omega Boss' }
     ],
     pool: null
   }
 };
 
-export default function PlayerTournamentDashboard({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params);
+function LiveTournamentView({ data, mutate, resolvedParams }: { data: any, mutate: any, resolvedParams: any }) {
   const [isDrawOpen, setIsDrawOpen] = React.useState(true);
   const [selectedMatch, setSelectedMatch] = React.useState<any>(null);
-  
-  const isMock = resolvedParams.id.startsWith('mock-sandbox-');
-  const mockData = isMock ? mockDataMap[resolvedParams.id] : null;
-
-  const { data: swrData, error, isLoading, mutate } = useSWR(
-    isMock ? null : `/api/player/tournaments/${resolvedParams.id}`, 
-    fetcher, 
-    { refreshInterval: isMock ? 0 : 5000 }
-  );
-
-  const data = isMock ? mockData : swrData;
-
-  if (!isMock && isLoading) return <div style={{ padding: '48px', color: '#8b949e', textAlign: 'center', minHeight: '100vh', background: '#0d1117' }}>Loading Command Center...</div>;
-  if (!isMock && (error || !data?.success)) return <div style={{ padding: '48px', color: '#f85149', textAlign: 'center', minHeight: '100vh', background: '#0d1117' }}>Access Denied.</div>;
-
   const { tournament, team, schedule, pool } = data;
 
   const handleCheckIn = async () => {
@@ -81,15 +62,7 @@ export default function PlayerTournamentDashboard({ params }: { params: Promise<
   };
 
   return (
-    <div style={{ padding: '48px 24px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'Inter, sans-serif', color: '#f0f6fc', minHeight: '100vh' }}>
-      
-      {/* Back & Header */}
-      <div style={{ marginBottom: '32px' }}>
-        <Link href="/dashboards/player" style={{ color: '#58a6ff', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-          ← Back to Global Hub
-        </Link>
-      </div>
-
+    <>
       <header style={{ marginBottom: '48px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '32px' }}>
         <Badge variant={tournament.status === 'ACTIVE' ? 'success' : 'default'} >{tournament.status}</Badge>
         <h1 style={{ margin: '0 0 12px', fontSize: '3rem', fontWeight: 900, color: '#f0f6fc' }}>{tournament.name}</h1>
@@ -111,7 +84,6 @@ export default function PlayerTournamentDashboard({ params }: { params: Promise<
         </div>
       </header>
 
-      {/* Tournament Details Info Section */}
       <Card style={{ background: '#161b22', border: '1px solid rgba(255,255,255,0.1)', padding: '24px', marginBottom: '48px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px' }}>
         <div>
           <h4 style={{ color: '#8b949e', fontSize: '0.85rem', textTransform: 'uppercase', marginBottom: '8px' }}>Format & Rules</h4>
@@ -141,7 +113,6 @@ export default function PlayerTournamentDashboard({ params }: { params: Promise<
         </div>
       </Card>
 
-      {/* Collapsible Draw & Brackets */}
       <div style={{ marginBottom: '48px' }}>
         <div 
           onClick={() => setIsDrawOpen(!isDrawOpen)}
@@ -158,10 +129,7 @@ export default function PlayerTournamentDashboard({ params }: { params: Promise<
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '32px' }}>
-        
-        {/* ── Left Column: Match Hub & Brackets ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-          
           <section>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h2 style={{ fontSize: '1.8rem', margin: 0 }}>The Match Hub</h2>
@@ -261,7 +229,6 @@ export default function PlayerTournamentDashboard({ params }: { params: Promise<
             )}
           </section>
 
-          {/* Social / Highlights Stub */}
           <section>
             <h2 style={{ fontSize: '1.8rem', marginBottom: '24px' }}>Highlights Library</h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -281,7 +248,6 @@ export default function PlayerTournamentDashboard({ params }: { params: Promise<
 
         </div>
 
-        {/* ── Right Column: Context & Stats ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
 
           <section>
@@ -315,11 +281,9 @@ export default function PlayerTournamentDashboard({ params }: { params: Promise<
             <h2 style={{ fontSize: '1.5rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}><Target color="#58a6ff" /> Shot Heatmap</h2>
             <Card style={{ background: '#161b22', border: '1px solid rgba(255,255,255,0.1)', padding: '24px' }}>
               <div style={{ width: '100%', height: '200px', background: '#3fb950', borderRadius: '4px', position: 'relative', overflow: 'hidden', border: '2px solid #fff' }}>
-                {/* Court Lines */}
                 <div style={{ position: 'absolute', top: 0, bottom: 0, left: '20%', right: '20%', borderLeft: '2px solid rgba(255,255,255,0.5)', borderRight: '2px solid rgba(255,255,255,0.5)' }} />
                 <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '2px', background: '#fff' }} />
                 <div style={{ position: 'absolute', top: '25%', bottom: '25%', left: '50%', width: '2px', background: 'rgba(255,255,255,0.5)', transform: 'translateX(-50%)' }} />
-                {/* Heat Points */}
                 <div style={{ position: 'absolute', top: '20%', left: '30%', width: '30px', height: '30px', background: 'radial-gradient(circle, rgba(255,0,0,0.8) 0%, rgba(255,0,0,0) 70%)', borderRadius: '50%' }} />
                 <div style={{ position: 'absolute', top: '70%', left: '70%', width: '50px', height: '50px', background: 'radial-gradient(circle, rgba(255,165,0,0.8) 0%, rgba(255,165,0,0) 70%)', borderRadius: '50%' }} />
                 <div style={{ position: 'absolute', top: '80%', left: '40%', width: '40px', height: '40px', background: 'radial-gradient(circle, rgba(255,0,0,0.9) 0%, rgba(255,0,0,0) 70%)', borderRadius: '50%' }} />
@@ -347,7 +311,6 @@ export default function PlayerTournamentDashboard({ params }: { params: Promise<
         </div>
       </div>
 
-      {/* Opponent Profile & Match Details Modal */}
       {selectedMatch && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setSelectedMatch(null)}>
           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} onClick={e => e.stopPropagation()} style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '32px', width: '500px', maxWidth: '90%' }}>
@@ -403,6 +366,246 @@ export default function PlayerTournamentDashboard({ params }: { params: Promise<
           </motion.div>
         </div>
       )}
+    </>
+  );
+}
+
+function PreTournamentView({ data, mutate, resolvedParams }: { data: any, mutate: any, resolvedParams: any }) {
+  const { tournament, team } = data;
+  const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
+  const [copied, setCopied] = useState(false);
+  const [isDrawOpen, setIsDrawOpen] = React.useState(false);
+  const [addingCategory, setAddingCategory] = useState(false);
+
+  let teamCategories: string[] = [];
+  try {
+    teamCategories = JSON.parse(team.categories || '[]');
+  } catch (e) {
+    teamCategories = [];
+  }
+
+  const allCategories = tournament.categories 
+    ? tournament.categories.split(',').map((c: string) => c.trim()).filter(Boolean)
+    : ["Men's Singles", "Women's Singles", "Men's Doubles", "Women's Doubles", "Mixed Doubles"];
+
+  const availableCategories = allCategories.filter((c: string) => !teamCategories.includes(c));
+  const canAddMore = tournament.allowMultiCategory && teamCategories.length < 3 && availableCategories.length > 0;
+
+  useEffect(() => {
+    if (!tournament.startDate) return;
+    const targetDate = new Date(tournament.startDate).getTime();
+    
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      const distance = targetDate - now;
+
+      if (distance < 0) {
+        clearInterval(interval);
+        setTimeLeft({ d: 0, h: 0, m: 0, s: 0 });
+      } else {
+        setTimeLeft({
+          d: Math.floor(distance / (1000 * 60 * 60 * 24)),
+          h: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          m: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+          s: Math.floor((distance % (1000 * 60)) / 1000)
+        });
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [tournament.startDate]);
+
+  const handleCopyLink = () => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    navigator.clipboard.writeText(`${origin}/checkout?t=${tournament.id}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleAddCategory = async (cat: string) => {
+    setAddingCategory(true);
+    try {
+      const res = await fetch(`/api/player/tournaments/${tournament.id}/categories`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category: cat })
+      });
+      if (res.ok) {
+        mutate();
+      } else {
+        const d = await res.json();
+        alert(d.error || 'Failed to add category');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('An error occurred.');
+    }
+    setAddingCategory(false);
+  };
+
+  return (
+    <>
+      <header style={{ marginBottom: '48px', textAlign: 'center' }}>
+        <div style={{ marginBottom: '16px' }}>
+          <Badge variant="accent">{tournament.registrationPhase === 'OPEN' ? 'Registration Open' : 'Pre-Tournament'}</Badge>
+        </div>
+        <h1 style={{ margin: '0 0 12px', fontSize: '3.5rem', fontWeight: 900, color: '#f0f6fc', letterSpacing: '-0.02em' }}>{tournament.name}</h1>
+        <p style={{ color: '#8b949e', fontSize: '1.2rem', maxWidth: '600px', margin: '0 auto' }}>
+          You're successfully registered as <strong>{team.franchiseName}</strong>. The tournament starts soon!
+        </p>
+      </header>
+
+      {/* Countdown Timer */}
+      {tournament.startDate && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginBottom: '48px' }}>
+          {[
+            { label: 'Days', value: timeLeft.d },
+            { label: 'Hours', value: timeLeft.h },
+            { label: 'Minutes', value: timeLeft.m },
+            { label: 'Seconds', value: timeLeft.s },
+          ].map((item, idx) => (
+            <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ background: 'linear-gradient(180deg, #161b22 0%, #0d1117 100%)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', width: '100px', height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', fontWeight: 800, color: '#58a6ff', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
+                {item.value.toString().padStart(2, '0')}
+              </div>
+              <span style={{ color: '#8b949e', marginTop: '12px', textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.85rem', fontWeight: 600 }}>{item.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '32px' }}>
+        
+        {/* Main Details */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          <Card style={{ background: '#161b22', border: '1px solid rgba(255,255,255,0.1)', padding: '32px' }}>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '24px', color: '#f0f6fc', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Shield color="var(--primary)" /> Registered Categories
+            </h2>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
+              {teamCategories.length > 0 ? teamCategories.map((cat: string) => (
+                <div key={cat} style={{ background: 'rgba(88,166,255,0.1)', border: '1px solid rgba(88,166,255,0.3)', color: '#58a6ff', padding: '8px 16px', borderRadius: '20px', fontWeight: 600 }}>
+                  {cat}
+                </div>
+              )) : (
+                <p style={{ color: '#8b949e', margin: 0 }}>No specific categories selected.</p>
+              )}
+            </div>
+
+            {canAddMore && (
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '24px' }}>
+                <h3 style={{ fontSize: '1.1rem', margin: '0 0 16px 0', color: '#e6edf3' }}>Add another category?</h3>
+                <p style={{ color: '#8b949e', fontSize: '0.9rem', marginBottom: '16px' }}>You can participate in up to 3 categories. Select an available category below to add it to your registration.</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                  {availableCategories.map((cat: string) => (
+                    <Button 
+                      key={cat} 
+                      variant="secondary" 
+                      onClick={() => handleAddCategory(cat)}
+                      disabled={addingCategory}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <Plus size={16} /> Add {cat}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Card>
+
+          <div style={{ marginBottom: '48px' }}>
+            <div 
+              onClick={() => setIsDrawOpen(!isDrawOpen)}
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', background: 'rgba(255,255,255,0.02)', padding: '24px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', marginBottom: isDrawOpen ? '24px' : '0', transition: 'all 0.2s ease' }}
+            >
+              <div>
+                <h2 style={{ fontSize: '1.5rem', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '12px' }}><Activity color="var(--primary)" /> Sneak Peek: Draws & Pools</h2>
+                <p style={{ margin: 0, color: '#8b949e', fontSize: '0.9rem' }}>If the organizer has published the draws early, you can view them here.</p>
+              </div>
+              {isDrawOpen ? <ChevronUp /> : <ChevronDown />}
+            </div>
+            {isDrawOpen && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                <DrawViewer tournamentId={tournament.id} myTeamId={team.id} />
+              </motion.div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Sidebar */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <Card style={{ background: 'linear-gradient(145deg, rgba(88,166,255,0.1), rgba(88,166,255,0.02))', border: '1px solid rgba(88,166,255,0.3)', padding: '24px', textAlign: 'center' }}>
+            <div style={{ background: 'rgba(88,166,255,0.2)', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto' }}>
+              <Share2 size={24} color="#58a6ff" />
+            </div>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '1.2rem', color: '#f0f6fc' }}>Invite Friends & Family</h3>
+            <p style={{ color: '#8b949e', fontSize: '0.9rem', marginBottom: '24px', lineHeight: 1.5 }}>
+              Share this tournament with others to grow the competition! They can register using your unique link.
+            </p>
+            <Button variant="primary" style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '8px' }} onClick={handleCopyLink}>
+              {copied ? <Check size={18} /> : <Share2 size={18} />}
+              {copied ? 'Copied to Clipboard!' : 'Copy Share Link'}
+            </Button>
+          </Card>
+
+          <Card style={{ background: '#161b22', border: '1px solid rgba(255,255,255,0.1)', padding: '24px' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', color: '#f0f6fc', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <MessageCircle color="#d2a8ff" size={20} /> Organizer Updates
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', borderLeft: '3px solid #d2a8ff' }}>
+                <p style={{ margin: '0 0 8px 0', color: '#e6edf3', fontSize: '0.95rem' }}>"Welcome to the tournament! Make sure to check in at the front desk at least 30 minutes before your first match."</p>
+                <span style={{ fontSize: '0.8rem', color: '#8b949e' }}>- Tournament Director</span>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', borderLeft: '3px solid rgba(255,255,255,0.2)' }}>
+                <p style={{ margin: '0 0 8px 0', color: '#e6edf3', fontSize: '0.95rem' }}>"Draws will be published on Friday evening. Keep an eye on this page!"</p>
+                <span style={{ fontSize: '0.8rem', color: '#8b949e' }}>- System Notification</span>
+              </div>
+            </div>
+            <Button variant="ghost" style={{ width: '100%', marginTop: '16px', color: '#8b949e' }}>View All Messages</Button>
+          </Card>
+        </div>
+
+      </div>
+    </>
+  );
+}
+
+export default function PlayerTournamentDashboard({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
+  
+  const isMock = resolvedParams.id.startsWith('mock-sandbox-');
+  const mockData = isMock ? mockDataMap[resolvedParams.id] : null;
+
+  const { data: swrData, error, isLoading, mutate } = useSWR(
+    isMock ? null : `/api/player/tournaments/${resolvedParams.id}`, 
+    fetcher, 
+    { refreshInterval: isMock ? 0 : 5000 }
+  );
+
+  const data = isMock ? mockData : swrData;
+
+  if (!isMock && isLoading) return <div style={{ padding: '48px', color: '#8b949e', textAlign: 'center', minHeight: '100vh', background: '#0d1117' }}>Loading Command Center...</div>;
+  if (!isMock && (error || !data?.success)) return <div style={{ padding: '48px', color: '#f85149', textAlign: 'center', minHeight: '100vh', background: '#0d1117' }}>Access Denied.</div>;
+
+  const { tournament } = data;
+
+  return (
+    <div style={{ padding: '48px 24px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'Inter, sans-serif', color: '#f0f6fc', minHeight: '100vh' }}>
+      
+      {/* Back Link */}
+      <div style={{ marginBottom: '32px' }}>
+        <Link href="/app/dashboards/player" style={{ color: '#58a6ff', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+          ← Back to Global Hub
+        </Link>
+      </div>
+
+      {tournament.isActive ? (
+        <LiveTournamentView data={data} mutate={mutate} resolvedParams={resolvedParams} />
+      ) : (
+        <PreTournamentView data={data} mutate={mutate} resolvedParams={resolvedParams} />
+      )}
+
     </div>
   );
 }

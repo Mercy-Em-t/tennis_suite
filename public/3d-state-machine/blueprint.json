@@ -1,0 +1,58 @@
+{
+  "spine": "Tournament Lifecycle",
+  "nodes": [
+    {
+      "id": "PRE_TOURNAMENT",
+      "title": "Pre-Tournament",
+      "position": { "z": 0 },
+      "substates": ["CLOSED", "EARLY_REGISTRATION", "LATE_REGISTRATION"],
+      "objectives": "Generate hype, secure sign-ups, organize pools.",
+      "allowedActions": ["Register Team", "Edit Settings", "Publish Pools"],
+      "prohibitedBoundaries": ["Cannot start matches", "Cannot enter scores"]
+    },
+    {
+      "id": "DURING_TOURNAMENT",
+      "title": "Live Tournament",
+      "position": { "z": -100 },
+      "substates": ["POOL", "KNOCKOUTS", "FINALS"],
+      "objectives": "Execute matches, manage courts, track telemetry.",
+      "allowedActions": ["Start Match", "Record Score", "Suspend Tournament"],
+      "prohibitedBoundaries": ["Cannot change registration fees", "Cannot alter bracket size"]
+    },
+    {
+      "id": "POST_TOURNAMENT",
+      "title": "Post-Tournament",
+      "position": { "z": -200 },
+      "substates": ["AWAITING_PAYOUTS", "COMPLETED"],
+      "objectives": "Distribute prize money, resolve ledger entries.",
+      "allowedActions": ["Trigger Stripe Payouts", "Publish Final Results"],
+      "prohibitedBoundaries": ["Cannot edit match scores"]
+    },
+    {
+      "id": "ARCHIVED",
+      "title": "Archived",
+      "position": { "z": -300 },
+      "substates": ["HISTORICAL"],
+      "objectives": "Preserve data for historical stats.",
+      "allowedActions": ["View Stats", "Export Data"],
+      "prohibitedBoundaries": ["Cannot modify any tournament data"]
+    }
+  ],
+  "gates": [
+    {
+      "from": "PRE_TOURNAMENT",
+      "to": "DURING_TOURNAMENT",
+      "requirement": "Minimum teams registered, pools generated, start date reached."
+    },
+    {
+      "from": "DURING_TOURNAMENT",
+      "to": "POST_TOURNAMENT",
+      "requirement": "Final match completed, champion crowned."
+    },
+    {
+      "from": "POST_TOURNAMENT",
+      "to": "ARCHIVED",
+      "requirement": "All ledgers settled and payouts processed."
+    }
+  ]
+}

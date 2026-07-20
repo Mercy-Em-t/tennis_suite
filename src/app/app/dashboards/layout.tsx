@@ -56,6 +56,7 @@ export default async function DashboardsLayout({ children }: { children: React.R
     ];
   } else if (upperRole === 'BROADCAST' || upperRole === 'NETWORK') {
     navItems = [
+      { name: 'Control Desk', path: '/app/dashboards/broadcaster', iconName: 'Radio' },
       { name: 'Graphics Engine', path: '/app/dashboards/broadcast', iconName: 'Video' },
     ];
   } else if (upperRole === 'DELEGATE') {

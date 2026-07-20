@@ -38,8 +38,10 @@ export default async function CentralSortingHatPage() {
     case 'PLAYER':
       redirect('/app/dashboards/player');
 
+    case 'BROADCAST':
     case 'BROADCASTER':
-      redirect('/app/dashboards/broadcast');
+    case 'NETWORK':
+      redirect('/app/dashboards/broadcaster');
 
     case 'DIRECTOR':
     case 'DELEGATE':

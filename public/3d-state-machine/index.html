@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Tournament Lifecycle State Machine</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Three.js and GSAP from CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body>
+  
+  <!-- 3D Canvas Container -->
+  <div id="canvas-container"></div>
+  
+  <!-- Overlay UI Layer -->
+  <div id="ui-layer">
+    <header class="header">
+      <div class="logo">Tennis Suite // Digital Twin</div>
+      <div class="controls">
+        <button id="btn-global">Global View</button>
+        <button id="btn-next">Next State</button>
+      </div>
+    </header>
+    
+    <div class="scroll-hint">
+      Scroll to traverse timeline
+    </div>
+
+    <!-- 2D Overlays generated dynamically -->
+    <div id="overlays-container"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
