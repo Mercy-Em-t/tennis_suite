@@ -35,18 +35,29 @@ export default function MatchScoringMVP({ params }: { params: Promise<{ id: stri
   const nameA = getTeamName(match.teamAId, match.placeholderA, match);
   const nameB = getTeamName(match.teamBId, match.placeholderB, match);
 
-  const handleCompleteMatch = async (winnerId: string | null) => {
-    if (!winnerId) {
+  const handleCompleteMatch = async (winnerId: string | null, scoreStateOverride?: any, forceStatus?: string) => {
+    if (!winnerId && !forceStatus) {
       alert("You must select a winner before completing the match.");
       return;
     }
-    if (!confirm(`Are you sure you want to mark ${winnerId === match.teamAId ? nameA : nameB} as the winner? This will lock the result and may progress the tournament bracket.`)) return;
+    
+    if (winnerId && !forceStatus) {
+      if (!confirm(`Are you sure you want to mark ${winnerId === match.teamAId ? nameA : nameB} as the winner? This will lock the result and may progress the tournament bracket.`)) return;
+    } else if (forceStatus === 'CANCELLED') {
+      if (!confirm(`Are you sure you want to permanently abandon/cancel this match? Neither team will receive points.`)) return;
+    } else if (scoreStateOverride?.walkover) {
+      if (!confirm(`Are you sure you want to award a Walkover to ${winnerId === match.teamAId ? nameA : nameB}?`)) return;
+    }
 
     setSubmitting(true);
     const res = await fetch(`/api/tournaments/${resolvedParams.id}/matches/${match.id}/score`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'COMPLETED', winnerId, scoreState: {} }) // Dummy score state for MVP
+      body: JSON.stringify({ 
+        status: forceStatus || 'COMPLETED', 
+        winnerId, 
+        scoreState: scoreStateOverride || {} 
+      })
     });
 
     const d = await res.json();
@@ -96,8 +107,49 @@ export default function MatchScoringMVP({ params }: { params: Promise<{ id: stri
         {match.status === 'COMPLETED' && (
           <div style={{ marginTop: '32px', color: '#3fb950', fontWeight: 'bold' }}>
             This match is already completed. Winner ID: {match.winnerId}
+            {match.scoreState?.includes('walkover') && " (via Walkover)"}
           </div>
         )}
+        
+        {match.status === 'CANCELLED' && (
+          <div style={{ marginTop: '32px', color: '#8b949e', fontWeight: 'bold' }}>
+            This match was abandoned/cancelled.
+          </div>
+        )}
+      </Card>
+
+      <Card style={{ background: '#3b1c1c', border: '1px solid #f85149', padding: '32px', textAlign: 'center', marginBottom: '24px' }}>
+        <h3 style={{ color: '#ff7b72', margin: '0 0 16px', fontSize: '1.2rem' }}>Exceptions & Overrides</h3>
+        <p style={{ color: '#8b949e', marginBottom: '24px', fontSize: '0.9rem' }}>
+          Use these options only if the match cannot be played conventionally.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '16px' }}>
+          <Button 
+            variant="secondary"
+            onClick={() => handleCompleteMatch(match.teamAId, { walkover: true, setsA: 2, setsB: 0, gamesA: 12, gamesB: 0 })} 
+            disabled={submitting || match.status === 'COMPLETED' || match.status === 'CANCELLED'}
+          >
+            Award Walkover to {nameA}
+          </Button>
+          
+          <Button 
+            variant="secondary"
+            onClick={() => handleCompleteMatch(match.teamBId, { walkover: true, setsA: 2, setsB: 0, gamesA: 12, gamesB: 0 })} 
+            disabled={submitting || match.status === 'COMPLETED' || match.status === 'CANCELLED'}
+          >
+            Award Walkover to {nameB}
+          </Button>
+        </div>
+
+        <Button 
+          variant="danger"
+          style={{ width: '100%' }}
+          onClick={() => handleCompleteMatch(null, {}, 'CANCELLED')} 
+          disabled={submitting || match.status === 'COMPLETED' || match.status === 'CANCELLED'}
+        >
+          Abandon Match (No Winner / 0 Points)
+        </Button>
       </Card>
 
       <Button variant="secondary" onClick={() => router.back()}>Return to Dispatcher</Button>

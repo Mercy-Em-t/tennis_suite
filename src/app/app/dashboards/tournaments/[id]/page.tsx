@@ -51,6 +51,13 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
 
   const { tournament, stats } = data;
 
+  const isSetupComplete = !!(
+    tournament.startDate && 
+    tournament.endDate && 
+    tournament.location && 
+    tournament.contactEmail
+  );
+
   const S = {
     page: { padding: '48px', color: '#f0f6fc', background: '#0d1117', minHeight: '100vh', fontFamily: 'Inter, system-ui, sans-serif' } as React.CSSProperties,
     header: { display: 'flex', flexDirection: 'column', gap: '16px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '24px', marginBottom: '32px' } as React.CSSProperties,
@@ -91,6 +98,20 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
         ← Back to Dashboard
       </Button>
 
+      {tournament.globalState !== 'NORMAL' && (
+        <div style={{ background: '#3b1c1c', border: '1px solid #f85149', padding: '16px', borderRadius: '8px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <span style={{ fontSize: '1.5rem' }}>⚠️</span>
+          <div>
+            <h3 style={{ color: '#ff7b72', margin: '0 0 4px', fontSize: '1.1rem' }}>Tournament is {tournament.globalState}</h3>
+            <p style={{ color: '#8b949e', margin: 0, fontSize: '0.9rem' }}>
+              {tournament.globalState === 'CANCELLED' && 'This event has been permanently cancelled. All operations are locked.'}
+              {tournament.globalState === 'POSTPONED' && 'This event has been postponed. Scheduling and live operations are locked until resumed.'}
+              {tournament.globalState === 'SUSPENDED' && 'The event is temporarily paused (e.g. weather delay). Active operations are suspended.'}
+            </p>
+          </div>
+        </div>
+      )}
+
       <header style={S.header}>
         <div style={S.topRow}>
           <div>
@@ -130,7 +151,24 @@ export default function TournamentDashboard({ params }: { params: Promise<{ id: 
         </div>
       </header>
 
-      {activeTab === 'PRE' && (
+      {activeTab === 'PRE' && !isSetupComplete && (
+        <div style={{ background: 'rgba(22, 27, 34, 0.8)', border: '1px solid rgba(255,255,255,0.1)', padding: '64px 32px', textAlign: 'center', borderRadius: '12px', backdropFilter: 'blur(10px)' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔒</div>
+          <h2 style={{ color: '#fff', fontSize: '1.75rem', marginBottom: '12px' }}>Tournament Setup Incomplete</h2>
+          <p style={{ color: '#8b949e', fontSize: '1.1rem', maxWidth: '500px', margin: '0 auto 32px', lineHeight: 1.6 }}>
+            Before you can access the Pre-Tournament operations and launch your event, you must complete the mandatory tournament settings (Dates, Location, Contact Email).
+          </p>
+          <Button 
+            variant="primary" 
+            onClick={() => router.push(`/app/dashboards/tournaments/${resolvedParams.id}/settings`)}
+            style={{ padding: '12px 32px', fontSize: '1.1rem' }}
+          >
+            Complete Tournament Settings →
+          </Button>
+        </div>
+      )}
+
+      {activeTab === 'PRE' && isSetupComplete && (
         <PreTournamentView 
           tournament={tournament} 
           stats={stats}

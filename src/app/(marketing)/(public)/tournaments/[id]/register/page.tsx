@@ -110,7 +110,7 @@ export default function TournamentRegistrationPage({ params }: { params: Promise
           Tennis <span className={styles.brandAccent}>Suite</span>
         </div>
         <div className={styles.navLinks}>
-          <button className={styles.navLink} onClick={() => router.push('/tournaments')}>Back to Tournaments</button>
+          <button className={styles.navLink} onClick={() => router.push(`/tournaments/${tournament.slug || tournament.id}`)}>Back to Tournament</button>
         </div>
       </nav>
 
@@ -119,21 +119,27 @@ export default function TournamentRegistrationPage({ params }: { params: Promise
         
         <div style={{ maxWidth: '800px', width: '100%' }}>
           <div style={{ marginBottom: '32px' }}>
-            <StatusBadge status="success" pulse={false}>
-              Registration Open
+            <StatusBadge status={tournament?.registrationEnd && new Date() > new Date(tournament.registrationEnd) ? "error" : "success"} pulse={false}>
+              {tournament?.registrationEnd && new Date() > new Date(tournament.registrationEnd) ? "Registration Closed" : "Registration Open"}
             </StatusBadge>
             <h1 style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--text-main)', marginTop: '16px', marginBottom: '8px' }}>
               Register for {tournament.name}
             </h1>
             <p style={{ color: 'var(--text-muted)', fontSize: '1rem', lineHeight: 1.6 }}>
-              {tournament.location || 'Location TBA'} • {tournament.formatType} • {tournament.prizeMoney || 'Glory & Honor'}
+              {tournament.location || 'Location TBA'} • {tournament.sportType} • {tournament.formatType}
             </p>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '32px' }}>
             {/* Form Column */}
             <GlassCard>
-              {success ? (
+              {tournament?.registrationEnd && new Date() > new Date(tournament.registrationEnd) ? (
+                <div style={{ textAlign: 'center', padding: '60px 0' }}>
+                  <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔒</div>
+                  <h2 style={{ fontSize: '1.5rem', color: 'var(--text-main)', marginBottom: '8px' }}>Registration Closed</h2>
+                  <p style={{ color: 'var(--text-muted)' }}>The deadline to register for this tournament has passed.</p>
+                </div>
+              ) : success ? (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ textAlign: 'center', padding: '40px 0' }}>
                   <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🎾</div>
                   <h2 style={{ fontSize: '1.5rem', color: 'var(--text-main)', marginBottom: '8px' }}>Preparing your Checkout...</h2>

@@ -103,21 +103,21 @@ export default function DuringTournamentView({ tournament, stats, updateTourname
           <h3 style={S.h3}>Action Center</h3>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {tournament.globalState === 'SUSPENDED' ? (
-              <Button 
-                variant="success" 
-                onClick={() => updateTournament({ globalState: 'NORMAL' })}
-              >
-                Resume Event
-              </Button>
-            ) : (
-              <Button 
-                variant="secondary" 
-                onClick={() => updateTournament({ globalState: 'SUSPENDED' })}
-              >
-                Pause Event (Emergency)
-              </Button>
-            )}
+            <div style={{ background: '#3b1c1c', padding: '12px', borderRadius: '8px', border: '1px solid #f85149' }}>
+              <h4 style={{ color: '#ff7b72', margin: '0 0 8px', fontSize: '0.9rem' }}>Emergency Global Override</h4>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <select 
+                  style={{ flex: 1, background: '#161b22', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', padding: '6px', borderRadius: '4px' }}
+                  value={tournament.globalState}
+                  onChange={(e) => updateTournament({ globalState: e.target.value })}
+                >
+                  <option value="NORMAL">NORMAL (Live)</option>
+                  <option value="SUSPENDED">SUSPENDED (Temporary Pause)</option>
+                  <option value="POSTPONED">POSTPONED (Rescheduled)</option>
+                  <option value="CANCELLED">CANCELLED (Terminated)</option>
+                </select>
+              </div>
+            </div>
 
             <Button 
               variant="secondary" 

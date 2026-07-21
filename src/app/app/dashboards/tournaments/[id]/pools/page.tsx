@@ -19,6 +19,7 @@ export default function PoolsWorkspace({ params }: { params: Promise<{ id: strin
   const [generating, setGenerating] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('Open');
   const [selectedVersion, setSelectedVersion] = useState<string>('v1.0');
+  const [numPools, setNumPools] = useState<number>(2);
 
   // We keep a local state of pools for optimistic updates
   const [localPools, setLocalPools] = useState<any[]>([]);
@@ -117,12 +118,45 @@ export default function PoolsWorkspace({ params }: { params: Promise<{ id: strin
     const res = await fetch(`/api/tournaments/${resolvedParams.id}/pools`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ category, numPools: 2 }) // default 2 pools for demo
+      body: JSON.stringify({ category, numPools })
     });
     const d = await res.json();
     if (!d.success) alert(`Error: ${d.error}`);
     mutate();
     setGenerating(false);
+  };
+
+  const handleAddPool = async () => {
+    const res = await fetch(`/api/tournaments/${resolvedParams.id}/pools/add`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category: selectedCategory, versionId: selectedVersion })
+    });
+    if (res.ok) mutate();
+    else alert('Failed to add pool');
+  };
+
+  const handleDeletePool = async (poolId: string) => {
+    const res = await fetch(`/api/tournaments/${resolvedParams.id}/pools/${poolId}`, {
+      method: 'DELETE'
+    });
+    if (res.ok) mutate();
+    else {
+      const d = await res.json();
+      alert(`Error: ${d.error}`);
+    }
+  };
+
+  const handleGenerateKnockouts = async () => {
+    if (!window.confirm("This will draft placeholder knockout matches based on the current pools. Proceed?")) return;
+    const res = await fetch(`/api/tournaments/${resolvedParams.id}/bracket/draft`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category: selectedCategory, versionId: selectedVersion })
+    });
+    const d = await res.json();
+    if (d.success) alert(d.message);
+    else alert(`Error: ${d.error}`);
   };
 
   const handleApproveRefereeDraw = async () => {
@@ -316,6 +350,13 @@ export default function PoolsWorkspace({ params }: { params: Promise<{ id: strin
       let itemToMove: any = null;
       let teamId = '';
 
+      if (isAppendOnly && sourceContainer === 'unassigned' && targetContainer !== 'unassigned') {
+        if (!window.confirm("Are you sure you want to commit this late player to this pool? This will permanently lock them in and generate their matches against the existing pool participants immediately. This action cannot be undone.")) {
+          setActiveId(null);
+          return;
+        }
+      }
+
       if (sourceContainer === 'unassigned') {
         const t: any = unassignedTeams.find((t: any) => t.id === activeIdStr);
         if (t) {
@@ -456,13 +497,26 @@ export default function PoolsWorkspace({ params }: { params: Promise<{ id: strin
           <p style={{ color: '#8b949e', marginBottom: '24px', maxWidth: '600px', margin: '0 auto 24px' }}>
             The auto-generation system uses a <strong>Serpentine Algorithm</strong> to seed players based on global XP and skill ratings.
           </p>
-          <Button 
-            onClick={() => handleGenerate(selectedCategory)} 
-            disabled={generating || (tournament.poolGenerationCount || 0) >= 5}
-            variant="success"
-          >
-            {generating ? 'Generating...' : 'Auto-Generate Pools'}
-          </Button>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label style={{ color: '#8b949e' }}>Number of Pools:</label>
+              <input 
+                type="number" 
+                min={2} 
+                max={16}
+                value={numPools} 
+                onChange={e => setNumPools(parseInt(e.target.value))} 
+                style={{ width: '60px', padding: '8px', background: '#0d1117', color: '#fff', border: '1px solid #30363d', borderRadius: '6px' }}
+              />
+            </div>
+            <Button 
+              onClick={() => handleGenerate(selectedCategory)} 
+              disabled={generating || (tournament.poolGenerationCount || 0) >= 5}
+              variant="success"
+            >
+              {generating ? 'Generating...' : 'Auto-Generate Pools'}
+            </Button>
+          </div>
         </Card>
       ) : (
         <DndContext collisionDetection={closestCorners} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
@@ -473,8 +527,16 @@ export default function PoolsWorkspace({ params }: { params: Promise<{ id: strin
             )}
 
             {visiblePools.map(pool => (
-              <PoolContainer key={pool.id} pool={pool} onManualSeedChange={handleManualSeedChange} />
+              <PoolContainer key={pool.id} pool={pool} onManualSeedChange={handleManualSeedChange} onDelete={isReadOnly ? undefined : handleDeletePool} />
             ))}
+            
+            {!isReadOnly && (
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <Button onClick={handleAddPool} variant="secondary" style={{ height: '100%', minHeight: '200px', border: '1px dashed #58a6ff', background: 'transparent' }}>
+                  + Add Pool
+                </Button>
+              </div>
+            )}
           </div>
           
           <DragOverlay>
@@ -485,6 +547,19 @@ export default function PoolsWorkspace({ params }: { params: Promise<{ id: strin
             ) : null}
           </DragOverlay>
         </DndContext>
+      )}
+
+      {/* Knockout Draft Section */}
+      {visiblePools.length > 0 && (
+        <div style={{ marginTop: '48px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '32px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <div>
+              <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#fff' }}>Knockout Draft Placeholder</h2>
+              <p style={{ color: '#8b949e', margin: 0, marginTop: '8px' }}>Pre-generate placeholder matches (A1 vs B2, etc.) based on your pools. Ensure you have 2 or 4 pools before drafting.</p>
+            </div>
+            <Button variant="primary" onClick={handleGenerateKnockouts}>Generate Knockout Bracket</Button>
+          </div>
+        </div>
       )}
     </div>
   );

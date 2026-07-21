@@ -7,7 +7,7 @@ export default async function ManagerDashboardPage() {
   const payload = await requireAuth();
   
   if (payload instanceof Response) {
-    return payload; // Redirect handled by requireAuth
+    redirect('/login?error=forbidden');
   }
 
   // Verify role

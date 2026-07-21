@@ -22,9 +22,12 @@ export default function TournamentFactory({ onClose }: TournamentFactoryProps) {
   // Form State
   const [formData, setFormData] = useState({
     name: '',
+    sportType: 'TENNIS',
     startDate: '',
     endDate: '',
     location: '',
+    contactEmail: '',
+    contactPhone: '',
     formatType: 'Round-Robin',
     matchDuration: '60',
     scoringRules: 'Advantage',
@@ -51,6 +54,8 @@ export default function TournamentFactory({ onClose }: TournamentFactoryProps) {
       if (!formData.startDate) newErrors.startDate = 'Start date is required';
       if (!formData.endDate) newErrors.endDate = 'End date is required';
       if (!formData.location.trim()) newErrors.location = 'Location/Venue is required';
+      if (!formData.contactEmail.trim()) newErrors.contactEmail = 'Contact email is required';
+      if (!formData.contactPhone.trim()) newErrors.contactPhone = 'Contact phone is required';
       if (formData.startDate && formData.endDate && new Date(formData.endDate) < new Date(formData.startDate)) {
         newErrors.endDate = 'End date cannot be before start date';
       }
@@ -168,14 +173,17 @@ export default function TournamentFactory({ onClose }: TournamentFactoryProps) {
         // Clear all form data upon success
         setFormData({
           name: '',
+          sportType: 'TENNIS',
           startDate: '',
           endDate: '',
           location: '',
+          contactEmail: '',
+          contactPhone: '',
           formatType: 'Round-Robin',
           matchDuration: '60',
-          scoringRules: 'Advantage',
+          scoringRules: '{"setsToWin":2,"gamesPerSet":6}',
           categories: '',
-          numCourts: '1',
+          numCourts: '',
           surfaceType: 'Hard',
           logoUrl: '',
           sponsorUrl: ''
@@ -243,12 +251,28 @@ export default function TournamentFactory({ onClose }: TournamentFactoryProps) {
                 />
                 {errors.name && <span className={styles.errorText}>{errors.name}</span>}
               </div>
+                <div className={styles.formGroup}>
+                  <label>Sport Type <span style={{ color: '#ef4444' }}>*</span></label>
+                  <select 
+                    className={`${styles.input}`} 
+                    name="sportType" 
+                    value={formData.sportType} 
+                    onChange={handleChange} 
+                  >
+                    <option value="TENNIS" style={{ color: '#000' }}>Tennis</option>
+                    <option value="PADEL" style={{ color: '#000' }}>Padel</option>
+                    <option value="BADMINTON" style={{ color: '#000' }}>Badminton</option>
+                    <option value="PICKLEBALL" style={{ color: '#000' }}>Pickleball</option>
+                    <option value="SQUASH" style={{ color: '#000' }}>Squash</option>
+                    <option value="SOCCER" style={{ color: '#000' }}>Soccer</option>
+                  </select>
+                </div>
               <div className={styles.row}>
                 <div className={styles.formGroup}>
-                  <label>Start Date <span style={{ color: '#ef4444' }}>*</span></label>
+                  <label>Start Date & Time <span style={{ color: '#ef4444' }}>*</span></label>
                   <input 
                     className={`${styles.input} ${errors.startDate ? styles.inputError : ''}`} 
-                    type="date" 
+                    type="datetime-local" 
                     name="startDate" 
                     value={formData.startDate} 
                     onChange={handleChange} 
@@ -256,10 +280,10 @@ export default function TournamentFactory({ onClose }: TournamentFactoryProps) {
                   {errors.startDate && <span className={styles.errorText}>{errors.startDate}</span>}
                 </div>
                 <div className={styles.formGroup}>
-                  <label>End Date <span style={{ color: '#ef4444' }}>*</span></label>
+                  <label>End Date & Time <span style={{ color: '#ef4444' }}>*</span></label>
                   <input 
                     className={`${styles.input} ${errors.endDate ? styles.inputError : ''}`} 
-                    type="date" 
+                    type="datetime-local" 
                     name="endDate" 
                     value={formData.endDate} 
                     onChange={handleChange} 
@@ -278,6 +302,32 @@ export default function TournamentFactory({ onClose }: TournamentFactoryProps) {
                 />
                 {errors.location && <span className={styles.errorText}>{errors.location}</span>}
               </div>
+              <div className={styles.row}>
+                <div className={styles.formGroup}>
+                  <label>Contact Email <span style={{ color: '#ef4444' }}>*</span></label>
+                  <input 
+                    className={`${styles.input} ${errors.contactEmail ? styles.inputError : ''}`} 
+                    type="email"
+                    name="contactEmail" 
+                    value={formData.contactEmail} 
+                    onChange={handleChange} 
+                    placeholder="organiser@tennis.com" 
+                  />
+                  {errors.contactEmail && <span className={styles.errorText}>{errors.contactEmail}</span>}
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Contact Phone <span style={{ color: '#ef4444' }}>*</span></label>
+                  <input 
+                    className={`${styles.input} ${errors.contactPhone ? styles.inputError : ''}`} 
+                    type="tel"
+                    name="contactPhone" 
+                    value={formData.contactPhone} 
+                    onChange={handleChange} 
+                    placeholder="+254 700 000 000" 
+                  />
+                  {errors.contactPhone && <span className={styles.errorText}>{errors.contactPhone}</span>}
+                </div>
+              </div>
             </div>
           )}
 
@@ -287,8 +337,8 @@ export default function TournamentFactory({ onClose }: TournamentFactoryProps) {
               <div className={styles.formGroup}>
                 <label>Format Type <span style={{ color: '#ef4444' }}>*</span></label>
                 <select className={styles.input} name="formatType" value={formData.formatType} onChange={handleChange}>
-                  <option value="Round-Robin">Round-Robin</option>
-                  <option value="Elimination">Elimination</option>
+                  <option value="Round-Robin" style={{ color: '#000' }}>Round-Robin</option>
+                  <option value="Elimination" style={{ color: '#000' }}>Elimination</option>
                 </select>
               </div>
               <div className={styles.formGroup}>
@@ -298,9 +348,9 @@ export default function TournamentFactory({ onClose }: TournamentFactoryProps) {
                   onChange={handleCategorySelect}
                   defaultValue=""
                 >
-                  <option value="" disabled>-- Select a Category --</option>
+                  <option value="" disabled style={{ color: '#000' }}>-- Select a Category --</option>
                   {predefinedCategories.map((cat) => (
-                    <option key={cat} value={cat} disabled={selectedCategories.includes(cat)}>
+                    <option key={cat} value={cat} disabled={selectedCategories.includes(cat)} style={{ color: '#000' }}>
                       {cat} {selectedCategories.includes(cat) ? '(Added)' : ''}
                     </option>
                   ))}

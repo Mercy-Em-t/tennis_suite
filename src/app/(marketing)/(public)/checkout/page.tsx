@@ -1,189 +1,207 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { useSearchParams } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { DynamicButton } from '@/components/ui/DynamicButton';
+import styles from '../../landing.module.css';
 
-function CheckoutForm() {
+function CheckoutContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
+  
   const tournamentId = searchParams.get('t');
   const franchiseName = searchParams.get('f');
   const categoriesParam = searchParams.get('c');
-  const categories = categoriesParam ? JSON.parse(decodeURIComponent(categoriesParam)) : [];
-  const src = searchParams.get('src');
-
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'STRIPE' | 'MPESA'>('STRIPE');
+  
+  const [categories, setCategories] = useState<string[]>([]);
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState('');
+  const [checkoutRequestId, setCheckoutRequestId] = useState<string | null>(null);
 
-  const handlePay = async () => {
-    setLoading(true);
-    setError('');
+  useEffect(() => {
+    if (!tournamentId || !franchiseName) {
+      router.push('/');
+    }
+    if (categoriesParam) {
+      try {
+        setCategories(JSON.parse(categoriesParam));
+      } catch (e) {
+        console.error("Failed to parse categories");
+      }
+    }
+  }, [tournamentId, franchiseName, categoriesParam, router]);
 
-    if (paymentMethod === 'MPESA' && !phoneNumber.trim()) {
-      setError('Please enter a valid M-Pesa phone number.');
-      setLoading(false);
+  // Polling logic when checkoutRequestId is present
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (checkoutRequestId && !isSuccess) {
+      interval = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/payments/mpesa/status?checkoutRequestId=${checkoutRequestId}`);
+          const data = await res.json();
+          if (data.status === 'COMPLETED') {
+            setIsSuccess(true);
+            setCheckoutRequestId(null);
+            clearInterval(interval);
+            setTimeout(() => {
+              router.push(`/tournaments/${tournamentId}`);
+            }, 3000);
+          } else if (data.status === 'FAILED') {
+            setError('Payment failed or was cancelled.');
+            setIsProcessing(false);
+            setCheckoutRequestId(null);
+            clearInterval(interval);
+          }
+        } catch (err) {
+          console.error("Error polling status", err);
+        }
+      }, 3000);
+    }
+    return () => clearInterval(interval);
+  }, [checkoutRequestId, isSuccess, router, tournamentId]);
+
+  const handlePayment = async () => {
+    if (!phoneNumber) {
+      setError('Please enter your M-Pesa phone number.');
       return;
     }
+    setIsProcessing(true);
+    setError('');
 
     try {
-      const res = await fetch('/api/checkout/process', {
+      const res = await fetch('/api/payments/mpesa/stkpush', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          tournamentId, 
-          franchiseName, 
-          paymentMethod,
-          phoneNumber: paymentMethod === 'MPESA' ? phoneNumber : undefined,
-          categories
-        })
+        body: JSON.stringify({
+          tournamentId,
+          name: franchiseName,
+          categories,
+          phoneNumber,
+          amount: 50 // Demo amount
+        }),
       });
+
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Payment failed');
-      
-      setSuccess(true);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Payment failed');
-      setLoading(false);
+      if (!res.ok) throw new Error(data.error || 'Payment processing failed');
+
+      // Save request ID to start polling
+      setCheckoutRequestId(data.checkoutRequestId);
+
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message);
+      setIsProcessing(false);
     }
   };
 
-  if (!tournamentId || !franchiseName) {
-    return <div style={{ color: '#f85149' }}>Invalid Checkout Session. Missing parameters.</div>;
-  }
-
-  if (success) {
+  if (isSuccess) {
     return (
-      <Card style={{ padding: '2rem', width: '450px', background: '#161b22', border: '1px solid rgba(255,255,255,0.1)' }}>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ textAlign: 'center', padding: '20px 0' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🎉</div>
-          <h2 style={{ fontSize: '1.5rem', color: '#f0f6fc', marginBottom: '12px' }}>Registration Complete!</h2>
-          <p style={{ color: '#8b949e', marginBottom: '8px' }}>Your payment was successful and your team is securely registered.</p>
-          
-          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid #1f6feb', borderRadius: '8px', padding: '16px', marginTop: '24px', marginBottom: '24px' }}>
-            <h3 style={{ fontSize: '1.1rem', color: '#fff', marginBottom: '8px' }}>📧 Check Your Inbox!</h3>
-            <p style={{ color: '#8b949e', fontSize: '0.9rem', lineHeight: 1.5 }}>
-              We've sent a <strong>Registration Confirmation</strong> email to you. It contains a magic link that will securely log you in to your Player Hub, where you can view your schedule and matchups!
-            </p>
-          </div>
-
-          <Button onClick={() => window.location.href = src === 'app' ? '/app/dashboards/player' : '/'} style={{ width: '100%', background: '#21262d', color: '#c9d1d9', border: '1px solid #30363d' }}>
-            {src === 'app' ? 'Back to Dashboard' : 'Back to Home'}
-          </Button>
-        </motion.div>
-      </Card>
+      <div className={styles.page} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <GlassCard>
+          <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ textAlign: 'center', padding: '40px' }}>
+            <div style={{ fontSize: '4rem', marginBottom: '16px' }}>🎉</div>
+            <h2 style={{ fontSize: '2rem', color: 'var(--text-main)', marginBottom: '8px' }}>Payment Successful!</h2>
+            <p style={{ color: 'var(--text-muted)' }}>Your team <strong>{franchiseName}</strong> is registered.</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '16px' }}>Redirecting to tournament portal...</p>
+          </motion.div>
+        </GlassCard>
+      </div>
     );
   }
 
   return (
-    <Card style={{ padding: '2rem', width: '450px', background: '#161b22', border: '1px solid rgba(255,255,255,0.1)' }}>
-      <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '48px', height: '48px', borderRadius: '50%', background: '#1f6feb', color: '#fff', fontSize: '1.5rem', fontWeight: 700, marginBottom: '16px' }}>
-          $
-        </div>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>Tournament Entry Fee</h1>
-        <p style={{ color: '#8b949e', marginTop: '8px' }}>Secure your spot for <strong>{franchiseName}</strong></p>
-      </div>
+    <div className={styles.page} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '24px' }}>
+      <div className={styles.heroBg} />
+      <div style={{ width: '100%', maxWidth: '500px', zIndex: 10 }}>
+        <GlassCard>
+          <div style={{ padding: '32px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <div className={styles.brand} style={{ justifyContent: 'center', marginBottom: '24px' }}>
+                <span className={styles.brandDot} />
+                Tennis <span className={styles.brandAccent}>Suite</span> Checkout
+              </div>
+              <h2 style={{ fontSize: '1.5rem', color: 'var(--text-main)', marginBottom: '8px' }}>Complete Registration</h2>
+              <p style={{ color: 'var(--text-muted)' }}>Team: <strong>{franchiseName}</strong></p>
+            </div>
 
-      <div style={{ background: '#0d1117', border: '1px solid #30363d', borderRadius: '6px', padding: '16px', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <span style={{ color: '#8b949e' }}>Entry Fee</span>
-          <span style={{ fontWeight: 600 }}>$150.00</span>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <span style={{ color: '#8b949e' }}>Platform Fee</span>
-          <span style={{ fontWeight: 600 }}>$7.50</span>
-        </div>
-        <div style={{ borderTop: '1px solid #30363d', margin: '12px 0' }}></div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>Total Due</span>
-          <span style={{ fontWeight: 800, fontSize: '1.5rem', color: '#7ee787' }}>$157.50</span>
-        </div>
-      </div>
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', color: '#c9d1d9' }}>
+                <span>Tournament Entry Fee</span>
+                <span>Ksh 50</span>
+              </div>
+              {categories.length > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', color: '#c9d1d9', fontSize: '0.9rem' }}>
+                  <span>Categories ({categories.length})</span>
+                  <span>Included</span>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-main)', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                <span>Total Due</span>
+                <span>Ksh 50</span>
+              </div>
+            </div>
 
-      <div style={{ marginBottom: '24px' }}>
-        <h3 style={{ fontSize: '0.9rem', marginBottom: '12px', color: '#8b949e', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payment Method</h3>
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-          <button 
-            onClick={() => setPaymentMethod('STRIPE')}
-            style={{ 
-              flex: 1, padding: '12px', borderRadius: '6px', 
-              background: paymentMethod === 'STRIPE' ? 'rgba(31,111,235,0.1)' : '#0d1117',
-              border: `1px solid ${paymentMethod === 'STRIPE' ? '#1f6feb' : '#30363d'}`,
-              color: paymentMethod === 'STRIPE' ? '#58a6ff' : '#8b949e',
-              cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s ease'
-            }}>
-            Credit Card
-          </button>
-          <button 
-            onClick={() => setPaymentMethod('MPESA')}
-            style={{ 
-              flex: 1, padding: '12px', borderRadius: '6px', 
-              background: paymentMethod === 'MPESA' ? 'rgba(63,185,80,0.1)' : '#0d1117',
-              border: `1px solid ${paymentMethod === 'MPESA' ? '#3fb950' : '#30363d'}`,
-              color: paymentMethod === 'MPESA' ? '#7ee787' : '#8b949e',
-              cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s ease'
-            }}>
-            M-Pesa
-          </button>
-        </div>
-        
-        {paymentMethod === 'MPESA' && (
-          <div style={{ animation: 'fadeIn 0.2s ease-in' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: '#8b949e' }}>M-Pesa Phone Number</label>
-            <input 
-              type="text" 
-              placeholder="e.g. 0700 000 000"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              style={{
-                width: '100%', padding: '12px', background: '#0d1117', border: '1px solid #30363d',
-                borderRadius: '6px', color: '#f0f6fc', fontSize: '1rem', outline: 'none',
-                boxSizing: 'border-box'
-              }}
-            />
-            <p style={{ fontSize: '0.75rem', color: '#8b949e', marginTop: '8px' }}>
-              We will send an STK push prompt directly to your phone. Enter your M-Pesa PIN to complete payment.
-            </p>
+            {checkoutRequestId ? (
+              <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} style={{ display: 'inline-block', fontSize: '2rem', marginBottom: '16px' }}>⏳</motion.div>
+                <h3 style={{ color: 'var(--text-main)', marginBottom: '8px' }}>Check your phone</h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>We've sent an M-Pesa prompt to <strong>{phoneNumber}</strong>.<br/>Please enter your PIN to complete the payment.</p>
+              </div>
+            ) : (
+              <>
+                <div style={{ marginBottom: '24px' }}>
+                  <label style={{ display: 'block', color: '#c9d1d9', marginBottom: '8px', fontSize: '0.9rem' }}>M-Pesa Phone Number</label>
+                  <input
+                    type="tel"
+                    placeholder="2547XXXXXXXX"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      background: '#0d1117',
+                      border: '1px solid #30363d',
+                      borderRadius: '6px',
+                      color: '#c9d1d9',
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+
+                {error && (
+                  <div style={{ background: 'rgba(248, 81, 73, 0.1)', color: '#f85149', padding: '12px', borderRadius: '6px', fontSize: '0.875rem', border: '1px solid rgba(248,81,73,0.3)', marginBottom: '24px' }}>
+                    {error}
+                  </div>
+                )}
+
+                <DynamicButton 
+                  onClick={handlePayment}
+                  variant="primary"
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? "Initiating..." : "Pay with M-Pesa"}
+                </DynamicButton>
+                <p style={{ textAlign: 'center', fontSize: '0.8rem', color: '#8b949e', marginTop: '16px', lineHeight: 1.5 }}>
+                  Secure payment via Safaricom Daraja API.<br/>
+                  Payments are processed by <strong>Savannah Atelier</strong>.
+                </p>
+              </>
+            )}
           </div>
-        )}
+        </GlassCard>
       </div>
-
-      {error && (
-        <div style={{ background: 'rgba(248, 81, 73, 0.1)', color: '#f85149', padding: '0.75rem', borderRadius: '6px', marginBottom: '1rem', fontSize: '0.875rem', border: '1px solid rgba(248,81,73,0.3)' }}>
-          {error}
-        </div>
-      )}
-
-      <Button 
-        onClick={handlePay} 
-        style={{ 
-          width: '100%', padding: '16px', fontSize: '1.1rem',
-          background: paymentMethod === 'MPESA' ? '#238636' : undefined,
-          color: '#fff'
-        }} 
-        disabled={loading}
-      >
-        {loading ? 'Processing...' : paymentMethod === 'MPESA' ? 'Pay via M-Pesa' : 'Pay with Stripe'}
-      </Button>
-
-      <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '0.8rem', color: '#8b949e' }}>
-        This is a simulated Sandbox environment. No real funds are transferred.
-      </p>
-    </Card>
+    </div>
   );
 }
 
 export default function CheckoutPage() {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0d1117', color: '#f0f6fc', fontFamily: 'Inter, sans-serif' }}>
-      <Suspense fallback={<div style={{ color: '#8b949e' }}>Loading Secure Checkout...</div>}>
-        <CheckoutForm />
-      </Suspense>
-    </div>
+    <Suspense fallback={<div className={styles.page} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>Loading...</div>}>
+      <CheckoutContent />
+    </Suspense>
   );
 }

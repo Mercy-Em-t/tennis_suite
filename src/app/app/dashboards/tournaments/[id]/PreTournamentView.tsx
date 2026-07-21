@@ -42,6 +42,7 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
   const [uploading, setUploading] = useState(false);
   const [isLaunching, setIsLaunching] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
 
   // Deriving current progress based on flags
   const highestStageUnlocked = 
@@ -50,6 +51,7 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
     tournament.registrationPhase === 'CLOSED' ? 3 : 2;
 
   const magicLink = typeof window !== 'undefined' ? `${window.location.origin}/tournaments/${tournament.slug || tournament.id}/register` : '';
+  const staffLink = typeof window !== 'undefined' ? `${window.location.origin}/tournaments/${tournament.slug || tournament.id}/apply-staff` : '';
   const qr = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(magicLink)}&bgcolor=0d1117&color=58a6ff`;
 
   const referees = tournament.staff?.filter((s: any) => s.role === 'REFEREE') || [];
@@ -221,9 +223,44 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
     </Card>
   );
 
+  const exportToCSV = () => {
+    const allTeams = tournament.teams || [];
+    const csvData = allTeams.map((t: any) => ({
+      'Franchise Name': t.franchiseName,
+      'Category': t.categories,
+      'Status': t.status || 'ACTIVE',
+      'Late Registration': t.isLateRegistration ? 'Yes' : 'No',
+      'Players': t.players?.map((p: any) => p.name).join(' & ') || '',
+    }));
+    const csv = Papa.unparse(csvData);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${tournament.name}-registrations.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const updateTeamStatus = async (teamId: string, status: string) => {
+    try {
+      const res = await fetch(`/api/tournaments/${tournament.id}/teams/${teamId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      if (!res.ok) throw new Error('Failed to update team');
+      mutate();
+    } catch (e) {
+      alert('Error updating team status');
+    }
+  };
+
   const renderStage2 = () => {
     const cats = groupByCategory(tournament.teams || []);
     const phase = tournament.registrationPhase || 'EARLY';
+    const hasOpenedRegistration = (tournament.teams || []).length > 0;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -235,22 +272,37 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
             <div>
-              <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 600, marginBottom: '8px' }}>Magic Link</h4>
-              <p style={{ color: '#8b949e', fontSize: '0.875rem', marginBottom: '12px' }}>Send this URL or QR code to players. It locks them into this exact tournament.</p>
+              <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 600, marginBottom: '8px' }}>Player Magic Link</h4>
+              <p style={{ color: '#8b949e', fontSize: '0.875rem', marginBottom: '12px' }}>Send this URL to players to register for this tournament.</p>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <input readOnly value={magicLink} style={{ ...S.input, marginBottom: 0 }} />
                 <Button variant="primary" onClick={handleCopy}>{copied ? 'Copied!' : 'Copy'}</Button>
               </div>
             </div>
             <div>
-              <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 600, marginBottom: '8px' }}>CSV Import</h4>
-              <p style={{ color: '#8b949e', fontSize: '0.875rem', marginBottom: '12px' }}>Roster bulk ingestion. Required: Team Name, Player 1 Name, Player 1 Email, etc.</p>
-              <label style={{ display: 'inline-block', padding: '10px 18px', background: 'rgba(88,166,255,0.08)', border: '1px dashed rgba(88,166,255,0.4)', color: '#58a6ff', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
-                Choose CSV file
-                <input type='file' accept='.csv' onChange={handleFileUpload} disabled={uploading} style={{ display: 'none' }} />
-              </label>
-              {uploading && <span style={{ marginLeft: '12px', color: '#58a6ff', fontSize: '0.85rem' }}>Processing...</span>}
+              <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 600, marginBottom: '8px' }}>Call for Staff Link</h4>
+              <p style={{ color: '#8b949e', fontSize: '0.875rem', marginBottom: '12px' }}>Public application link for Referees and Marshalls.</p>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input readOnly value={tournament.isActive ? staffLink : 'Tournament must be launched first'} style={{ ...S.input, marginBottom: 0, opacity: tournament.isActive ? 1 : 0.5 }} />
+                <Button variant="primary" disabled={!tournament.isActive} onClick={() => {
+                  navigator.clipboard.writeText(staffLink);
+                  alert('Staff application link copied!');
+                }}>Copy</Button>
+              </div>
             </div>
+          </div>
+          
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 600, margin: 0 }}>CSV Import (Roster Bulk Ingestion)</h4>
+              <a href="#" onClick={(e) => { e.preventDefault(); alert("CSV Format Required:\n- Team Name (Required)\n- Player 1 Name (Required)\n- Player 1 Email (Required)\n- Category (Optional, defaults to Open)"); }} style={{ color: '#58a6ff', fontSize: '0.85rem', textDecoration: 'none' }}>View CSV Template Guide</a>
+            </div>
+            <p style={{ color: '#8b949e', fontSize: '0.875rem', marginBottom: '12px' }}>Required: Team Name, Player 1 Name, Player 1 Email, etc.</p>
+            <label style={{ display: 'inline-block', padding: '10px 18px', background: 'rgba(88,166,255,0.08)', border: '1px dashed rgba(88,166,255,0.4)', color: '#58a6ff', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
+              Choose CSV file
+              <input type='file' accept='.csv' onChange={handleFileUpload} disabled={uploading} style={{ display: 'none' }} />
+            </label>
+            {uploading && <span style={{ marginLeft: '12px', color: '#58a6ff', fontSize: '0.85rem' }}>Processing...</span>}
           </div>
 
           {/* Registration Logic Banner */}
@@ -261,8 +313,16 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
                 <span style={{ color: '#8b949e', fontSize: '0.9rem' }}>The designated early registration period has ended. Please advance the phase.</span>
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <Button variant='secondary' onClick={() => updateTournament({ registrationPhase: 'LATE' })}>Switch to Late</Button>
-                <Button variant='danger' onClick={() => updateTournament({ registrationPhase: 'CLOSED' })}>Close Now</Button>
+                <Button variant='secondary' onClick={() => {
+                  if (window.confirm('Are you sure you want to close Early Registration and switch to Late Registration? This cannot be undone.')) {
+                    updateTournament({ registrationPhase: 'LATE' });
+                  }
+                }}>Switch to Late</Button>
+                <Button variant='danger' onClick={() => {
+                  if (window.confirm('Are you sure you want to permanently close all registrations?')) {
+                    updateTournament({ registrationPhase: 'CLOSED' });
+                  }
+                }}>Close Now</Button>
               </div>
             </div>
           )}
@@ -276,55 +336,131 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
               {phase === 'CLOSED' && (
                 <Button 
                   variant='success' 
+                  disabled={hasOpenedRegistration}
                   onClick={() => {
-                    const hasPassedEarly = tournament.registrationEnd && new Date() > new Date(tournament.registrationEnd);
-                    updateTournament({ registrationPhase: hasPassedEarly ? 'LATE' : 'EARLY' });
+                    if (hasOpenedRegistration) return;
+                    if (window.confirm('Are you sure you want to open Early Registration? This can only be done once.')) {
+                      updateTournament({ registrationPhase: 'EARLY' });
+                    }
                   }}
                 >
-                  {tournament.registrationEnd && new Date() > new Date(tournament.registrationEnd) ? 'Re-open Late Registration' : 'Open Early Registration'}
+                  {hasOpenedRegistration ? 'Early Registration Was Opened' : 'Open Early Registration'}
                 </Button>
               )}
-              {phase === 'EARLY' && <Button variant='secondary' onClick={() => updateTournament({ registrationPhase: 'LATE' })}>Switch to Late Onsite Reg</Button>}
-              {phase === 'LATE' && <Button variant='danger' onClick={() => updateTournament({ registrationPhase: 'CLOSED' })}>Close Registration</Button>}
+              {phase === 'EARLY' && <Button variant='secondary' onClick={() => {
+                if (window.confirm('Are you sure you want to close Early Registration and switch to Late Registration? This cannot be undone.')) {
+                  updateTournament({ registrationPhase: 'LATE' });
+                }
+              }}>Switch to Late Onsite Reg</Button>}
+              {phase === 'LATE' && <Button variant='danger' onClick={() => {
+                if (window.confirm('Are you sure you want to permanently close all registrations?')) {
+                  updateTournament({ registrationPhase: 'CLOSED' });
+                }
+              }}>Close Registration</Button>}
             </div>
           </div>
         </Card>
 
         {/* Registrations List */}
         <div>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '24px' }}>Roster Bucket</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0 }}>Roster Bucket</h2>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <Button variant='secondary' onClick={() => setViewMode(viewMode === 'grid' ? 'table' : 'grid')}>
+                {viewMode === 'grid' ? 'Switch to Table View' : 'Switch to Grid View'}
+              </Button>
+              <Button variant='primary' onClick={exportToCSV}>Export to CSV</Button>
+            </div>
+          </div>
+          
           {Object.keys(cats).length === 0 ? (
             <Card style={{ background: '#161b22', border: '1px dashed rgba(255,255,255,0.2)', padding: '48px', textAlign: 'center' }}>
               <p style={{ color: '#8b949e', margin: 0 }}>No registrations yet.</p>
             </Card>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '36px' }}>
-              {Object.entries(cats).map(([category, teams]) => (
-                <div key={category}>
-                  <h3 style={{ color: '#d2a8ff', fontSize: '1.05rem', margin: '0 0 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', paddingBottom: '8px' }}>
-                    {category} <span style={{ color: '#8b949e', fontSize: '0.85rem', marginLeft: '8px' }}>({teams.length} teams)</span>
-                  </h3>
-                  <div style={S.teamGrid}>
-                    {teams.map((t: any) => (
-                      <Card key={t.id} style={S.teamCard}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                          <strong style={{ fontSize: '1rem', color: '#fff' }}>{t.franchiseName}</strong>
-                          {t.isLateRegistration && <Badge variant='warning'>LATE</Badge>}
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          {t.players?.map((p: any) => (
-                            <div key={p.id} style={{ fontSize: '0.875rem', color: '#8b949e' }}>
-                              <span style={{ color: '#c9d1d9', fontWeight: 500 }}>{p.name}</span><br />
-                              <span style={{ fontSize: '0.8rem' }}>{p.email}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </Card>
-                    ))}
+            viewMode === 'grid' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '36px' }}>
+                {Object.entries(cats).map(([category, teams]) => (
+                  <div key={category}>
+                    <h3 style={{ color: '#d2a8ff', fontSize: '1.05rem', margin: '0 0 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', paddingBottom: '8px' }}>
+                      {category} <span style={{ color: '#8b949e', fontSize: '0.85rem', marginLeft: '8px' }}>({teams.length} teams)</span>
+                    </h3>
+                    <div style={S.teamGrid}>
+                      {teams.map((t: any) => (
+                        <Card key={t.id} style={{ ...S.teamCard, opacity: t.status === 'WITHDRAWN' || t.status === 'DISQUALIFIED' ? 0.5 : 1 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                            <strong style={{ fontSize: '1rem', color: '#fff' }}>
+                              {t.franchiseName} {t.status === 'WITHDRAWN' && '(Withdrawn)'}
+                            </strong>
+                            {t.isLateRegistration && <Badge variant='warning'>LATE</Badge>}
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {t.players?.map((p: any) => (
+                              <div key={p.id} style={{ fontSize: '0.875rem', color: '#8b949e' }}>
+                                <span style={{ color: '#c9d1d9', fontWeight: 500 }}>{p.name}</span><br />
+                                <span style={{ fontSize: '0.8rem' }}>{p.email}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', color: '#c9d1d9', fontSize: '0.9rem' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: '#8b949e' }}>
+                      <th style={{ padding: '12px 16px' }}>Team Name</th>
+                      <th style={{ padding: '12px 16px' }}>Category</th>
+                      <th style={{ padding: '12px 16px' }}>Status</th>
+                      <th style={{ padding: '12px 16px' }}>Late Reg?</th>
+                      <th style={{ padding: '12px 16px' }}>Players</th>
+                      <th style={{ padding: '12px 16px', textAlign: 'right' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(tournament.teams || []).map((t: any) => (
+                      <tr key={t.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        <td style={{ padding: '12px 16px', fontWeight: 600, color: '#fff' }}>{t.franchiseName}</td>
+                        <td style={{ padding: '12px 16px' }}>{t.categories}</td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <Badge variant={t.status === 'WITHDRAWN' || t.status === 'DISQUALIFIED' ? 'default' : 'success'}>
+                            {t.status || 'ACTIVE'}
+                          </Badge>
+                        </td>
+                        <td style={{ padding: '12px 16px' }}>{t.isLateRegistration ? 'Yes' : 'No'}</td>
+                        <td style={{ padding: '12px 16px' }}>
+                          {t.players?.map((p: any) => p.name).join(', ')}
+                        </td>
+                        <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                          {(!t.status || t.status === 'ACTIVE') && (
+                            <button 
+                              onClick={() => {
+                                if (window.confirm(`Reject / Disqualify ${t.franchiseName}?`)) updateTeamStatus(t.id, 'DISQUALIFIED');
+                              }}
+                              style={{ background: 'transparent', color: '#ff7b72', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }}
+                            >
+                              Reject
+                            </button>
+                          )}
+                          {(t.status === 'WITHDRAWN' || t.status === 'DISQUALIFIED') && (
+                            <button 
+                              onClick={() => updateTeamStatus(t.id, 'ACTIVE')}
+                              style={{ background: 'transparent', color: '#58a6ff', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }}
+                            >
+                              Restore
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
           )}
         </div>
       </div>
@@ -354,7 +490,7 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
   const renderStage4 = () => (
     <Card style={S.card}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h2 style={{ margin: 0, fontSize: '1.4rem', color: '#fff' }}>Stage 4: Match Scheduling & Dispatcher</h2>
+        <h2 style={{ margin: 0, fontSize: '1.4rem', color: '#fff' }}>Stage 4: Match Generation & Scheduling</h2>
         <Badge variant={tournament.isActive ? 'success' : 'warning'}>
           {tournament.isActive ? 'LIVE EVENT ACTIVE' : 'DRAFTING'}
         </Badge>
@@ -389,8 +525,8 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
           {tournament.registrationPhase === 'CLOSED' && <Badge variant="success">Done</Badge>}
         </button>
         <button 
-          style={S.navItem(3, tournament.registrationPhase === 'CLOSED')} 
-          onClick={() => tournament.registrationPhase === 'CLOSED' && setActiveStage(3)}
+          style={S.navItem(3, tournament.registrationPhase === 'CLOSED' || tournament.registrationPhase === 'LATE')} 
+          onClick={() => (tournament.registrationPhase === 'CLOSED' || tournament.registrationPhase === 'LATE') && setActiveStage(3)}
         >
           <span>3. Pool Manager</span>
           {tournament.pools?.length > 0 && <Badge variant="success">Done</Badge>}
@@ -399,7 +535,7 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
           style={S.navItem(4, tournament.pools?.length > 0)} 
           onClick={() => tournament.pools?.length > 0 && setActiveStage(4)}
         >
-          <span>4. Match Scheduling</span>
+          <span>4. Match Generation & Scheduling</span>
           {tournament.isActive && <Badge variant="success">Done</Badge>}
         </button>
       </div>

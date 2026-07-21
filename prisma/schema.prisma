@@ -46,6 +46,7 @@ model Tournament {
   id                  String   @id @default(cuid())
   slug                String?  @unique // URL-friendly identifier e.g. "summer-open-2026"
   name                String
+  sportType           String   @default("TENNIS") // TENNIS, PADEL, BADMINTON, PICKLEBALL, SOCCER
   formatType          String // e.g. 'Fast4', 'Standard'
   isActive            Boolean  @default(false)
   isArchived          Boolean  @default(false)
@@ -348,4 +349,19 @@ model IncidentReport {
   incidentType String // MEDICAL, CODE_VIOLATION, DISPUTE
   description  String
   createdAt    DateTime @default(now())
+}
+
+model Transaction {
+  id                String   @id @default(cuid())
+  amount            Int
+  phoneNumber       String
+  merchantRequestId String?  @unique // From Safaricom STK Push
+  checkoutRequestId String?  @unique // From Safaricom STK Push
+  mpesaReceiptNumber String? @unique // Actual M-Pesa receipt code
+  status            String   @default("PENDING") // PENDING, COMPLETED, FAILED
+  tournamentId      String
+  teamName          String
+  categories        String   // JSON stringified array of categories
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }

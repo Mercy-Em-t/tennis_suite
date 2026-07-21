@@ -27,6 +27,29 @@ export async function POST(
       return NextResponse.json({ error: 'Missing checkout context' }, { status: 400 });
     }
 
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: tournamentId },
+      select: { registrationPhase: true, updatedAt: true }
+    });
+
+    if (!tournament) {
+      return NextResponse.json({ error: 'Tournament not found' }, { status: 404 });
+    }
+
+    let isLateRegistration = false;
+
+    if (tournament.registrationPhase === 'CLOSED') {
+      const msSinceUpdate = Date.now() - tournament.updatedAt.getTime();
+      const GRACE_PERIOD_MS = 15 * 60 * 1000; // 15 minutes
+      if (msSinceUpdate > GRACE_PERIOD_MS) {
+        return NextResponse.json({ error: 'Registration is permanently closed. Whistle blew over 15 minutes ago.' }, { status: 403 });
+      }
+      // "Ball in the air" accepted, but marked as late
+      isLateRegistration = true;
+    } else if (tournament.registrationPhase === 'LATE') {
+      isLateRegistration = true;
+    }
+
     // Wrap in a transaction to ensure atomic Ledger writing + Team creation
     // Using Serializable isolation level to guarantee absolute consistency for financial ledgers
     await prisma.$transaction(async (tx) => {
@@ -35,6 +58,7 @@ export async function POST(
         data: {
           franchiseName,
           tournamentId,
+          isLateRegistration,
           players: { connect: { id: payload.sub } }
         }
       });

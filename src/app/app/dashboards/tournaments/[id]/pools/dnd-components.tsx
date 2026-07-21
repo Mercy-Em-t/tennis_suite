@@ -71,7 +71,7 @@ export function SortableTeam({ poolTeam, isUnassigned = false, onManualSeedChang
   );
 }
 
-export function PoolContainer({ pool, onManualSeedChange }: { pool: any, onManualSeedChange?: (poolTeamId: string, poolId: string, newSeed: number) => void }) {
+export function PoolContainer({ pool, onManualSeedChange, onDelete }: { pool: any, onManualSeedChange?: (poolTeamId: string, poolId: string, newSeed: number) => void, onDelete?: (poolId: string) => void }) {
   const { setNodeRef } = useDroppable({ id: pool.id });
   const poolTeamIds = pool.poolTeams.map((pt: any) => pt.id);
 
@@ -86,13 +86,24 @@ export function PoolContainer({ pool, onManualSeedChange }: { pool: any, onManua
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#58a6ff' }}>{pool.name}</h3>
-        <Badge variant={
-          pool.status === 'COMMITTED' ? 'success' :
-          pool.status === 'PUBLISHED' ? 'warning' : 'default'
-        }>
-          {pool.status === 'COMMITTED' ? `COMMITTED (${pool.versionId})` :
-           pool.status === 'PUBLISHED' ? `PUBLISHED (${pool.versionId})` : pool.versionId}
-        </Badge>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Badge variant={
+            pool.status === 'COMMITTED' ? 'success' :
+            pool.status === 'PUBLISHED' ? 'warning' : 'default'
+          }>
+            {pool.status === 'COMMITTED' ? `COMMITTED (${pool.versionId})` :
+             pool.status === 'PUBLISHED' ? `PUBLISHED (${pool.versionId})` : pool.versionId}
+          </Badge>
+          {onDelete && (
+            <button 
+              onClick={() => onDelete(pool.id)}
+              style={{ background: 'transparent', border: 'none', color: '#ff7b72', cursor: 'pointer', padding: '4px', fontSize: '1rem' }}
+              title="Delete Pool"
+            >
+              🗑️
+            </button>
+          )}
+        </div>
       </div>
 
       <div ref={setNodeRef} style={{ minHeight: '200px', background: '#161b22', borderRadius: '6px', padding: '8px' }}>

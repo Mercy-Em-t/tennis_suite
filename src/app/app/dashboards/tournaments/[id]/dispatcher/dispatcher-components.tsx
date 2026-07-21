@@ -2,14 +2,18 @@
 
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
-import { useSortable, SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+import { useSortable, SortableContext, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 
-export function SortableMatch({ match }: { match: any }) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: match.id });
+export function SortableMatch({ match, timeMarker }: { match: any, timeMarker?: string }) {
+  const isLocked = match.status === 'IN_PROGRESS' || match.status === 'WARM_UP' || match.status === 'COMPLETED' || match.status === 'REQUIRES_INTERVENTION';
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ 
+    id: match.id,
+    disabled: isLocked
+  });
 
   let healthBorder = '';
   let warningMessage = '';
@@ -24,18 +28,18 @@ export function SortableMatch({ match }: { match: any }) {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    background: match.status === 'REQUIRES_INTERVENTION' ? '#3b1c1c' : '#161b22',
+    background: match.status === 'REQUIRES_INTERVENTION' ? '#3b1c1c' : match.status === 'IN_PROGRESS' ? '#122315' : '#161b22',
     border: match.status === 'REQUIRES_INTERVENTION' ? '1px solid #f85149' 
           : healthBorder ? healthBorder
-          : match.status === 'IN_PROGRESS' ? '1px solid #d2a8ff' 
+          : match.status === 'IN_PROGRESS' ? '1px solid #3fb950' 
+          : match.status === 'WARM_UP' ? '1px solid #d2a8ff'
           : '1px solid rgba(255,255,255,0.1)',
     padding: '12px',
     marginBottom: '8px',
     borderRadius: '6px',
-    cursor: match.status === 'REQUIRES_INTERVENTION' ? 'not-allowed' : 'grab',
-    opacity: match.status === 'REQUIRES_INTERVENTION' ? 0.8 : 1,
-    minWidth: '220px',
-    maxWidth: '220px',
+    cursor: isLocked ? 'not-allowed' : 'grab',
+    opacity: isLocked ? 0.8 : 1,
+    width: '100%',
     flexShrink: 0,
   };
 
@@ -60,12 +64,19 @@ export function SortableMatch({ match }: { match: any }) {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} onDoubleClick={handleDoubleClick}>
+      {timeMarker && (
+        <div style={{ fontSize: '0.75rem', color: '#58a6ff', marginBottom: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span>🕒</span>
+          {match.courtId ? (match.status === 'PENDING' ? `Play Not Before: ${timeMarker}` : `Scheduled: ${timeMarker}`) : `Est: ${timeMarker}`}
+        </div>
+      )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <span style={{ fontSize: '0.8rem', color: '#8b949e', textTransform: 'uppercase' }}>
           {match.stage} 
           {warningMessage && <span style={{ color: '#ff7b72', marginLeft: '8px', fontWeight: 'bold' }}>{warningMessage}</span>}
         </span>
-        {match.status === 'IN_PROGRESS' && <Badge variant="default">LIVE</Badge>}
+        {match.status === 'IN_PROGRESS' && <Badge variant="success">LIVE</Badge>}
+        {match.status === 'WARM_UP' && <Badge variant="default">WARM UP</Badge>}
         {match.status === 'PENDING' && <Badge variant="default">PENDING</Badge>}
         {match.status === 'COMPLETED' && <Badge variant="success">FINISHED</Badge>}
         {match.status === 'REQUIRES_INTERVENTION' && <Badge variant="error">PAUSED</Badge>}
@@ -169,16 +180,23 @@ export function CourtContainer({ id, name, matches, courtData, allStaff = [] }: 
         minHeight: '120px', 
         background: '#161b22', 
         borderRadius: '6px', 
-        padding: '8px',
+        padding: '12px',
         display: 'flex',
-        flexDirection: 'row',
+        flexDirection: 'column',
         gap: '8px',
-        overflowX: 'auto'
+        overflowY: 'auto',
+        maxHeight: '600px'
       }}>
-        <SortableContext items={matchIds} strategy={horizontalListSortingStrategy}>
-          {matches.map(m => (
-            <SortableMatch key={m.id} match={m} />
-          ))}
+        <SortableContext items={matchIds} strategy={verticalListSortingStrategy}>
+          {matches.map((m, index) => {
+            // Compute dynamic time marker starting at 9:00 AM today, adding 90 mins per match
+            const baseTime = new Date();
+            baseTime.setHours(9, 0, 0, 0);
+            const estTime = new Date(baseTime.getTime() + index * 90 * 60000);
+            const timeString = estTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            return <SortableMatch key={m.id} match={m} timeMarker={timeString} />
+          })}
         </SortableContext>
         {matches.length === 0 && (
           <div style={{ padding: '32px', textAlign: 'center', color: '#8b949e', fontSize: '0.9rem', width: '100%' }}>

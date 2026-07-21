@@ -55,7 +55,7 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     // Send "Email" to host
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://sports.tmsavannah.com';
     const registerLink = `${origin}/tournaments/${tournament.slug || tournament.id}/register`;
-    const staffLink = `${origin}/tournaments/${tournament.slug || tournament.id}/staff/apply`;
+    const staffLink = `${origin}/tournaments/${tournament.slug || tournament.id}/apply-staff`;
 
     console.log('\n======================================================');
     console.log(`✉️ MOCK EMAIL DISPATCHED`);

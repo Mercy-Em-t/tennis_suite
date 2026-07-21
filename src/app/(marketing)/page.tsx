@@ -47,7 +47,7 @@ export default async function LandingPage() {
       lifecyclePhase: { not: 'ARCHIVED' }
     },
     orderBy: { createdAt: 'desc' },
-    take: 6
+    take: 3
   });
 
   return (
@@ -140,6 +140,14 @@ export default async function LandingPage() {
               </GlassCard>
             ))
           )}
+        </div>
+
+        <div style={{ marginTop: '48px', display: 'flex', justifyContent: 'center' }}>
+          <Link href="/tournaments">
+            <DynamicButton variant="secondary" style={{ padding: '0 32px', height: '48px' }}>
+              View All Tournaments →
+            </DynamicButton>
+          </Link>
         </div>
       </section>
 

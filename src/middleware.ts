@@ -119,7 +119,7 @@ export async function middleware(req: NextRequest) {
       } else if (role === 'host') {
         if (requestedDashboard === 'host' || requestedDashboard === 'player') isAllowed = true;
       } else if (role === 'player') {
-        if (requestedDashboard === 'player') isAllowed = true;
+        if (requestedDashboard === 'player' || requestedDashboard === 'host') isAllowed = true;
       } else if (role === 'referee' || role === 'umpire') {
         if (requestedDashboard === 'referee' || requestedDashboard === 'player' || requestedDashboard === 'umpire') isAllowed = true;
       } else if (role === 'marshall') {

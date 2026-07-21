@@ -16,6 +16,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Name and email are required.' }, { status: 400 });
     }
 
+    if (tournamentId) {
+      const tournament = await prisma.tournament.findUnique({ where: { id: tournamentId } });
+      if (tournament?.registrationEnd && new Date() > new Date(tournament.registrationEnd)) {
+        return NextResponse.json({ error: 'Registration is closed for this tournament.' }, { status: 403 });
+      }
+    }
+
     let user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {

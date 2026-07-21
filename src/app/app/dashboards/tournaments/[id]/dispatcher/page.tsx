@@ -102,7 +102,11 @@ export default function MatchDispatcher({ params }: { params: Promise<{ id: stri
   const categories = ['All', ...allCategories];
 
   const filteredMatches = localMatches.filter(m => selectedCategory === 'All' || m.category === selectedCategory);
-  const readyQueueMatches = filteredMatches.filter(m => !m.courtId && m.stage === tournament.currentStage);
+  const readyQueueMatches = filteredMatches.filter(m => 
+    !m.courtId && 
+    m.stage === tournament.currentStage &&
+    (m.stage !== 'KNOCKOUTS' || (m.teamAId && m.teamBId))
+  );
   return (
     <div style={{ padding: '48px', color: '#f0f6fc', background: '#0d1117', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
       

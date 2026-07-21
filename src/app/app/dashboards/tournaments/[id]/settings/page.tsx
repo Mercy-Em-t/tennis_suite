@@ -213,6 +213,24 @@ export default function TournamentSettings({ params }: { params: Promise<{ id: s
     }
   };
 
+  const handleUpdateTeamStatus = async (teamId: string, newStatus: string) => {
+    if (!confirm(`Are you sure you want to mark this team as ${newStatus}? This will award Walkovers for their pending pool matches and flag their knockout matches for intervention.`)) return;
+
+    try {
+      const res = await fetch(`/api/tournaments/${resolvedParams.id}/teams/${teamId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+      await mutate();
+      alert(`Team successfully marked as ${newStatus}. Cascade applied.`);
+    } catch (err: any) {
+      alert(`Error updating team: ${err.message}`);
+    }
+  };
+
   const backPath = `/app/dashboards/tournaments/${resolvedParams.id}`;
 
   if (isLoading) return (
@@ -284,11 +302,11 @@ export default function TournamentSettings({ params }: { params: Promise<{ id: s
         <Field label="Location / Venue *">
           <input style={inputStyle} value={form.location ?? ''} onChange={set('location')} placeholder="e.g. Ace Arena, Nairobi" required />
         </Field>
-        <Field label="Start Date *">
-          <input style={inputStyle} type="date" value={form.startDate ?? ''} onChange={set('startDate')} required />
+        <Field label="Tournament Start *">
+          <input style={inputStyle} type="datetime-local" value={form.startDate ?? ''} onChange={set('startDate')} required />
         </Field>
-        <Field label="End Date *">
-          <input style={inputStyle} type="date" value={form.endDate ?? ''} onChange={set('endDate')} required />
+        <Field label="Tournament End *">
+          <input style={inputStyle} type="datetime-local" value={form.endDate ?? ''} onChange={set('endDate')} required />
         </Field>
         <Field label="Contact Email *">
           <select 
@@ -381,12 +399,12 @@ export default function TournamentSettings({ params }: { params: Promise<{ id: s
           <input style={inputStyle} type="number" value={form.registrationFee ?? ''} onChange={set('registrationFee')} placeholder="e.g. 50" min={0} required />
         </Field>
 
-        <Field label="Registration Start Date *">
-          <input style={inputStyle} type="date" value={form.registrationStart ?? ''} onChange={set('registrationStart')} required />
+        <Field label="Registration Start Date & Time *">
+          <input style={inputStyle} type="datetime-local" value={form.registrationStart ?? ''} onChange={set('registrationStart')} required />
         </Field>
         
-        <Field label="Registration End Date *">
-          <input style={inputStyle} type="date" value={form.registrationEnd ?? ''} onChange={set('registrationEnd')} required />
+        <Field label="Registration End Date & Time *">
+          <input style={inputStyle} type="datetime-local" value={form.registrationEnd ?? ''} onChange={set('registrationEnd')} required />
         </Field>
 
         <Field label="Max Teams" hint="Leave blank for unlimited">
@@ -449,6 +467,56 @@ export default function TournamentSettings({ params }: { params: Promise<{ id: s
                 <option value="No-Ad">No-Ad</option>
               </select>
             </Field>
+          </div>
+        </div>
+      </Section>
+
+      <Section title="Participant Management" color="#f85149">
+        <div style={{ gridColumn: '1 / -1' }}>
+          <p style={{ color: '#8b949e', marginBottom: '16px', fontSize: '0.9rem' }}>
+            Manage exceptions for active players. Marking a player as Withdrawn or Disqualified will automatically award Walkovers for their pending pool matches.
+          </p>
+          <div style={{ display: 'grid', gap: '12px' }}>
+            {t.teams?.map((team: any) => (
+              <div key={team.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#161b22', padding: '12px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div>
+                  <h4 style={{ margin: '0 0 4px', fontSize: '1rem', color: team.status !== 'ACTIVE' ? '#8b949e' : '#fff' }}>
+                    {team.franchiseName}
+                  </h4>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.8rem', color: '#8b949e' }}>Categories: {team.categories}</span>
+                    <span style={{ 
+                      fontSize: '0.75rem', fontWeight: 600, padding: '2px 8px', borderRadius: '12px',
+                      background: team.status === 'ACTIVE' ? '#23863622' : '#f8514922',
+                      color: team.status === 'ACTIVE' ? '#3fb950' : '#ff7b72'
+                    }}>
+                      {team.status}
+                    </span>
+                  </div>
+                </div>
+                
+                {team.status === 'ACTIVE' && (
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button 
+                      onClick={() => handleUpdateTeamStatus(team.id, 'WITHDRAWN')}
+                      style={{ background: '#3b1c1c', color: '#ff7b72', border: '1px solid #f85149', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
+                    >
+                      Withdraw
+                    </button>
+                    <button 
+                      onClick={() => handleUpdateTeamStatus(team.id, 'DISQUALIFIED')}
+                      style={{ background: '#3b1c1c', color: '#ff7b72', border: '1px solid #f85149', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
+                    >
+                      Disqualify
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+            
+            {(!t.teams || t.teams.length === 0) && (
+              <div style={{ color: '#8b949e', textAlign: 'center', padding: '24px' }}>No teams registered yet.</div>
+            )}
           </div>
         </div>
       </Section>

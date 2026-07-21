@@ -1,90 +1,94 @@
-import { logger } from './logger';
+export const MPESA_ENV = process.env.MPESA_ENVIRONMENT || 'sandbox';
+export const CONSUMER_KEY = process.env.MPESA_CONSUMER_KEY || '';
+export const CONSUMER_SECRET = process.env.MPESA_CONSUMER_SECRET || '';
+export const PASSKEY = process.env.MPESA_PASSKEY || '';
+export const SHORTCODE = process.env.MPESA_SHORTCODE || '9022868';
+export const TILL_NUMBER = process.env.MPESA_TILL_NUMBER || '5758419';
 
-const MPESA_ENVIRONMENT = process.env.MPESA_ENVIRONMENT || 'sandbox';
-const MPESA_CONSUMER_KEY = process.env.MPESA_CONSUMER_KEY || '';
-const MPESA_CONSUMER_SECRET = process.env.MPESA_CONSUMER_SECRET || '';
-const MPESA_SHORTCODE = process.env.MPESA_SHORTCODE || '174379';
-const MPESA_PASSKEY = process.env.MPESA_PASSKEY || 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919';
-
-const BASE_URL = MPESA_ENVIRONMENT === 'production' 
+const BASE_URL = MPESA_ENV === 'live' 
   ? 'https://api.safaricom.co.ke' 
   : 'https://sandbox.safaricom.co.ke';
 
-/**
- * Generates an OAuth token for Safaricom Daraja API
- */
-export async function generateMpesaToken(): Promise<string> {
-  const auth = Buffer.from(`${MPESA_CONSUMER_KEY}:${MPESA_CONSUMER_SECRET}`).toString('base64');
-  
+export async function getMpesaAccessToken(): Promise<string | null> {
+  if (!CONSUMER_KEY || !CONSUMER_SECRET) {
+    console.warn("M-Pesa Consumer Key/Secret is missing.");
+    return null;
+  }
+  const credentials = Buffer.from(`${CONSUMER_KEY}:${CONSUMER_SECRET}`).toString('base64');
+
   try {
-    const response = await fetch(`${BASE_URL}/oauth/v1/generate?grant_type=client_credentials`, {
+    const res = await fetch(`${BASE_URL}/oauth/v1/generate?grant_type=client_credentials`, {
+      method: 'GET',
       headers: {
-        Authorization: `Basic ${auth}`
+        Authorization: `Basic ${credentials}`,
       },
-      next: { revalidate: 3500 } // Cache token for nearly 1 hour (expires in 3600s)
+      // Safari requires no-cache for authentication routes in some cases
+      cache: 'no-store',
     });
 
-    if (!response.ok) {
-      throw new Error(`Failed to generate M-Pesa token: ${response.statusText}`);
+    if (!res.ok) {
+      console.error("Failed to generate M-Pesa token:", await res.text());
+      return null;
     }
 
-    const data = await response.json();
+    const data = await res.json();
     return data.access_token;
   } catch (error) {
-    logger.error('M-Pesa Token Generation Error', {}, error);
-    throw error;
+    console.error("M-Pesa token generation error:", error);
+    return null;
   }
 }
 
-/**
- * Initiates an STK Push (Lipa Na M-Pesa Online)
- */
-export async function initiateStkPush(phoneNumber: string, amount: number, reference: string, callbackUrl: string) {
-  try {
-    const token = await generateMpesaToken();
+function generatePassword(timestamp: string): string {
+  return Buffer.from(`${SHORTCODE}${PASSKEY}${timestamp}`).toString('base64');
+}
 
-    // Format phone number to 254XXXXXXXXX
-    let formattedPhone = phoneNumber.replace(/\s+/g, '').replace(/^\+/, '');
-    if (formattedPhone.startsWith('0')) {
-      formattedPhone = '254' + formattedPhone.substring(1);
-    }
+export async function initiateStkPush(phoneNumber: string, amount: number, accountReference: string, transactionDesc: string) {
+  const token = await getMpesaAccessToken();
+  if (!token) throw new Error("M-Pesa configuration error or unable to authenticate");
 
-    const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, -3);
-    const password = Buffer.from(`${MPESA_SHORTCODE}${MPESA_PASSKEY}${timestamp}`).toString('base64');
+  // Phone number needs to be in 2547XXXXXXXX format
+  let formattedPhone = phoneNumber.replace(/[^0-9]/g, '');
+  if (formattedPhone.startsWith('0')) formattedPhone = `254${formattedPhone.substring(1)}`;
+  if (formattedPhone.startsWith('+')) formattedPhone = formattedPhone.substring(1);
 
-    const payload = {
-      BusinessShortCode: MPESA_SHORTCODE,
-      Password: password,
-      Timestamp: timestamp,
-      TransactionType: 'CustomerPayBillOnline',
-      Amount: Math.ceil(amount).toString(), // M-Pesa expects integer string
-      PartyA: formattedPhone,
-      PartyB: MPESA_SHORTCODE,
-      PhoneNumber: formattedPhone,
-      CallBackURL: callbackUrl,
-      AccountReference: reference.substring(0, 12), // Max 12 chars
-      TransactionDesc: 'Tennis Suite Registration'
-    };
+  const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').substring(0, 14);
+  const password = generatePassword(timestamp);
 
-    const response = await fetch(`${BASE_URL}/mpesa/stkpush/v1/processrequest`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://tennis-suite.vercel.app';
+  const callbackUrl = `${baseUrl}/api/payments/mpesa/callback`;
 
-    const data = await response.json();
-    
-    if (data.ResponseCode !== '0') {
-      logger.error('M-Pesa STK Push Failed', data);
-      throw new Error(data.errorMessage || data.CustomerMessage || 'STK Push Failed');
-    }
+  // For Buy Goods, PartyB is the Till Number, but BusinessShortCode (and Password) uses the Head Office Shortcode.
+  const isBuyGoods = !!TILL_NUMBER && TILL_NUMBER !== SHORTCODE;
 
-    return data;
-  } catch (error) {
-    logger.error('M-Pesa STK Push Error', {}, error);
-    throw error;
+  const payload = {
+    BusinessShortCode: SHORTCODE,
+    Password: password,
+    Timestamp: timestamp,
+    TransactionType: isBuyGoods ? "CustomerBuyGoodsOnline" : "CustomerPayBillOnline",
+    Amount: amount,
+    PartyA: formattedPhone,
+    PartyB: isBuyGoods ? TILL_NUMBER : SHORTCODE,
+    PhoneNumber: formattedPhone,
+    CallBackURL: callbackUrl,
+    AccountReference: accountReference,
+    TransactionDesc: transactionDesc,
+  };
+
+  const response = await fetch(`${BASE_URL}/mpesa/stkpush/v1/processrequest`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json();
+  
+  if (!response.ok) {
+    throw new Error(data.errorMessage || 'M-Pesa STK Push failed');
   }
+
+  return data;
 }

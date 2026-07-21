@@ -13,8 +13,8 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const payload = await verifyToken(token);
-    if (!payload || !payload.roles.some(r => ['HOST', 'ADMIN', 'MARSHALL'].includes(r))) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!payload) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Accept either a slug (e.g. "summer-open-2026") or a raw cuid
@@ -50,6 +50,15 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
 
     if (!tournament) {
       return NextResponse.json({ error: 'Tournament not found' }, { status: 404 });
+    }
+
+    // Contextual Authorization Check
+    const isGlobalAdmin = payload.roles.includes('ADMIN');
+    const isHost = tournament.hostId === payload.sub;
+    const isStaff = tournament.staff.some((s: any) => s.userId === payload.sub);
+
+    if (!isGlobalAdmin && !isHost && !isStaff) {
+       return NextResponse.json({ error: 'Forbidden. You do not have permission to view this tournament dashboard.' }, { status: 403 });
     }
 
     // Calculate completion ratio and average match duration
@@ -88,8 +97,8 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const payload = await verifyToken(token);
-    if (!payload || !payload.roles.some(r => ['HOST', 'ADMIN'].includes(r))) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!payload) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -97,11 +106,19 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     // Resolve tournament by slug or cuid
     const existing = await prisma.tournament.findFirst({
       where: { OR: [{ slug: params.id }, { id: params.id }] },
-      select: { id: true, name: true, slug: true, lifecyclePhase: true },
+      select: { id: true, name: true, slug: true, lifecyclePhase: true, hostId: true },
     });
 
     if (!existing) {
       return NextResponse.json({ error: 'Tournament not found' }, { status: 404 });
+    }
+
+    // Contextual Authorization Check
+    const isGlobalAdmin = payload.roles.includes('ADMIN');
+    const isHost = existing.hostId === payload.sub;
+
+    if (!isGlobalAdmin && !isHost) {
+      return NextResponse.json({ error: 'Forbidden. Only the host or an admin can modify this tournament.' }, { status: 403 });
     }
 
     // Freeze mutations if archived (unless an ADMIN is explicitly unlocking it)

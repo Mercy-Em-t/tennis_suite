@@ -53,6 +53,21 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
             addedTeamName: addedTeam?.franchiseName || 'A new participant',
             existingTeams: pool.poolTeams.map(pt => pt.team.franchiseName)
           };
+          
+          // MATCH GENERATION LOOP: Automatically generate matches for this late player against existing players
+          const existingTeamsInPool = pool.poolTeams.map(pt => pt.teamId);
+          for (const existingTeamId of existingTeamsInPool) {
+             await tx.match.create({
+               data: {
+                 tournamentId: id,
+                 stage: 'POOL',
+                 poolId: targetPoolId,
+                 status: 'PENDING',
+                 teamAId: existingTeamId,
+                 teamBId: teamId
+               }
+             });
+          }
         }
       }
       // 2. Move from Pool to Unassigned
@@ -92,6 +107,21 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
             addedTeamName: addedTeam?.franchiseName || 'A new participant',
             existingTeams: p2.poolTeams.map(pt => pt.team.franchiseName)
           };
+
+          // MATCH GENERATION LOOP: Automatically generate matches for this late player against existing players
+          const existingTeamsInPool = p2.poolTeams.map(pt => pt.teamId);
+          for (const existingTeamId of existingTeamsInPool) {
+             await tx.match.create({
+               data: {
+                 tournamentId: id,
+                 stage: 'POOL',
+                 poolId: targetPoolId,
+                 status: 'PENDING',
+                 teamAId: existingTeamId,
+                 teamBId: teamId
+               }
+             });
+          }
         }
       }
     });

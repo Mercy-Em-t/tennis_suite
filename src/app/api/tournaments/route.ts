@@ -5,16 +5,16 @@ import { logger } from '@/lib/logger';
 import { generateUniqueSlug } from '@/lib/slug';
 
 export async function POST(request: Request) {
-  const authResult = await requireAuth(['HOST', 'ADMIN']);
+  const authResult = await requireAuth(['HOST', 'ADMIN', 'PLAYER']);
   if (authResult instanceof NextResponse) return authResult;
 
   try {
     const data = await request.json();
     const { 
-      name, startDate, endDate, location, 
+      name, startDate, endDate, location, sportType,
       formatType, matchDuration, scoringRules, categories,
       numCourts, surfaceType, logoUrl, sponsorUrl,
-      contactPhone, registrationFee, registrationStart, registrationEnd, allowMultiCategory
+      contactEmail, contactPhone, registrationFee, registrationStart, registrationEnd, allowMultiCategory
     } = data;
 
     // Validate required fields
@@ -27,6 +27,7 @@ export async function POST(request: Request) {
     if (!numCourts || parseInt(numCourts) <= 0) return NextResponse.json({ error: 'Number of courts must be at least 1' }, { status: 400 });
     if (!surfaceType) return NextResponse.json({ error: 'Surface type is required' }, { status: 400 });
     if (!contactPhone?.trim()) return NextResponse.json({ error: 'Contact phone is required' }, { status: 400 });
+    if (!contactEmail?.trim()) return NextResponse.json({ error: 'Contact email is required' }, { status: 400 });
 
     if (new Date(endDate) < new Date(startDate)) {
       return NextResponse.json({ error: 'End date cannot be before start date' }, { status: 400 });
@@ -48,6 +49,7 @@ export async function POST(request: Request) {
         data: {
           slug,
           name: name || 'Untitled Tournament',
+          sportType: sportType || 'TENNIS',
           formatType: formatType || 'Round Robin',
           maxTeams: 16,
           isActive: false,
@@ -64,6 +66,7 @@ export async function POST(request: Request) {
           allowMultiCategory: Boolean(allowMultiCategory),
           surfaceType,
           contactPhone,
+          contactEmail,
           logoUrl,
           sponsorUrl,
           courts: {
