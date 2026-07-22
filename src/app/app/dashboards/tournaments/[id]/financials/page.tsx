@@ -34,6 +34,18 @@ export default function FinancialsDashboard({ params }: { params: Promise<{ id: 
   const pendingTeams = teams.filter((t: any) => t.paymentStatus === 'PENDING_PAYMENT');
   const paidTeams = teams.filter((t: any) => t.paymentStatus !== 'PENDING_PAYMENT');
 
+  // Online/Offline Financials
+  const ledgerTeamIds = new Set(ledgerEntries.map((e: any) => e.teamId));
+  const onlineTeams = paidTeams.filter((t: any) => ledgerTeamIds.has(t.id));
+  const offlineTeams = paidTeams.filter((t: any) => !ledgerTeamIds.has(t.id));
+  
+  const REGISTRATION_FEE_CENTS = (tournament?.registrationFee || 150) * 100;
+  const offlineGrossRevenue = offlineTeams.length * REGISTRATION_FEE_CENTS;
+  const offlinePlatformFeeOwed = Math.floor(offlineGrossRevenue * 0.05); // 5% flat fee
+  
+  const onlineGrossRevenue = ledgerEntries.reduce((acc: number, cur: any) => acc + (cur.grossAmount || 0), 0);
+  const onlinePlatformFeesCollected = ledgerEntries.reduce((acc: number, cur: any) => acc + (cur.platformFee || 0), 0);
+
   const runComplianceScan = () => {
     setScanActive(true);
     setTimeout(() => {
@@ -79,6 +91,50 @@ export default function FinancialsDashboard({ params }: { params: Promise<{ id: 
         </Card>
       </div>
 
+      {/* Revenue Sources Breakdown (Online vs Offline) */}
+      <div className="mb-10">
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-3">
+          Revenue Auditing (Online vs Offline)
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="bg-[#161b22] border border-blue-500/20 p-6 shadow-xl rounded-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+            <h3 className="text-blue-400 font-bold mb-4 flex justify-between items-center relative z-10">
+              Digital Collections (Online)
+              <Badge variant="primary">{onlineTeams.length} Teams</Badge>
+            </h3>
+            <div className="space-y-3 relative z-10">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-slate-400">Gross Processed</span>
+                <span className="font-mono text-white">${(onlineGrossRevenue / 100).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-slate-400">Platform Fees Collected</span>
+                <span className="font-mono text-purple-400">-${(onlinePlatformFeesCollected / 100).toFixed(2)}</span>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="bg-[#161b22] border border-emerald-500/20 p-6 shadow-xl rounded-xl relative overflow-hidden">
+             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+            <h3 className="text-emerald-400 font-bold mb-4 flex justify-between items-center relative z-10">
+              Host Direct (Offline/Manual)
+              <Badge variant="success">{offlineTeams.length} Teams</Badge>
+            </h3>
+            <div className="space-y-3 relative z-10">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-slate-400">Est. Cash Collected by Host</span>
+                <span className="font-mono text-white">${(offlineGrossRevenue / 100).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm pt-3 border-t border-white/10 mt-2">
+                <span className="text-slate-300 font-semibold">Platform Fees to Recover</span>
+                <span className="font-mono font-bold text-red-400">-${(offlinePlatformFeeOwed / 100).toFixed(2)}</span>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         {/* Teams Payment Status */}
         <div>
@@ -116,7 +172,14 @@ export default function FinancialsDashboard({ params }: { params: Promise<{ id: 
                 <div className="flex flex-col gap-2">
                   {paidTeams.map((t: any) => (
                     <div key={t.id} className="flex justify-between items-center bg-[#0d1117]/50 rounded-lg p-3">
-                      <span className="font-medium text-slate-300">{t.franchiseName}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="font-medium text-slate-300">{t.franchiseName}</span>
+                        {ledgerTeamIds.has(t.id) ? (
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 font-mono tracking-wider">ONLINE</span>
+                        ) : (
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono tracking-wider">OFFLINE</span>
+                        )}
+                      </div>
                       <span className="text-xs text-slate-500 font-mono">ID: {t.id.slice(0, 8)}</span>
                     </div>
                   ))}

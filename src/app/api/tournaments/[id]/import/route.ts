@@ -25,79 +25,89 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (!tournament) return NextResponse.json({ error: 'Tournament not found' }, { status: 404 });
     const isLate = tournament.registrationPhase === 'LATE';
 
-    // Atomic transaction for ingestion
-    const ingestedTeams = await prisma.$transaction(async (tx) => {
-      const results = [];
+    // We will hash a default password once for efficiency
+    const defaultPasswordHash = await bcrypt.hash('welcome123!', 10);
+    const CHUNK_SIZE = 50;
+    let totalIngested = 0;
+
+    for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
+      const chunk = rows.slice(i, i + CHUNK_SIZE);
       
-      // We will hash a default password once for efficiency
-      const defaultPasswordHash = await bcrypt.hash('welcome123!', 10);
-
-      for (let i = 0; i < rows.length; i++) {
-        const row = rows[i];
-        const teamName = row['Team Name'];
-        const p1Name = row['Player 1 Name'];
-        const p1Email = row['Player 1 Email'];
-        const p2Name = row['Player 2 Name'];
-        const p2Email = row['Player 2 Email'];
+      const chunkResults = await prisma.$transaction(async (tx) => {
+        const results = [];
         
-        // Parse categories (e.g. "Men's Singles, Mixed Doubles")
-        const rawCategory = row['Category'] || 'Open';
-        const parsedCategories = rawCategory.split(',').map((c: string) => c.trim()).filter(Boolean);
+        for (let j = 0; j < chunk.length; j++) {
+          const row = chunk[j];
+          const teamName = row['Team Name'];
+          const p1Name = row['Player 1 Name'];
+          const p1Email = row['Player 1 Email'];
+          const p2Name = row['Player 2 Name'];
+          const p2Email = row['Player 2 Email'];
+          
+          // Parse categories (e.g. "Men's Singles, Mixed Doubles")
+          const rawCategory = row['Category'] || 'Open';
+          const parsedCategories = rawCategory.split(',').map((c: string) => c.trim()).filter(Boolean);
 
-        if (!teamName || !p1Name || !p1Email) {
-          throw new Error(`Row ${i + 1}: Missing required fields (Team Name, Player 1 Name, Player 1 Email)`);
-        }
-
-        // Upsert Player 1
-        const player1 = await tx.user.upsert({
-          where: { email: p1Email },
-          update: {},
-          create: {
-            email: p1Email,
-            name: p1Name,
-            passwordHash: defaultPasswordHash,
-            role: 'PLAYER',
+          if (!teamName || !p1Name || !p1Email) {
+            throw new Error(`Row ${i + j + 1}: Missing required fields (Team Name, Player 1 Name, Player 1 Email)`);
           }
-        });
 
-        const playerConnections = [{ id: player1.id }];
-
-        // Upsert Player 2 if exists
-        if (p2Name && p2Email) {
-          const player2 = await tx.user.upsert({
-            where: { email: p2Email },
+          // Upsert Player 1
+          const player1 = await tx.user.upsert({
+            where: { email: p1Email },
             update: {},
             create: {
-              email: p2Email,
-              name: p2Name,
+              email: p1Email,
+              name: p1Name,
               passwordHash: defaultPasswordHash,
               role: 'PLAYER',
             }
           });
-          playerConnections.push({ id: player2.id });
-        }
 
-        // Create the Team
-        const team = await tx.team.create({
-          data: {
-            franchiseName: teamName,
-            tournamentId: id,
-            categories: JSON.stringify(parsedCategories.length > 0 ? parsedCategories : ['Open']),
-            isLateRegistration: isLate,
-            paymentStatus: paymentStatus,
-            players: {
-              connect: playerConnections
-            }
+          const playerConnections = [{ id: player1.id }];
+
+          // Upsert Player 2 if exists
+          if (p2Name && p2Email) {
+            const player2 = await tx.user.upsert({
+              where: { email: p2Email },
+              update: {},
+              create: {
+                email: p2Email,
+                name: p2Name,
+                passwordHash: defaultPasswordHash,
+                role: 'PLAYER',
+              }
+            });
+            playerConnections.push({ id: player2.id });
           }
-        });
 
-        results.push(team);
-      }
-      return results;
-    });
+          // Create the Team
+          const team = await tx.team.create({
+            data: {
+              franchiseName: teamName,
+              tournamentId: id,
+              categories: JSON.stringify(parsedCategories.length > 0 ? parsedCategories : ['Open']),
+              isLateRegistration: isLate,
+              paymentStatus: paymentStatus,
+              players: {
+                connect: playerConnections
+              }
+            }
+          });
 
-    logger.info('Bulk ingestion successful', { tournamentId: id, count: ingestedTeams.length });
-    return NextResponse.json({ success: true, count: ingestedTeams.length });
+          results.push(team);
+        }
+        return results;
+      }, {
+        maxWait: 5000, 
+        timeout: 15000, 
+      });
+
+      totalIngested += chunkResults.length;
+    }
+
+    logger.info('Bulk ingestion successful', { tournamentId: id, count: totalIngested });
+    return NextResponse.json({ success: true, count: totalIngested });
 
   } catch (error: any) {
     logger.error('[import] Failed to process ingestion', {}, error);
