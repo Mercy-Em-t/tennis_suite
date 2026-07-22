@@ -29,6 +29,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const defaultPasswordHash = await bcrypt.hash('welcome123!', 10);
     const CHUNK_SIZE = 10;
     let totalIngested = 0;
+    // Determine default fallback category from tournament settings
+    let defaultCategory = 'Open';
+    try {
+      if (tournament.categories) {
+        const tCats = JSON.parse(tournament.categories);
+        if (tCats.length > 0) defaultCategory = tCats[0];
+      }
+    } catch { }
 
     for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
       const chunk = rows.slice(i, i + CHUNK_SIZE);
@@ -45,7 +53,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
           const p2Email = row['Player 2 Email'];
           
           // Parse categories (e.g. "Men's Singles, Mixed Doubles")
-          const rawCategory = row['Category'] || 'Open';
+          const rawCategory = row['Category'] || defaultCategory;
           const parsedCategories = rawCategory.split(',').map((c: string) => c.trim()).filter(Boolean);
 
           if (!teamName || !p1Name || !p1Email) {

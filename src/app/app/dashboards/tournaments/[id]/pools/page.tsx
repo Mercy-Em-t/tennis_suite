@@ -33,15 +33,30 @@ export default function PoolsWorkspace({ params }: { params: Promise<{ id: strin
 
   const tournament = data?.tournament;
 
-  // Extract categories from tournament settings
   const allCategories = useMemo(() => {
     if (!tournament) return [];
+    const catSet = new Set<string>();
+    
+    // Add tournament settings categories
     try {
       if (tournament.categories) {
-        return JSON.parse(tournament.categories);
+        const tCats = JSON.parse(tournament.categories);
+        tCats.forEach((c: string) => catSet.add(c));
       }
     } catch { }
-    return ['Open'];
+
+    // Add any categories teams actually have (prevents orphaned teams from being hidden)
+    if (tournament.teams && Array.isArray(tournament.teams)) {
+      tournament.teams.forEach((t: any) => {
+        try {
+          const tCats = JSON.parse(t.categories || '[]');
+          tCats.forEach((c: string) => catSet.add(c));
+        } catch { }
+      });
+    }
+    
+    if (catSet.size === 0) catSet.add('Open');
+    return Array.from(catSet);
   }, [tournament]);
 
   const availableVersions = useMemo(() => {
@@ -55,6 +70,12 @@ export default function PoolsWorkspace({ params }: { params: Promise<{ id: strin
       return numB - numA;
     }); // sort descending
   }, [localPools, selectedCategory]);
+
+  React.useEffect(() => {
+    if (allCategories.length > 0 && !allCategories.includes(selectedCategory)) {
+      setSelectedCategory(allCategories[0]);
+    }
+  }, [allCategories, selectedCategory]);
 
   React.useEffect(() => {
     if (availableVersions.length > 0 && !availableVersions.includes(selectedVersion)) {
