@@ -423,7 +423,10 @@ export default function PoolsWorkspace({ params }: { params: Promise<{ id: strin
     <div style={{ padding: '48px', color: '#f0f6fc', background: '#0d1117', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '24px', marginBottom: '32px' }}>
         <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: 0 }}>Pools Workspace</h1>
+          <Button variant="ghost" onClick={() => window.history.back()} style={{ marginBottom: '16px', padding: 0, color: '#58a6ff' }}>
+            &larr; Back to {tournament.name} Dashboard
+          </Button>
+          <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: 0 }}>{tournament.name} Pools Workspace</h1>
           <p style={{ color: '#8b949e', margin: 0 }}>Drag and drop franchises to override seeding. Create snapshots for versions.</p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
