@@ -415,7 +415,9 @@ export default function PoolsWorkspace({ params }: { params: Promise<{ id: strin
           teamId,
           sourcePoolId: sourceContainer === 'unassigned' ? null : sourceContainer, 
           targetPoolId: targetContainer === 'unassigned' ? null : targetContainer,
-          targetPoolTeamIds: targetContainer !== 'unassigned' ? newPools.find(p => p.id === targetContainer)?.poolTeams.map((pt:any)=>pt.id || teamId) : []
+          targetPoolTeamIds: targetContainer !== 'unassigned' 
+            ? newPools.find(p => p.id === targetContainer)?.poolTeams.map((pt:any) => (pt.id && !pt.id.startsWith('temp-')) ? pt.id : teamId) 
+            : []
         })
       });
       mutate();

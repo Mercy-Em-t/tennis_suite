@@ -68,67 +68,78 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        const rows = results.data as any[];
-        const seenTeamNames = new Set<string>();
-        const seenEmails = new Set<string>();
+    const processRows = (rows: any[]) => {
+      const seenTeamNames = new Set<string>();
+      const seenEmails = new Set<string>();
 
-        const previewRows = rows.map((row, index) => {
-          const teamName = (row['Team Name'] || '').trim();
-          const p1Name = (row['Player 1 Name'] || '').trim();
-          const p1Email = (row['Player 1 Email'] || '').trim();
-          const p2Name = (row['Player 2 Name'] || '').trim();
-          const p2Email = (row['Player 2 Email'] || '').trim();
-          const category = (row['Category'] || 'Open').trim();
-          
-          const errors = [];
-          if (!teamName) errors.push('Missing Team Name');
-          if (!p1Name) errors.push('Missing Player 1 Name');
-          if (!p1Email) errors.push('Missing Player 1 Email');
-          
-          // Intra-CSV Duplicate Checks
-          if (teamName) {
-            if (seenTeamNames.has(teamName.toLowerCase())) errors.push('Duplicate Team Name in this CSV');
-            seenTeamNames.add(teamName.toLowerCase());
-          }
-          if (p1Email) {
-            if (seenEmails.has(p1Email.toLowerCase())) errors.push('Duplicate Player 1 in this CSV');
-            seenEmails.add(p1Email.toLowerCase());
-          }
-          if (p2Email) {
-            if (seenEmails.has(p2Email.toLowerCase())) errors.push('Duplicate Player 2 in this CSV');
-            seenEmails.add(p2Email.toLowerCase());
-          }
-
-          // Idempotency Checks against existing teams
-          const existingTeam = tournament.teams?.find((t: any) => t.franchiseName.toLowerCase() === teamName.toLowerCase());
-          if (existingTeam) errors.push('Team Name already registered');
-
-          const allExistingEmails = tournament.teams?.flatMap((t: any) => t.players?.map((p: any) => p.email.toLowerCase()) || []) || [];
-          if (p1Email && allExistingEmails.includes(p1Email.toLowerCase())) errors.push('Player 1 already registered');
-          if (p2Email && allExistingEmails.includes(p2Email.toLowerCase())) errors.push('Player 2 already registered');
-
-          return {
-            original: row,
-            index,
-            teamName, p1Name, p1Email, p2Name, p2Email, category,
-            status: errors.length === 0 ? 'Valid' : 'Invalid',
-            errors
-          };
-        });
+      const previewRows = rows.map((row, index) => {
+        const teamName = (row['Team Name'] || '').trim();
+        const p1Name = (row['Player 1 Name'] || '').trim();
+        const p1Email = (row['Player 1 Email'] || '').trim();
+        const p2Name = (row['Player 2 Name'] || '').trim();
+        const p2Email = (row['Player 2 Email'] || '').trim();
+        const category = (row['Category'] || 'Open').trim();
         
-        setCsvPreviewData(previewRows);
-        setIsPreviewMode(true);
-        e.target.value = ''; // reset file input
-      }
-    });
+        const errors = [];
+        if (!teamName) errors.push('Missing Team Name');
+        if (!p1Name) errors.push('Missing Player 1 Name');
+        if (!p1Email) errors.push('Missing Player 1 Email');
+        
+        if (teamName) {
+          if (seenTeamNames.has(teamName.toLowerCase())) errors.push('Duplicate Team Name in this CSV');
+          seenTeamNames.add(teamName.toLowerCase());
+        }
+        if (p1Email) {
+          if (seenEmails.has(p1Email.toLowerCase())) errors.push('Duplicate Player 1 in this CSV');
+          seenEmails.add(p1Email.toLowerCase());
+        }
+        if (p2Email) {
+          if (seenEmails.has(p2Email.toLowerCase())) errors.push('Duplicate Player 2 in this CSV');
+          seenEmails.add(p2Email.toLowerCase());
+        }
+
+        const existingTeam = tournament.teams?.find((t: any) => t.franchiseName.toLowerCase() === teamName.toLowerCase());
+        if (existingTeam) errors.push('Team Name already registered');
+
+        const allExistingEmails = tournament.teams?.flatMap((t: any) => t.players?.map((p: any) => p.email.toLowerCase()) || []) || [];
+        if (p1Email && allExistingEmails.includes(p1Email.toLowerCase())) errors.push('Player 1 already registered');
+        if (p2Email && allExistingEmails.includes(p2Email.toLowerCase())) errors.push('Player 2 already registered');
+
+        return {
+          original: row,
+          index,
+          teamName, p1Name, p1Email, p2Name, p2Email, category,
+          status: errors.length === 0 ? 'Valid' : 'Invalid',
+          errors
+        };
+      });
+      
+      setCsvPreviewData(previewRows);
+      setIsPreviewMode(true);
+      e.target.value = ''; // reset file input
+    };
+
+    if (file.name.endsWith('.xlsx')) {
+      const XLSX = await import('xlsx');
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data, { type: 'array' });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      const rows = XLSX.utils.sheet_to_json(worksheet);
+      processRows(rows);
+    } else {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          processRows(results.data as any[]);
+        }
+      });
+    }
   };
 
   const confirmUpload = async () => {
@@ -356,17 +367,22 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
           
           <div style={{ marginBottom: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 600, margin: 0 }}>CSV Import (Roster Bulk Ingestion)</h4>
-              <a href="/app/guides/csv-import" target="_blank" rel="noopener noreferrer" style={{ color: '#58a6ff', fontSize: '0.85rem', textDecoration: 'none' }}>View CSV Template Guide</a>
+              <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 600, margin: 0 }}>Roster Bulk Ingestion</h4>
+              <a href="/app/guides/csv-import" target="_blank" rel="noopener noreferrer" style={{ color: '#58a6ff', fontSize: '0.85rem', textDecoration: 'none' }}>View Ingestion Guide</a>
             </div>
             
             {!isPreviewMode ? (
               <>
-                <p style={{ color: '#8b949e', fontSize: '0.875rem', marginBottom: '12px' }}>Required: Team Name, Player 1 Name, Player 1 Email, etc.</p>
-                <label style={{ display: 'inline-block', padding: '10px 18px', background: 'rgba(88,166,255,0.08)', border: '1px dashed rgba(88,166,255,0.4)', color: '#58a6ff', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
-                  Choose CSV file
-                  <input type='file' accept='.csv' onChange={handleFileUpload} disabled={uploading} style={{ display: 'none' }} />
-                </label>
+                <p style={{ color: '#8b949e', fontSize: '0.875rem', marginBottom: '12px' }}>Required: Team Name, Player 1 Name, Player 1 Email, Category, etc.</p>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                  <Button variant="secondary" onClick={() => window.open(`/api/tournaments/${tournament.id}/template`, '_blank')}>
+                    Download Smart Template (.xlsx)
+                  </Button>
+                  <label style={{ display: 'inline-block', padding: '10px 18px', background: 'rgba(88,166,255,0.08)', border: '1px dashed rgba(88,166,255,0.4)', color: '#58a6ff', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
+                    Upload File (.xlsx or .csv)
+                    <input type='file' accept='.csv, .xlsx' onChange={handleFileUpload} disabled={uploading} style={{ display: 'none' }} />
+                  </label>
+                </div>
               </>
             ) : (
               <div style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '16px' }}>

@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { NextResponse } from 'next/server';
 
 import { verifyToken } from '@/lib/auth';
+import { sendTemplateEmail } from '@/lib/mail/dispatch';
 
 export async function POST(
   request: Request,
@@ -92,6 +93,22 @@ export async function POST(
       isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
       maxWait: 5000, // default is 2000
       timeout: 10000 // default is 5000
+    });
+
+    // Send registration confirmation asynchronously
+    prisma.user.findUnique({ where: { id: payload.sub } }).then(user => {
+      if (user) {
+        sendTemplateEmail({
+          to: user.email,
+          template: 'system_notification',
+          variables: {
+            brand_name: 'Tennis Suite',
+            alert_title: 'Tournament Registration Confirmed',
+            alert_body: `You have successfully registered for ${tournament.name || 'the tournament'} with team: ${franchiseName}.`,
+            timestamp: new Date().toISOString()
+          }
+        }).catch(e => console.error('Failed to send registration confirmation:', e));
+      }
     });
 
     return NextResponse.json({ success: true, message: 'Checkout and ledgering complete' });

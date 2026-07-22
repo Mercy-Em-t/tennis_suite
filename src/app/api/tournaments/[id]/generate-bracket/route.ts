@@ -3,8 +3,7 @@ import { NextResponse } from 'next/server';
 
 import { requireTournamentAccess } from '@/lib/auth/require-auth';
 import { logger } from '@/lib/logger';
-
-
+import { sendRawEmail } from '@/lib/mail/dispatch';
 
 export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
@@ -35,7 +34,8 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     });
 
     const allTeams = await prisma.team.findMany({
-      where: { tournamentId: params.id }
+      where: { tournamentId: params.id },
+      include: { players: true }
     });
 
     if (allTeams.length < 2) {
@@ -106,9 +106,31 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
       newMatches.map(data => prisma.match.create({ data }))
     );
 
+    // Notify all players about the draw
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://sports.tmsavannah.com';
+    const loginLink = `${origin}/login`;
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+        <h2 style="color: #d97706;">🏆 Tournament Draw Published!</h2>
+        <p>The bracket for your tournament has been generated and published.</p>
+        <p>Log in to your player dashboard to view your upcoming match schedule and opponents.</p>
+        <p><a href="${loginLink}" style="background: #d97706; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">View The Draw</a></p>
+      </div>
+    `;
+
+    for (const team of allTeams) {
+      for (const player of team.players) {
+        sendRawEmail({
+          to: player.email,
+          subject: \`🏆 Tournament Draw Published\`,
+          html
+        }).catch(e => logger.error(\`Failed to send draw notification to \${player.email}\`, {}, e));
+      }
+    }
+
     return NextResponse.json({ 
       success: true, 
-      message: `Generated ${createdMatches.length} bracket matches for Top ${topN} teams.`,
+      message: \`Generated \${createdMatches.length} bracket matches for Top \${topN} teams.\`,
       matches: createdMatches 
     });
 

@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { signToken } from '@/lib/auth';
 import { hashPassword } from '@/lib/auth/password';
 import { logger } from '@/lib/logger';
+import { sendTemplateEmail } from '@/lib/mail/dispatch';
 
 
 
@@ -66,6 +67,20 @@ export async function POST(request: Request) {
     });
 
     logger.info('New HOST registered', { userId: user.id, organizationName });
+
+    // Send welcome email asynchronously
+    sendTemplateEmail({
+      to: user.email,
+      template: 'welcome_email',
+      variables: {
+        name: user.name,
+        brand_name: 'Tennis Suite',
+        message: `Your host account for ${organizationName} has been successfully created. Welcome to the platform!`,
+        cta_url: 'https://sports.tmsavannah.com/login',
+        cta_label: 'Go to Dashboard'
+      }
+    }).catch(e => logger.error('Failed to send welcome email', {}, e));
+
     return response;
   } catch (error) {
     logger.error('[auth/onboard-host] Registration failed', {}, error);

@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
+import { sendRawEmail } from '@/lib/mail/dispatch';
 
 export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
@@ -52,27 +53,37 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
       data: { isActive: true }
     });
 
-    // Send "Email" to host
+    // Send real email to host
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://sports.tmsavannah.com';
     const registerLink = `${origin}/tournaments/${tournament.slug || tournament.id}/register`;
     const staffLink = `${origin}/tournaments/${tournament.slug || tournament.id}/apply-staff`;
 
-    console.log('\n======================================================');
-    console.log(`✉️ MOCK EMAIL DISPATCHED`);
-    console.log(`To: ${tournament.contactEmail || tournament.host?.email}`);
-    console.log(`Subject: 🚀 Tournament Launched: ${tournament.name}`);
-    console.log('------------------------------------------------------');
-    console.log(`Congratulations! Your tournament "${tournament.name}" is now LIVE.`);
-    console.log(`Location: ${tournament.location}`);
-    console.log(`Dates: ${tournament.startDate?.toISOString().split('T')[0]} to ${tournament.endDate?.toISOString().split('T')[0]}`);
-    console.log(`Format: ${tournament.formatType}`);
-    console.log('');
-    console.log(`Share this Magic Link with players to register:`);
-    console.log(registerLink);
-    console.log('');
-    console.log(`Share this link to recruit referees and marshalls:`);
-    console.log(staffLink);
-    console.log('======================================================\n');
+    const hostEmail = tournament.contactEmail || tournament.host?.email;
+    if (hostEmail) {
+      const html = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+          <h2 style="color: #2e7d32;">🚀 Tournament Launched: ${tournament.name}</h2>
+          <p>Congratulations! Your tournament <strong>"${tournament.name}"</strong> is now LIVE.</p>
+          <ul>
+            <li><strong>Location:</strong> ${tournament.location}</li>
+            <li><strong>Dates:</strong> ${tournament.startDate?.toISOString().split('T')[0]} to ${tournament.endDate?.toISOString().split('T')[0]}</li>
+            <li><strong>Format:</strong> ${tournament.formatType}</li>
+          </ul>
+          <hr style="border: 1px solid #eee; margin: 20px 0;" />
+          <p><strong>Share this Magic Link with players to register:</strong></p>
+          <p><a href="${registerLink}" style="background: #2e7d32; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Player Registration</a></p>
+          <br />
+          <p><strong>Share this link to recruit referees and marshalls:</strong></p>
+          <p><a href="${staffLink}" style="color: #2e7d32; text-decoration: none; border-bottom: 1px solid #2e7d32;">Staff Application</a></p>
+        </div>
+      `;
+
+      sendRawEmail({
+        to: hostEmail,
+        subject: `🚀 Tournament Launched: ${tournament.name}`,
+        html
+      }).catch(e => console.error('Failed to send launch email', e));
+    }
 
     return NextResponse.json({ success: true, tournament: updated });
   } catch (error) {

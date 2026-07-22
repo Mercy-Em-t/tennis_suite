@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
 import { cookies } from 'next/headers';
+import { sendTemplateEmail } from '@/lib/mail/dispatch';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key_change_me_in_production';
 
@@ -37,6 +38,19 @@ export async function POST(request: Request) {
           role: 'PLAYER',
         },
       });
+
+      // Send welcome email asynchronously for newly created accounts
+      sendTemplateEmail({
+        to: user.email,
+        template: 'welcome_email',
+        variables: {
+          name: user.name,
+          brand_name: 'Tennis Suite',
+          message: `Your guest player account has been successfully created with a temporary password. You can reset it anytime.`,
+          cta_url: 'https://sports.tmsavannah.com/login',
+          cta_label: 'Access Account'
+        }
+      }).catch(e => console.error('Failed to send welcome email', e));
     }
 
     // Sign a token to log them in for the checkout session
