@@ -30,7 +30,7 @@ export async function POST(
 
     const tournament = await prisma.tournament.findUnique({
       where: { id: tournamentId },
-      select: { registrationPhase: true, updatedAt: true }
+      select: { registrationPhase: true, updatedAt: true, name: true }
     });
 
     if (!tournament) {
