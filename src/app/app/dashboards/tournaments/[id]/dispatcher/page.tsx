@@ -18,6 +18,8 @@ export default function MatchDispatcher({ params }: { params: Promise<{ id: stri
   const [activeId, setActiveId] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
 
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  
   // Local state for optimistic drag and drop
   const [localMatches, setLocalMatches] = useState<any[]>([]);
 
@@ -97,7 +99,6 @@ export default function MatchDispatcher({ params }: { params: Promise<{ id: stri
     mutate();
   };
 
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const allCategories = Array.from(new Set(localMatches.map(m => m.category).filter(Boolean))) as string[];
   const categories = ['All', ...allCategories];
 
