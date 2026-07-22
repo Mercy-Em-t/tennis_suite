@@ -254,7 +254,7 @@ export default function TeamDashboard() {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                         <h3 style={{ margin: 0, color: '#fff', fontSize: '1.25rem', fontWeight: 700 }}>{t.tournamentName}</h3>
                         <StatusBadge status={t.isActive ? 'success' : isUpcoming ? 'info' : undefined} >
-                          {t.isActive ? 'Ongoing' : isUpcoming ? (t.registrationPhase === 'OPEN' ? 'Reg Open' : 'Upcoming') : 'Past'}
+                          {t.isActive ? 'Ongoing' : isUpcoming ? ((t.registrationPhase === 'EARLY' || t.registrationPhase === 'LATE') ? 'Reg Open' : 'Upcoming') : 'Past'}
                         </StatusBadge>
                       </div>
                       <p style={{ color: 'var(--text-muted)', margin: '0 0 20px 0', fontSize: '0.9rem' }}>

@@ -19,6 +19,8 @@ export default function TournamentFactory({ onClose }: TournamentFactoryProps) {
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
+  const [createdTournamentId, setCreatedTournamentId] = useState<string | null>(null);
+
   // Form State
   const [formData, setFormData] = useState({
     name: '',
@@ -28,9 +30,9 @@ export default function TournamentFactory({ onClose }: TournamentFactoryProps) {
     location: '',
     contactEmail: '',
     contactPhone: '',
-    formatType: 'Round-Robin',
+    formatType: 'Round Robin',
     matchDuration: '60',
-    scoringRules: 'Advantage',
+    scoringRules: '{"setsToWin":2,"gamesPerSet":6,"tiebreakAt":6,"advantage":"Standard"}',
     categories: '',
     numCourts: '1',
     surfaceType: 'Hard',
@@ -170,6 +172,7 @@ export default function TournamentFactory({ onClose }: TournamentFactoryProps) {
       
       if (res.ok && data.success) {
         setSubmitSuccess(true);
+        setCreatedTournamentId(data.tournament.id);
         // Clear all form data upon success
         setFormData({
           name: '',
@@ -179,30 +182,25 @@ export default function TournamentFactory({ onClose }: TournamentFactoryProps) {
           location: '',
           contactEmail: '',
           contactPhone: '',
-          formatType: 'Round-Robin',
+          formatType: 'Round Robin',
           matchDuration: '60',
-          scoringRules: '{"setsToWin":2,"gamesPerSet":6}',
+          scoringRules: '{"setsToWin":2,"gamesPerSet":6,"tiebreakAt":6,"advantage":"Standard"}',
           categories: '',
-          numCourts: '',
+          numCourts: '1',
           surfaceType: 'Hard',
           logoUrl: '',
           sponsorUrl: ''
         });
         setSelectedCategories([]);
         setErrors({});
-
-        // Delay routing to let the user see the success message
-        setTimeout(() => {
-          onClose();
-          router.push(`/tournaments/${data.tournament.id}`);
-        }, 1500);
+        setIsSubmitting(false); // Done submitting, waiting for user action
       } else {
         setSubmitError(data.error || 'Failed to provision tournament');
+        setIsSubmitting(false);
       }
     } catch (err) {
       console.error(err);
       setSubmitError('An error occurred during provisioning');
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -225,19 +223,37 @@ export default function TournamentFactory({ onClose }: TournamentFactoryProps) {
         </div>
 
         <div className={styles.content}>
-          {submitSuccess && (
-            <div className={styles.successBanner}>
-              🎉 Tournament provisioned successfully! Redirecting...
+          {submitSuccess ? (
+            <div style={{ textAlign: 'center', padding: '40px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
+              <div style={{ fontSize: '4rem' }}>🎉</div>
+              <div>
+                <h3 style={{ margin: '0 0 8px 0', fontSize: '1.5rem', color: '#fff' }}>Tournament Provisioned!</h3>
+                <p style={{ color: '#8b949e', margin: 0 }}>Your new tournament is ready to be managed.</p>
+              </div>
+              <div style={{ display: 'flex', gap: '16px', marginTop: '16px' }}>
+                <button 
+                  onClick={() => { onClose(); router.push(`/app/dashboards/tournaments/${createdTournamentId}`); }}
+                  style={{ background: '#238636', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 24px', fontSize: '1rem', fontWeight: 600, cursor: 'pointer' }}
+                >
+                  Manage Tournament
+                </button>
+                <button 
+                  onClick={() => { onClose(); router.push(`/tournaments/${createdTournamentId}/profile`); }}
+                  style={{ background: '#21262d', color: '#c9d1d9', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '12px 24px', fontSize: '1rem', fontWeight: 600, cursor: 'pointer' }}
+                >
+                  View Public Profile
+                </button>
+              </div>
             </div>
-          )}
-
-          {submitError && (
+          ) : (
+            <>
+              {submitError && (
             <div className={styles.errorBanner}>
               ❌ {submitError}
             </div>
           )}
 
-          {step === 1 && (
+              {step === 1 && (
             <div>
               <h3 className={styles.stepTitle}>1. Identity</h3>
               <div className={styles.formGroup}>
@@ -337,8 +353,9 @@ export default function TournamentFactory({ onClose }: TournamentFactoryProps) {
               <div className={styles.formGroup}>
                 <label>Format Type <span style={{ color: '#ef4444' }}>*</span></label>
                 <select className={styles.input} name="formatType" value={formData.formatType} onChange={handleChange}>
-                  <option value="Round-Robin" style={{ color: '#000' }}>Round-Robin</option>
-                  <option value="Elimination" style={{ color: '#000' }}>Elimination</option>
+                  <option value="Round Robin" style={{ color: '#000' }}>Round Robin</option>
+                  <option value="Knockout" style={{ color: '#000' }}>Knockout</option>
+                  <option value="Pool + Knockout" style={{ color: '#000' }}>Pool + Knockout</option>
                 </select>
               </div>
               <div className={styles.formGroup}>
@@ -392,8 +409,9 @@ export default function TournamentFactory({ onClose }: TournamentFactoryProps) {
                 <div className={styles.formGroup}>
                   <label>Scoring Rules <span style={{ color: '#ef4444' }}>*</span></label>
                   <select className={styles.input} name="scoringRules" value={formData.scoringRules} onChange={handleChange}>
-                    <option value="Advantage">Advantage</option>
-                    <option value="No-Ad">No-Ad</option>
+                    <option value='{"setsToWin":2,"gamesPerSet":6,"tiebreakAt":6,"advantage":"Standard"}' style={{ color: '#000' }}>Standard (Best of 3, Ad)</option>
+                    <option value='{"setsToWin":2,"gamesPerSet":6,"tiebreakAt":6,"advantage":"No-Ad"}' style={{ color: '#000' }}>Fast (Best of 3, No-Ad)</option>
+                    <option value='{"setsToWin":1,"gamesPerSet":8,"tiebreakAt":8,"advantage":"Standard"}' style={{ color: '#000' }}>Pro Set (8 Games)</option>
                   </select>
                 </div>
               </div>
@@ -445,21 +463,32 @@ export default function TournamentFactory({ onClose }: TournamentFactoryProps) {
               </div>
             </div>
           )}
-        </div>
-
-        <div className={styles.footer}>
-          <button className={styles.cancelBtn} onClick={step === 1 ? onClose : handlePrev} disabled={isSubmitting}>
-            {step === 1 ? 'Cancel' : 'Back'}
-          </button>
-          
-          {step < 4 ? (
-            <button className={styles.nextBtn} onClick={handleNext}>Next</button>
-          ) : (
-            <button className={styles.launchBtn} onClick={handleLaunch} disabled={isSubmitting}>
-              {isSubmitting ? 'Provisioning courts and starting tournament...' : 'Launch'}
-            </button>
+          </>
           )}
         </div>
+
+        {!submitSuccess && (
+          <div className={styles.footer}>
+            <button className={styles.cancelBtn} onClick={step === 1 ? onClose : handlePrev} disabled={isSubmitting}>
+              {step === 1 ? 'Cancel' : 'Back'}
+            </button>
+            
+            {step < 4 ? (
+              <button className={styles.nextBtn} onClick={handleNext}>Next</button>
+            ) : (
+              <button className={styles.launchBtn} onClick={handleLaunch} disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+                    <svg className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                    </svg>
+                    Provisioning...
+                  </span>
+                ) : 'Launch Tournament'}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* --- Custom Category Creation Modal --- */}

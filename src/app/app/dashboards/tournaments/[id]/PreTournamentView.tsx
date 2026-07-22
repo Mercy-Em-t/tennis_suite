@@ -44,6 +44,11 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
   const [copied, setCopied] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
 
+  // New states for CSV preview
+  const [csvPreviewData, setCsvPreviewData] = useState<any[]>([]);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [importPaymentStatus, setImportPaymentStatus] = useState<'REGISTERED' | 'PENDING_PAYMENT'>('REGISTERED');
+
   // Deriving current progress based on flags
   const highestStageUnlocked = 
     tournament.isActive ? 4 :
@@ -67,32 +72,93 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setUploading(true);
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
-      complete: async (results) => {
-        try {
-          const res = await fetch(`/api/tournaments/${tournament.id}/import`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ rows: results.data })
-          });
-          const resData = await res.json();
-          if (resData.success) {
-            alert(`Successfully ingested ${resData.count} franchises!`);
-            mutate();
-          } else {
-            alert(`Ingestion Error: ${resData.error}`);
+      complete: (results) => {
+        const rows = results.data as any[];
+        const seenTeamNames = new Set<string>();
+        const seenEmails = new Set<string>();
+
+        const previewRows = rows.map((row, index) => {
+          const teamName = (row['Team Name'] || '').trim();
+          const p1Name = (row['Player 1 Name'] || '').trim();
+          const p1Email = (row['Player 1 Email'] || '').trim();
+          const p2Name = (row['Player 2 Name'] || '').trim();
+          const p2Email = (row['Player 2 Email'] || '').trim();
+          const category = (row['Category'] || 'Open').trim();
+          
+          const errors = [];
+          if (!teamName) errors.push('Missing Team Name');
+          if (!p1Name) errors.push('Missing Player 1 Name');
+          if (!p1Email) errors.push('Missing Player 1 Email');
+          
+          // Intra-CSV Duplicate Checks
+          if (teamName) {
+            if (seenTeamNames.has(teamName.toLowerCase())) errors.push('Duplicate Team Name in this CSV');
+            seenTeamNames.add(teamName.toLowerCase());
           }
-        } catch (err) {
-          alert('A network error occurred during ingestion.');
-        } finally {
-          setUploading(false);
-          e.target.value = ''; // reset
-        }
+          if (p1Email) {
+            if (seenEmails.has(p1Email.toLowerCase())) errors.push('Duplicate Player 1 in this CSV');
+            seenEmails.add(p1Email.toLowerCase());
+          }
+          if (p2Email) {
+            if (seenEmails.has(p2Email.toLowerCase())) errors.push('Duplicate Player 2 in this CSV');
+            seenEmails.add(p2Email.toLowerCase());
+          }
+
+          // Idempotency Checks against existing teams
+          const existingTeam = tournament.teams?.find((t: any) => t.franchiseName.toLowerCase() === teamName.toLowerCase());
+          if (existingTeam) errors.push('Team Name already registered');
+
+          const allExistingEmails = tournament.teams?.flatMap((t: any) => t.players?.map((p: any) => p.email.toLowerCase()) || []) || [];
+          if (p1Email && allExistingEmails.includes(p1Email.toLowerCase())) errors.push('Player 1 already registered');
+          if (p2Email && allExistingEmails.includes(p2Email.toLowerCase())) errors.push('Player 2 already registered');
+
+          return {
+            original: row,
+            index,
+            teamName, p1Name, p1Email, p2Name, p2Email, category,
+            status: errors.length === 0 ? 'Valid' : 'Invalid',
+            errors
+          };
+        });
+        
+        setCsvPreviewData(previewRows);
+        setIsPreviewMode(true);
+        e.target.value = ''; // reset file input
       }
     });
+  };
+
+  const confirmUpload = async () => {
+    const validRows = csvPreviewData.filter(r => r.status === 'Valid').map(r => r.original);
+    if (validRows.length === 0) {
+      alert("No valid rows to upload.");
+      setIsPreviewMode(false);
+      return;
+    }
+    
+    setUploading(true);
+    try {
+      const res = await fetch(`/api/tournaments/${tournament.id}/import`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rows: validRows, paymentStatus: importPaymentStatus })
+      });
+      const resData = await res.json();
+      if (resData.success) {
+        alert(`Successfully ingested ${resData.count} franchises!`);
+        mutate();
+        setIsPreviewMode(false);
+      } else {
+        alert(`Ingestion Error: ${resData.error}`);
+      }
+    } catch (err) {
+      alert('A network error occurred during ingestion.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const S = {
@@ -210,13 +276,9 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
         <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid rgba(255,255,255,0.1)', textAlign: 'right' }}>
           <Button 
             variant="primary"
-            onClick={async () => {
-              if (window.confirm('Are you ready to transition to the During-Tournament phase? Matches will go live.')) {
-                await updateTournament({ lifecyclePhase: 'DURING_TOURNAMENT' });
-              }
-            }}
+            onClick={() => setActiveStage(2)}
           >
-            Transition to Live Event (During-Tournament) →
+            Proceed to Registration Phase →
           </Button>
         </div>
       )}
@@ -295,14 +357,96 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
           <div style={{ marginBottom: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <h4 style={{ color: '#fff', fontSize: '1rem', fontWeight: 600, margin: 0 }}>CSV Import (Roster Bulk Ingestion)</h4>
-              <a href="#" onClick={(e) => { e.preventDefault(); alert("CSV Format Required:\n- Team Name (Required)\n- Player 1 Name (Required)\n- Player 1 Email (Required)\n- Category (Optional, defaults to Open)"); }} style={{ color: '#58a6ff', fontSize: '0.85rem', textDecoration: 'none' }}>View CSV Template Guide</a>
+              <a href="/app/guides/csv-import" target="_blank" rel="noopener noreferrer" style={{ color: '#58a6ff', fontSize: '0.85rem', textDecoration: 'none' }}>View CSV Template Guide</a>
             </div>
-            <p style={{ color: '#8b949e', fontSize: '0.875rem', marginBottom: '12px' }}>Required: Team Name, Player 1 Name, Player 1 Email, etc.</p>
-            <label style={{ display: 'inline-block', padding: '10px 18px', background: 'rgba(88,166,255,0.08)', border: '1px dashed rgba(88,166,255,0.4)', color: '#58a6ff', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
-              Choose CSV file
-              <input type='file' accept='.csv' onChange={handleFileUpload} disabled={uploading} style={{ display: 'none' }} />
-            </label>
-            {uploading && <span style={{ marginLeft: '12px', color: '#58a6ff', fontSize: '0.85rem' }}>Processing...</span>}
+            
+            {!isPreviewMode ? (
+              <>
+                <p style={{ color: '#8b949e', fontSize: '0.875rem', marginBottom: '12px' }}>Required: Team Name, Player 1 Name, Player 1 Email, etc.</p>
+                <label style={{ display: 'inline-block', padding: '10px 18px', background: 'rgba(88,166,255,0.08)', border: '1px dashed rgba(88,166,255,0.4)', color: '#58a6ff', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
+                  Choose CSV file
+                  <input type='file' accept='.csv' onChange={handleFileUpload} disabled={uploading} style={{ display: 'none' }} />
+                </label>
+              </>
+            ) : (
+              <div style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h4 style={{ margin: 0, color: '#fff' }}>CSV Import Preview</h4>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <Badge variant="success">{csvPreviewData.filter(r => r.status === 'Valid').length} Valid</Badge>
+                    <Badge variant="default">{csvPreviewData.filter(r => r.status === 'Invalid').length} Invalid</Badge>
+                  </div>
+                </div>
+
+                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <h5 style={{ margin: '0 0 12px', color: '#fff', fontSize: '0.95rem' }}>Payment Status for this Batch</h5>
+                  <div style={{ display: 'flex', gap: '16px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: importPaymentStatus === 'REGISTERED' ? '#fff' : '#8b949e', fontSize: '0.9rem' }}>
+                      <input 
+                        type="radio" 
+                        name="paymentStatus" 
+                        value="REGISTERED" 
+                        checked={importPaymentStatus === 'REGISTERED'} 
+                        onChange={() => setImportPaymentStatus('REGISTERED')} 
+                        style={{ accentColor: '#58a6ff' }}
+                      />
+                      Mark as Fully Paid (Offline)
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: importPaymentStatus === 'PENDING_PAYMENT' ? '#fff' : '#8b949e', fontSize: '0.9rem' }}>
+                      <input 
+                        type="radio" 
+                        name="paymentStatus" 
+                        value="PENDING_PAYMENT" 
+                        checked={importPaymentStatus === 'PENDING_PAYMENT'} 
+                        onChange={() => setImportPaymentStatus('PENDING_PAYMENT')}
+                        style={{ accentColor: '#58a6ff' }}
+                      />
+                      Require Online Payment (Pending)
+                    </label>
+                  </div>
+                </div>
+                
+                <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '6px' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem', color: '#c9d1d9' }}>
+                    <thead style={{ background: 'rgba(255,255,255,0.02)', position: 'sticky', top: 0, zIndex: 10 }}>
+                      <tr>
+                        <th style={{ padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Row</th>
+                        <th style={{ padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Team</th>
+                        <th style={{ padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Player 1</th>
+                        <th style={{ padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>Status / Errors</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {csvPreviewData.map((row) => (
+                        <tr key={row.index} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: row.status === 'Invalid' ? 'rgba(255,123,114,0.05)' : 'transparent' }}>
+                          <td style={{ padding: '8px 12px' }}>{row.index + 1}</td>
+                          <td style={{ padding: '8px 12px', fontWeight: 600, color: '#fff' }}>{row.teamName || '-'}</td>
+                          <td style={{ padding: '8px 12px' }}>
+                            {row.p1Name} <span style={{ color: '#8b949e' }}>{row.p1Email ? `(${row.p1Email})` : ''}</span>
+                          </td>
+                          <td style={{ padding: '8px 12px' }}>
+                            {row.status === 'Valid' ? (
+                              <span style={{ color: '#3fb950', fontWeight: 600 }}>Valid</span>
+                            ) : (
+                              <div style={{ color: '#ff7b72', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                {row.errors.map((e: string, i: number) => <span key={i}>• {e}</span>)}
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                  <Button variant="secondary" onClick={() => setIsPreviewMode(false)} disabled={uploading}>Cancel</Button>
+                  <Button variant="primary" onClick={confirmUpload} disabled={uploading || csvPreviewData.filter(r => r.status === 'Valid').length === 0}>
+                    {uploading ? 'Processing...' : `Confirm & Upload ${csvPreviewData.filter(r => r.status === 'Valid').length} Valid Rows`}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Registration Logic Banner */}
@@ -504,6 +648,27 @@ export default function PreTournamentView({ tournament, stats, updateTournament,
           Enter Match Dispatcher Grid →
         </Button>
       </div>
+
+      {tournament.isActive && (
+        <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid rgba(255,255,255,0.1)', textAlign: 'right' }}>
+          <Button 
+            variant="success"
+            disabled={
+              !tournament.isActive || 
+              tournament.registrationPhase !== 'CLOSED' || 
+              !(tournament.pools?.length > 0) || 
+              !(tournament.matches?.length > 0)
+            }
+            onClick={async () => {
+              if (window.confirm('Are you ready to transition to the During-Tournament phase? Matches will go live.')) {
+                await updateTournament({ lifecyclePhase: 'DURING_TOURNAMENT' });
+              }
+            }}
+          >
+            {tournament.matches?.length > 0 && tournament.pools?.length > 0 && tournament.registrationPhase === 'CLOSED' ? 'Transition to Live Event (During-Tournament) →' : 'Complete all Stages (1-4) to transition to Live'}
+          </Button>
+        </div>
+      )}
     </Card>
   );
 

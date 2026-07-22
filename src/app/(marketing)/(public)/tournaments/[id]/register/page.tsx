@@ -110,7 +110,7 @@ export default function TournamentRegistrationPage({ params }: { params: Promise
           Tennis <span className={styles.brandAccent}>Suite</span>
         </div>
         <div className={styles.navLinks}>
-          <button className={styles.navLink} onClick={() => router.push(`/tournaments/${tournament.slug || tournament.id}`)}>Back to Tournament</button>
+          <button className={styles.navLink} onClick={() => router.push(`/tournaments/${tournament.slug || tournament.id}/profile`)}>Back to Tournament</button>
         </div>
       </nav>
 

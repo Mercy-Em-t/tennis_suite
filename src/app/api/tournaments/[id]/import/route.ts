@@ -14,7 +14,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   try {
     const { id } = await params;
     const body = await request.json();
-    const { rows } = body;
+    const { rows, paymentStatus = 'REGISTERED' } = body;
 
     if (!Array.isArray(rows) || rows.length === 0) {
       return NextResponse.json({ error: 'No data provided' }, { status: 400 });
@@ -84,7 +84,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             tournamentId: id,
             categories: JSON.stringify(parsedCategories.length > 0 ? parsedCategories : ['Open']),
             isLateRegistration: isLate,
-            paymentStatus: 'REGISTERED',
+            paymentStatus: paymentStatus,
             players: {
               connect: playerConnections
             }

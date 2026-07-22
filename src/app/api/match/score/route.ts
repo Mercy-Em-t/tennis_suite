@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     const payload = await verifyToken(token);
     if (!payload || !payload.sub) return NextResponse.json({ error: 'Invalid Token' }, { status: 401 });
 
-    // Fetch the match
+    // Fetch the match metadata
     const match = await prisma.match.findUnique({
       where: { id: matchId }
     });
@@ -29,27 +29,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Match not found' }, { status: 404 });
     }
 
-    // Parse current score state, or initialize if empty
-    let currentState: TennisScoreState;
-    try {
-      currentState = match.scoreState ? JSON.parse(match.scoreState as string) : createInitialScoreState();
-    } catch (e) {
-      currentState = createInitialScoreState();
-    }
+    // 1. Get Live State from Redis (Buffer) or DB
+    const { getLiveScoreState, saveLiveScoreState } = await import('@/lib/engine/match-buffer');
+    const currentState = (await getLiveScoreState(matchId)) || createInitialScoreState();
 
-    // Advance the score using our Tennis Engine
+    // 2. Advance the score using our Tennis Engine
     const { newState, matchCompleted, matchWinnerId } = advanceScore(currentState, scoringTeam as 'A' | 'B', DEFAULT_MATCH_FORMAT);
 
-    // Update in database (this triggers SSE broadcasts automatically if the Prisma extension is set up, 
-    // but the Next.js routes we built poll/stream based on updated `scoreState`)
-    const updatedMatch = await prisma.match.update({
-      where: { id: matchId },
-      data: {
-        scoreState: JSON.stringify(newState),
-        status: matchCompleted ? 'COMPLETED' : match.status,
-        winnerId: matchCompleted ? (matchWinnerId === 'A' ? match.teamAId : match.teamBId) : null,
+    let updatedMatch = match;
+
+    if (matchCompleted) {
+      // 3A. If match is over, commit final state and winner to Postgres instantly
+      updatedMatch = await prisma.match.update({
+        where: { id: matchId },
+        data: {
+          scoreState: JSON.stringify(newState),
+          status: 'COMPLETED',
+          winnerId: matchWinnerId === 'A' ? match.teamAId : match.teamBId,
+        }
+      });
+      // Clean up Redis
+      const { redis, isRedisConfigured } = await import('@/lib/redis');
+      if (isRedisConfigured) {
+        await redis.del(`match:${matchId}:state`);
+        await redis.srem('system:dirty_matches', matchId);
       }
-    });
+    } else {
+      // 3B. If match is still ongoing, buffer the state in Redis ONLY
+      await saveLiveScoreState(matchId, newState, false);
+      updatedMatch = { ...match, scoreState: JSON.stringify(newState) };
+    }
 
     return NextResponse.json({
       success: true,

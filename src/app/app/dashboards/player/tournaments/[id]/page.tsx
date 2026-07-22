@@ -15,7 +15,7 @@ const fetcher = (url: string) => fetch(url).then(r => r.json());
 const mockDataMap: Record<string, any> = {
   'mock-sandbox-pools': {
     success: true,
-    tournament: { id: 'mock-sandbox-pools', name: 'Sandbox Rivals (Pools Stage)', status: 'ACTIVE', formatType: 'Pool Play', scoringRules: 'Standard', location: 'Sandbox Arena', prizeMoney: '10,000 XP', startDate: new Date(Date.now() + 86400000).toISOString(), registrationPhase: 'OPEN', isActive: false, categories: "Men's Singles, Women's Singles", allowMultiCategory: true },
+    tournament: { id: 'mock-sandbox-pools', name: 'Sandbox Rivals (Pools Stage)', status: 'ACTIVE', formatType: 'Pool Play', scoringRules: 'Standard', location: 'Sandbox Arena', prizeMoney: '10,000 XP', startDate: new Date(Date.now() + 86400000).toISOString(), registrationPhase: 'EARLY', isActive: false, categories: "Men's Singles, Women's Singles", allowMultiCategory: true },
     team: { franchiseName: 'Sandbox Team', isCheckedIn: false, categories: JSON.stringify(["Men's Singles"]) },
     schedule: [],
     pool: { name: 'Pool A', standings: [{ teamName: 'Sandbox Team', wins: 0, losses: 0, points: 0 }] }

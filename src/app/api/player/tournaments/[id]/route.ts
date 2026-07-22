@@ -56,7 +56,7 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
           stationInfo: 'Head to the main desk to check in.',
           scoringRules: 'Best of 3 Sets',
           startDate: new Date(Date.now() + 86400000).toISOString(),
-          registrationPhase: 'OPEN',
+          registrationPhase: 'EARLY',
           isActive: mockType !== 'pools',
           categories: "Men's Singles, Women's Singles",
           allowMultiCategory: true,

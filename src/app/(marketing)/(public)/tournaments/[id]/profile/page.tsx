@@ -7,20 +7,18 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { MapPin, Shield, Calendar, Users, Trophy, Mail, Phone, ChevronLeft } from 'lucide-react';
 import styles from '@/app/(marketing)/landing.module.css';
 
+import { getCachedTournament } from '@/lib/cache/tournament';
+
 export default async function PublicTournamentProfile({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
-  const tournament = await prisma.tournament.findFirst({
-    where: { 
-      OR: [
-        { id: resolvedParams.id },
-        { slug: resolvedParams.id }
-      ]
-    }
-  });
+  const tournament = await getCachedTournament(resolvedParams.id);
 
   if (!tournament) return notFound();
 
-  const isRegistrationOpen = tournament.registrationPhase === 'OPEN';
+  const isRegistrationOpen = tournament.registrationPhase === 'EARLY' || tournament.registrationPhase === 'LATE';
+  const now = new Date();
+  const regStart = tournament.registrationStart ? new Date(tournament.registrationStart) : null;
+  const isUpcoming = regStart && regStart > now && tournament.registrationPhase === 'CLOSED';
 
   return (
     <div className={styles.page}>
@@ -73,6 +71,15 @@ export default async function PublicTournamentProfile({ params }: { params: Prom
                     </DynamicButton>
                   </Link>
                   <p style={{ textAlign: 'center', margin: 0, fontSize: '0.85rem', color: 'var(--success)' }}>Registration is Open!</p>
+                </>
+              ) : isUpcoming ? (
+                <>
+                  <DynamicButton variant="secondary" style={{ width: '100%', height: '56px', fontSize: '1.1rem', opacity: 0.5, cursor: 'not-allowed' }}>
+                    Registration Upcoming
+                  </DynamicButton>
+                  <p style={{ textAlign: 'center', margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                    Opens on {regStart?.toLocaleDateString()}
+                  </p>
                 </>
               ) : (
                 <>

@@ -126,13 +126,21 @@ export default function TournamentSettings({ params }: { params: Promise<{ id: s
         setCategories(t.categories.split(",").map((c: string) => c.trim()).filter((c: string) => c));
       }
 
+      const formatDateForInput = (d: string | null | undefined) => {
+        if (!d) return '';
+        const dt = new Date(d);
+        if (isNaN(dt.getTime())) return '';
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+      };
+
       setForm({
         name: t.name ?? '',
         location: t.location ?? '',
-        startDate: t.startDate ? t.startDate.split('T')[0] : '',
-        endDate: t.endDate ? t.endDate.split('T')[0] : '',
-        registrationStart: t.registrationStart ? t.registrationStart.split('T')[0] : '',
-        registrationEnd: t.registrationEnd ? t.registrationEnd.split('T')[0] : '',
+        startDate: formatDateForInput(t.startDate),
+        endDate: formatDateForInput(t.endDate),
+        registrationStart: formatDateForInput(t.registrationStart),
+        registrationEnd: formatDateForInput(t.registrationEnd),
         formatType: t.formatType ?? '',
         matchDuration: t.matchDuration ? String(t.matchDuration) : '',
         surfaceType: t.surfaceType ?? '',

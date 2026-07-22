@@ -9,10 +9,9 @@ const BASE_URL = MPESA_ENV === 'live'
   ? 'https://api.safaricom.co.ke' 
   : 'https://sandbox.safaricom.co.ke';
 
-export async function getMpesaAccessToken(): Promise<string | null> {
+export async function getMpesaAccessToken(): Promise<string> {
   if (!CONSUMER_KEY || !CONSUMER_SECRET) {
-    console.warn("M-Pesa Consumer Key/Secret is missing.");
-    return null;
+    throw new Error(`Missing M-Pesa Credentials. KEY: ${!!CONSUMER_KEY}, SECRET: ${!!CONSUMER_SECRET}`);
   }
   const credentials = Buffer.from(`${CONSUMER_KEY}:${CONSUMER_SECRET}`).toString('base64');
 
@@ -22,20 +21,18 @@ export async function getMpesaAccessToken(): Promise<string | null> {
       headers: {
         Authorization: `Basic ${credentials}`,
       },
-      // Safari requires no-cache for authentication routes in some cases
       cache: 'no-store',
     });
 
     if (!res.ok) {
-      console.error("Failed to generate M-Pesa token:", await res.text());
-      return null;
+      const errorText = await res.text();
+      throw new Error(`Safaricom API Error: ${res.status} ${res.statusText} - ${errorText}`);
     }
 
     const data = await res.json();
     return data.access_token;
-  } catch (error) {
-    console.error("M-Pesa token generation error:", error);
-    return null;
+  } catch (error: any) {
+    throw new Error(`M-Pesa token generation error: ${error.message}`);
   }
 }
 
@@ -45,7 +42,6 @@ function generatePassword(timestamp: string): string {
 
 export async function initiateStkPush(phoneNumber: string, amount: number, accountReference: string, transactionDesc: string) {
   const token = await getMpesaAccessToken();
-  if (!token) throw new Error("M-Pesa configuration error or unable to authenticate");
 
   // Phone number needs to be in 2547XXXXXXXX format
   let formattedPhone = phoneNumber.replace(/[^0-9]/g, '');
