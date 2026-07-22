@@ -2,8 +2,8 @@ export const MPESA_ENV = process.env.MPESA_ENVIRONMENT || 'sandbox';
 export const CONSUMER_KEY = process.env.MPESA_CONSUMER_KEY || '';
 export const CONSUMER_SECRET = process.env.MPESA_CONSUMER_SECRET || '';
 export const PASSKEY = process.env.MPESA_PASSKEY || '';
-export const SHORTCODE = process.env.MPESA_SHORTCODE || '9022868';
-export const TILL_NUMBER = process.env.MPESA_TILL_NUMBER || '5758419';
+export const SHORTCODE = process.env.MPESA_SHORTCODE || '174379';
+export const TILL_NUMBER = process.env.MPESA_TILL_NUMBER || '';
 
 const BASE_URL = MPESA_ENV === 'live' 
   ? 'https://api.safaricom.co.ke' 
