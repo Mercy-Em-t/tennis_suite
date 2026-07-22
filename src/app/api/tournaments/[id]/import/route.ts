@@ -27,7 +27,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     // We will hash a default password once for efficiency
     const defaultPasswordHash = await bcrypt.hash('welcome123!', 10);
-    const CHUNK_SIZE = 50;
+    const CHUNK_SIZE = 10;
     let totalIngested = 0;
 
     for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
