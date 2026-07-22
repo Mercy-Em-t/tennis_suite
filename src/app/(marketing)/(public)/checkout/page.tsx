@@ -14,6 +14,7 @@ function CheckoutContent() {
   const tournamentId = searchParams.get('t');
   const franchiseName = searchParams.get('f');
   const categoriesParam = searchParams.get('c');
+  const emailParam = searchParams.get('e');
   
   const [categories, setCategories] = useState<string[]>([]);
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -81,6 +82,7 @@ function CheckoutContent() {
           name: franchiseName,
           categories,
           phoneNumber,
+          email: emailParam,
           amount: 50 // Demo amount
         }),
       });

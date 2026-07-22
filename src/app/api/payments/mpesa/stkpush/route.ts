@@ -6,7 +6,7 @@ import { verifyToken } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
-    const { phoneNumber, amount, tournamentId, name, categories } = await request.json();
+    const { phoneNumber, amount, tournamentId, name, categories, email } = await request.json();
 
     if (!phoneNumber || !amount || !tournamentId || !name) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -26,10 +26,9 @@ export async function POST(request: Request) {
         phoneNumber,
         merchantRequestId: mpesaRes.MerchantRequestID,
         checkoutRequestId: mpesaRes.CheckoutRequestID,
-        status: 'PENDING',
         tournamentId,
         teamName: name,
-        categories: JSON.stringify(categories || []),
+        categories: JSON.stringify({ list: categories || [], email }),
       }
     });
 

@@ -55,7 +55,7 @@ export async function POST(request: Request) {
         const categoryParam = Array.isArray(categories) && categories.length > 0 
           ? `&c=${encodeURIComponent(JSON.stringify(categories))}` 
           : '';
-        checkoutUrl = `/checkout?t=${targetTournamentId}&f=${encodeURIComponent(franchiseName)}${categoryParam}`;
+        checkoutUrl = `/checkout?t=${targetTournamentId}&f=${encodeURIComponent(franchiseName)}${categoryParam}&e=${encodeURIComponent(email)}`;
       }
     }
 

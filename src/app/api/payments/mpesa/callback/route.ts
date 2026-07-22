@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendTemplateEmail } from '@/lib/mail/dispatch';
 
 export async function POST(request: Request) {
   try {
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
     // If successful, create the Team
     if (isSuccess && transaction.status !== 'COMPLETED') {
       try {
-        await prisma.team.create({
+        const team = await prisma.team.create({
           data: {
             franchiseName: transaction.teamName,
             tournamentId: transaction.tournamentId,
@@ -66,6 +67,28 @@ export async function POST(request: Request) {
           }
         });
         console.log(`[MPESA CALLBACK] Created team ${transaction.teamName} for tournament ${transaction.tournamentId}`);
+
+        // Try sending confirmation email
+        try {
+          const catData = JSON.parse(transaction.categories || '{}');
+          if (catData.email) {
+            const tournament = await prisma.tournament.findUnique({ where: { id: transaction.tournamentId } });
+            await sendTemplateEmail({
+              to: catData.email,
+              template: 'registration_success',
+              variables: {
+                team_name: team.franchiseName,
+                tournament_name: tournament?.name || 'Tournament',
+                cta_url: `https://sports.tmsavannah.com/tournaments/${tournament?.id}`,
+                cta_label: 'View Tournament'
+              }
+            });
+            console.log(`[MPESA CALLBACK] Registration email sent to ${catData.email}`);
+          }
+        } catch (emailErr) {
+          console.error("Failed to send registration email:", emailErr);
+        }
+
       } catch (teamError) {
         console.error("Error creating team after payment", teamError);
       }
