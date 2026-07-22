@@ -122,15 +122,15 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
       for (const player of team.players) {
         sendRawEmail({
           to: player.email,
-          subject: \`🏆 Tournament Draw Published\`,
+          subject: `🏆 Tournament Draw Published`,
           html
-        }).catch(e => logger.error(\`Failed to send draw notification to \${player.email}\`, {}, e));
+        }).catch(e => logger.error(`Failed to send draw notification to ${player.email}`, {}, e));
       }
     }
 
     return NextResponse.json({ 
       success: true, 
-      message: \`Generated \${createdMatches.length} bracket matches for Top \${topN} teams.\`,
+      message: `Generated ${createdMatches.length} bracket matches for Top ${topN} teams.`,
       matches: createdMatches 
     });
 
