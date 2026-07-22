@@ -101,7 +101,7 @@ export default function FinancialsDashboard({ params }: { params: Promise<{ id: 
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
             <h3 className="text-blue-400 font-bold mb-4 flex justify-between items-center relative z-10">
               Digital Collections (Online)
-              <Badge variant="primary">{onlineTeams.length} Teams</Badge>
+              <Badge variant="accent">{onlineTeams.length} Teams</Badge>
             </h3>
             <div className="space-y-3 relative z-10">
               <div className="flex justify-between items-center text-sm">
