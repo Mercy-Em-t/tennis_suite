@@ -8,6 +8,9 @@ export function WatchScoringPad({ matchId }: { matchId: string }) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  
+  // Split-Brain Conflict State
+  const [conflict, setConflict] = useState<{serverScore: any, localScore: any, resolve: (choice: 'SERVER' | 'LOCAL') => void} | null>(null);
 
   const fetchScore = async () => {
     try {
@@ -24,34 +27,52 @@ export function WatchScoringPad({ matchId }: { matchId: string }) {
 
   useEffect(() => {
     fetchScore();
-    // Simulate real-time updates for now with polling,
-    // though real implementation uses WebSockets
     const interval = setInterval(fetchScore, 3000);
-    return () => clearInterval(interval);
+    
+    // Listen for rollback events from the OfflineSyncManager
+    const rollbackHandler = () => fetchScore();
+    window.addEventListener(`sync-rollback-${matchId}`, rollbackHandler);
+    
+    // Register Conflict Handler for Split-Brain UI
+    import('@/lib/resilience/OfflineSyncManager').then(m => {
+      m.OfflineSyncManager.registerConflictHandler((serverScore, localScore, resolve) => {
+        setConflict({ serverScore, localScore, resolve });
+      });
+    });
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener(`sync-rollback-${matchId}`, rollbackHandler);
+    };
   }, [matchId]);
 
   const handleAction = async (action: string) => {
-    if (actionLoading) return;
-    setActionLoading(true);
-    // Haptic feedback simulation in browser
+    // We removed actionLoading blocking to allow rapid offline tapping!
+    
     if (typeof navigator !== "undefined" && navigator.vibrate) {
       navigator.vibrate(50);
     }
     
-    try {
-      const res = await fetch("/api/watch/score", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ matchId, action }),
-      });
-      if (res.ok) {
-        await fetchScore();
+    // 1. Optimistic UI Update (Very basic simulation of the backend logic)
+    const optimisticData = { ...data };
+    if (action === "POINT_SRV" || action === "POINT_RCV") {
+      // In a real app, we'd import the TennisEngine to precisely calculate the next state.
+      // For this demo watch pad, we just show immediate feedback visually without breaking.
+      const isServerPoint = action === "POINT_SRV";
+      const winnerA = (optimisticData.currentServer === optimisticData.teamAId) ? isServerPoint : !isServerPoint;
+      if (winnerA) {
+        optimisticData.pointsA = optimisticData.pointsA === "0" ? "15" : optimisticData.pointsA === "15" ? "30" : "40";
+      } else {
+        optimisticData.pointsB = optimisticData.pointsB === "0" ? "15" : optimisticData.pointsB === "15" ? "30" : "40";
       }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setActionLoading(false);
+      setData(optimisticData);
     }
+
+    // 2. Queue in the OfflineSyncManager
+    // @ts-ignore
+    window.OfflineSyncManager = window.OfflineSyncManager || await import('@/lib/resilience/OfflineSyncManager').then(m => m.OfflineSyncManager);
+    // @ts-ignore
+    window.OfflineSyncManager.pushAction(matchId, action);
   };
 
   if (loading && !data) {
@@ -63,9 +84,52 @@ export function WatchScoringPad({ matchId }: { matchId: string }) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-between w-full h-[300px]">
-      {/* Header / Score Display */}
-      <div className="text-center w-full mt-2">
+    <>
+      {conflict && (
+        <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center p-6 backdrop-blur-sm">
+          <div className="bg-red-950 border border-red-500 rounded-2xl p-6 shadow-2xl w-full max-w-sm">
+            <h2 className="text-xl font-bold text-red-500 mb-2">Sync Conflict Detected!</h2>
+            <p className="text-sm text-red-200 mb-4">
+              The server score was modified while you were offline.
+            </p>
+            <div className="flex justify-between bg-black/50 p-3 rounded-lg mb-4 text-sm font-mono text-white">
+              <div>
+                <span className="text-neutral-500 block text-xs">SERVER</span>
+                {conflict.serverScore?.pointsA} - {conflict.serverScore?.pointsB}
+              </div>
+              <div className="text-right">
+                <span className="text-neutral-500 block text-xs">YOUR DEVICE</span>
+                {conflict.localScore?.pointsA} - {conflict.localScore?.pointsB}
+              </div>
+            </div>
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  conflict.resolve('LOCAL');
+                  setConflict(null);
+                }}
+                className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-xl transition-all"
+              >
+                Force Overwrite Server
+              </button>
+              <button
+                onClick={() => {
+                  conflict.resolve('SERVER');
+                  setConflict(null);
+                  fetchScore(); // revalidate
+                }}
+                className="w-full bg-transparent border border-red-500/50 hover:bg-red-900/50 text-red-300 font-bold py-3 rounded-xl transition-all"
+              >
+                Accept Server Score
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <div className="flex flex-col items-center justify-between w-full h-[300px] relative">
+        {/* Header / Score Display */}
+        <div className="text-center w-full mt-2">
         <div className="text-xs text-neutral-400 font-medium truncate px-4">{data.m}</div>
         <div className="text-2xl font-bold tracking-tighter mt-1">{data.s}</div>
       </div>
@@ -118,5 +182,6 @@ export function WatchScoringPad({ matchId }: { matchId: string }) {
         </button>
       </div>
     </div>
+    </>
   );
 }

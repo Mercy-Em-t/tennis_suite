@@ -1,25 +1,46 @@
 /**
- * Pillar 31A: Algorithmic Outlier Detection (Anti-Sandbagging)
- * Flags players winning with mathematically suspicious margins for their bracket.
+ * Pillar 31A: Algorithmic Outlier Detection (Anti-Smurfing/Botting)
+ * Flags matches where score input frequency deviates from historical norms by more than 3 standard deviations (FR-4).
  */
 
-export function detectSandbagging(recentScores: { scoreUs: number, scoreThem: number }[], registeredSkillTier: string) {
-  if (recentScores.length < 3) return { isFlagged: false };
+export function detectFrequencyOutlier(
+  inputTimestamps: number[],          // array of unix ms timestamps for each score entry
+  historicalMeanMs: number,           // mean gap between inputs in similar matches
+  historicalStdDevMs: number          // std dev of that gap
+): { isFlagged: boolean; zScore: number } {
+  if (inputTimestamps.length < 2) return { isFlagged: false, zScore: 0 };
 
-  let blowoutCount = 0;
-  
-  for (const match of recentScores) {
-    const margin = match.scoreUs - match.scoreThem;
-    // A margin of 6 or more in a set indicates a potential mismatch
-    if (margin >= 6) blowoutCount++;
-  }
+  // Calculate mean gap between consecutive entries
+  const gaps = inputTimestamps.slice(1).map((t, i) => t - inputTimestamps[i]);
+  const meanGap = gaps.reduce((a, b) => a + b, 0) / gaps.length;
 
-  // If a "Novice" player blows out 3 opponents in a row, flag them
-  const isSuspicious = (registeredSkillTier === 'NOVICE' && blowoutCount >= 3);
+  // Z-score: how many std devs away from historical mean
+  const zScore = Math.abs(historicalMeanMs - meanGap) / historicalStdDevMs;
 
   return {
-    isFlagged: isSuspicious,
-    blowoutCount,
-    recommendedAction: isSuspicious ? "PROMOTE_TO_INTERMEDIATE" : "NONE"
+    isFlagged: zScore > 3,   // SRS FR-4: flag if > 3 std deviations
+    zScore
   };
+}
+
+export function detectSandbagging(
+  recentScores: { scoreUs: number; scoreThem: number }[],
+  tier: string
+): { isFlagged: boolean; blowoutCount: number; recommendedAction?: string } {
+  if (recentScores.length < 3 || tier === 'ADVANCED') {
+    return { isFlagged: false, blowoutCount: 0 };
+  }
+
+  let blowouts = 0;
+  for (const score of recentScores) {
+    if (score.scoreUs - score.scoreThem >= 5) { // Arbitrary blowout margin
+      blowouts++;
+    }
+  }
+
+  if (blowouts >= 3 && tier === 'NOVICE') {
+    return { isFlagged: true, blowoutCount: blowouts, recommendedAction: 'PROMOTE_TO_INTERMEDIATE' };
+  }
+
+  return { isFlagged: false, blowoutCount: blowouts };
 }
