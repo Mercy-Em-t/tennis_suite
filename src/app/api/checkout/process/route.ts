@@ -54,7 +54,25 @@ export async function POST(request: Request) {
       const callbackUrl = `${hostUrl}/api/checkout/mpesa/callback`;
 
       try {
-        await initiateStkPush(phoneNumber, amount, franchiseName, callbackUrl);
+        const gatewayRes = await fetch('https://pay.tmsavannah.com/api/mpesa-initiate', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.GATEWAY_API_KEY}`
+          },
+          body: JSON.stringify({
+            source_app: 'sports',
+            source_reference: franchiseName.substring(0, 12).replace(/[^a-zA-Z0-9]/g, ''),
+            amount,
+            phone_number: phoneNumber,
+            webhook_url: callbackUrl
+          })
+        });
+        
+        const mpesaRes = await gatewayRes.json();
+        if (!gatewayRes.ok || !mpesaRes.success) {
+          throw new Error(mpesaRes.error || mpesaRes.message || 'STK Push Failed.');
+        }
       } catch (err: any) {
         return NextResponse.json({ error: err.message || 'STK Push Failed. Check your phone number.' }, { status: 400 });
       }

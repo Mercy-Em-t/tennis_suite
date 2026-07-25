@@ -4,44 +4,30 @@ import { sendTemplateEmail } from '@/lib/mail/dispatch';
 
 export async function POST(request: Request) {
   try {
-    const data = await request.json();
+    // Verify Gateway Webhook Secret
+    const authHeader = request.headers.get("authorization");
+    if (authHeader !== `Bearer ${process.env.GATEWAY_WEBHOOK_SECRET}`) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    // Safaricom wraps the response in Body.stkCallback
-    const callbackData = data?.Body?.stkCallback;
-    
-    if (!callbackData) {
-      console.error("Invalid M-Pesa Callback Payload", data);
+    const payload = await request.json();
+
+    if (!payload.gateway_transaction_id) {
+      console.error("Invalid Gateway Callback Payload", payload);
       return NextResponse.json({ ResultCode: 1, ResultDesc: "Invalid Payload" });
     }
 
-    const { MerchantRequestID, CheckoutRequestID, ResultCode, ResultDesc, CallbackMetadata } = callbackData;
+    const { status, amount: gatewayAmount, mpesa_receipt, raw_result_code, raw_result_desc, source_reference } = payload;
+    const isSuccess = status === 'COMPLETED';
 
-    // ResultCode 0 means success. Anything else is an error (e.g., cancelled by user)
-    const isSuccess = ResultCode === 0;
-    
-    let mpesaReceiptNumber = null;
-    let amount = 0;
-    let phoneNumber = '';
-
-    // If successful, extract the metadata
-    if (isSuccess && CallbackMetadata && CallbackMetadata.Item) {
-      const items = CallbackMetadata.Item;
-      const receiptItem = items.find((item: any) => item.Name === 'MpesaReceiptNumber');
-      const amountItem = items.find((item: any) => item.Name === 'Amount');
-      const phoneItem = items.find((item: any) => item.Name === 'PhoneNumber');
-
-      mpesaReceiptNumber = receiptItem?.Value?.toString();
-      amount = amountItem?.Value;
-      phoneNumber = phoneItem?.Value?.toString();
-    }
-
-    // Find the pending transaction
-    const transaction = await prisma.transaction.findUnique({
-      where: { checkoutRequestId: CheckoutRequestID }
+    // Find the pending transaction using teamName (which was passed as source_reference)
+    const transaction = await prisma.transaction.findFirst({
+      where: { teamName: { startsWith: source_reference } },
+      orderBy: { createdAt: 'desc' }
     });
 
     if (!transaction) {
-      console.warn("Callback received for unknown checkoutRequestId", CheckoutRequestID);
+      console.warn("Callback received for unknown source_reference", source_reference);
       return NextResponse.json({ ResultCode: 0, ResultDesc: "Accepted but transaction not found" });
     }
 

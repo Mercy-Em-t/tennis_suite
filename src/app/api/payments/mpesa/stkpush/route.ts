@@ -12,12 +12,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Attempt the STK Push
-    // Use the name for the Account Reference (max 12 characters)
+    // Attempt the STK Push via Gateway
     const accountRef = name.substring(0, 12).replace(/[^a-zA-Z0-9]/g, '');
     const transactionDesc = `Payment for ${accountRef}`;
 
-    const mpesaRes = await initiateStkPush(phoneNumber, amount, accountRef, transactionDesc);
+    const gatewayRes = await fetch('https://pay.tmsavannah.com/api/mpesa-initiate', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.GATEWAY_API_KEY}`
+      },
+      body: JSON.stringify({
+        source_app: 'sports',
+        source_reference: accountRef,
+        amount,
+        phone_number: phoneNumber,
+        webhook_url: 'https://sports.tmsavannah.com/api/payments/mpesa/callback',
+        customer_email: email
+      })
+    });
+    
+    const mpesaRes = await gatewayRes.json();
+    if (!gatewayRes.ok || !mpesaRes.success) {
+      throw new Error(mpesaRes.error || mpesaRes.message || 'Gateway STK Push failed');
+    }
 
     // Save the pending transaction
     const transaction = await prisma.transaction.create({

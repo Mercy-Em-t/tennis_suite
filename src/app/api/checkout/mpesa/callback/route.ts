@@ -5,60 +5,38 @@ import { Prisma } from '@prisma/client';
 
 export async function POST(request: Request) {
   try {
-    const data = await request.json();
+    const authHeader = request.headers.get("authorization");
+    if (authHeader !== `Bearer ${process.env.GATEWAY_WEBHOOK_SECRET}`) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const payload = await request.json();
     
-    // Safaricom Daraja STK Push Callback Structure
-    const stkCallback = data?.Body?.stkCallback;
-    
-    if (!stkCallback) {
+    if (!payload.gateway_transaction_id) {
       return NextResponse.json({ error: 'Invalid callback payload' }, { status: 400 });
     }
 
-    const { ResultCode, ResultDesc, CallbackMetadata } = stkCallback;
+    const { status, amount, mpesa_receipt, raw_result_code, raw_result_desc, source_reference } = payload;
+    const isSuccess = status === 'COMPLETED';
 
-    // We passed the Team ID as the AccountReference during STK Push.
-    // However, Safaricom's callback doesn't echo the AccountReference. 
-    // In a real production app, we would store the `CheckoutRequestID` returned from `initiateStkPush` 
-    // in the DB alongside the team, and look up the Team by `CheckoutRequestID` here.
-    // For this scaffolding, we will parse the metadata and log the success.
-    
-    let amount = 0;
-    let mpesaReceiptNumber = '';
-    let phoneNumber = '';
+    logger.info(`Gateway Callback Received: ${raw_result_code} - ${raw_result_desc}. Receipt: ${mpesa_receipt}`);
 
-    if (CallbackMetadata?.Item) {
-      const items = CallbackMetadata.Item;
-      amount = items.find((i: any) => i.Name === 'Amount')?.Value || 0;
-      mpesaReceiptNumber = items.find((i: any) => i.Name === 'MpesaReceiptNumber')?.Value || '';
-      phoneNumber = items.find((i: any) => i.Name === 'PhoneNumber')?.Value || '';
-    }
-
-    logger.info(`M-Pesa Callback Received: ${ResultCode} - ${ResultDesc}. Receipt: ${mpesaReceiptNumber}`);
-
-    if (ResultCode === 0) {
-      // Payment Successful
-      // TODO: Lookup the Team by CheckoutRequestID (or a tracking ID)
-      // Since this is scaffolded, we'll just log it for now.
-      logger.info(`Payment of KES ${amount} successful from ${phoneNumber}. Receipt: ${mpesaReceiptNumber}`);
-      
-      // Example DB Update (Needs the tracking ID in a real implementation):
-      /*
-      const team = await prisma.team.findFirst({ where: { mpesaTrackingId: stkCallback.CheckoutRequestID } });
+    if (isSuccess) {
+      logger.info(`Payment of KES ${amount} successful for ${source_reference}. Receipt: ${mpesa_receipt}`);
+      // Find team and update paymentStatus
+      const team = await prisma.team.findFirst({ 
+        where: { franchiseName: { startsWith: source_reference } }
+      });
       if (team) {
         await prisma.team.update({
           where: { id: team.id },
           data: { paymentStatus: 'REGISTERED' }
         });
-        
-        // Ledger entries...
       }
-      */
     } else {
-      // Payment Failed or Cancelled
-      logger.warn(`M-Pesa Payment Failed. Reason: ${ResultDesc}`);
+      logger.warn(`Gateway Payment Failed. Reason: ${raw_result_desc}`);
     }
 
-    // Safaricom expects a success response so they don't retry
     return NextResponse.json({ ResultCode: 0, ResultDesc: "Accepted" });
 
   } catch (error) {
