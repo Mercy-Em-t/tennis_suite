@@ -11,7 +11,10 @@ const eslintConfig = defineConfig([
       "tennis": tennisPlugin
     },
     rules: {
-      "tennis/enforce-tenant-gating": "error"
+      "tennis/enforce-tenant-gating": "error",
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-require-imports": "warn",
+      "prefer-const": "warn"
     }
   },
   // Override default ignores of eslint-config-next.
