@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       where: { id: transaction.id },
       data: {
         status: isSuccess ? 'COMPLETED' : 'FAILED',
-        mpesaReceiptNumber: mpesaReceiptNumber,
+        mpesaReceiptNumber: mpesa_receipt,
       }
     });
 
